@@ -6,6 +6,11 @@ if (process.env.NODE_ENV === 'development') {
   console.log('API Base URL:', API_BASE_URL);
 }
 
+// Log API URL in production for debugging
+if (process.env.NODE_ENV === 'production') {
+  console.log('Production API Base URL:', API_BASE_URL);
+}
+
 // Generic API request function
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
