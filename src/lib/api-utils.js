@@ -1,6 +1,11 @@
 // API utility functions for making requests to different endpoints
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Log API URL in development for debugging
+if (process.env.NODE_ENV === 'development') {
+  console.log('API Base URL:', API_BASE_URL);
+}
+
 // Generic API request function
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -8,6 +13,7 @@ async function apiRequest(endpoint, options = {}) {
   const defaultOptions = {
     headers: {
       "Content-Type": "application/json",
+      "ngrok-skip-browser-warning": "69420",
     },
   };
 
