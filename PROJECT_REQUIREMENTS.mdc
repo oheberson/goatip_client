@@ -1,0 +1,136 @@
+# Goatip - Fantasy Soccer Helper Project Requirements
+
+## Project Overview
+Goatip is a mobile-first web application designed to help users create optimal fantasy soccer teams. The app provides data-driven insights, player performance analysis, and formation optimization to maximize winning potential in fantasy soccer platforms.
+
+## Technology Stack
+- **Framework**: Next.js (latest with App Router)
+- **Frontend**: React (plain JavaScript, no TypeScript)
+- **Styling**: Tailwind CSS v4
+- **Deployment**: Vercel (free tier)
+- **API**: Local server (localhost:8000) with environment variable configuration
+
+## Core Features
+1. **Team Creation**: Build fantasy soccer teams with player selection
+2. **Formation Management**: Choose and optimize team formations
+3. **Player Analytics**: View player performance data and statistics
+4. **Team Optimization**: AI-powered suggestions for optimal team combinations
+5. **Performance Tracking**: Monitor team performance over time
+
+## Mobile-First Design Requirements
+- **Device Target**: iPhone 12 dimensions (390x844px)
+- **Layout**: Mobile container with max-width constraints
+- **UX**: Native app-like experience with smooth animations
+- **PWA**: Progressive Web App with manifest.json for home screen installation
+- **Responsive**: Desktop users see mobile interface with centered container
+
+## Technical Requirements
+
+### Performance
+- Smooth 60fps animations using Framer Motion
+- Lazy loading for components and assets
+- Optimized images and assets
+- Efficient memory management
+
+### Accessibility
+- WCAG 2.1 AA compliance
+- Screen reader support
+- Keyboard navigation
+- High contrast mode support
+- Touch-friendly interface (44px minimum touch targets)
+
+### Error Handling
+- Try-catch blocks for all async operations
+- User-friendly error messages
+- Network error handling with retry logic
+- Fallback UI components
+- Comprehensive logging
+
+### Security
+- No sensitive data in client code
+- Environment variables for API configuration
+- Input validation and sanitization
+- HTTPS enforcement in production
+
+## Development Checklist
+
+### Before Each Implementation
+- [ ] Review project requirements
+- [ ] Check mobile-first design principles
+- [ ] Ensure accessibility standards
+- [ ] Plan component reusability
+- [ ] Consider performance implications
+
+### During Development
+- [ ] Follow React best practices
+- [ ] Use semantic HTML elements
+- [ ] Implement proper error handling
+- [ ] Add loading states
+- [ ] Test on mobile devices
+- [ ] Validate with screen readers
+
+### After Each Implementation
+- [ ] Run `npm run build` to check for errors
+- [ ] Run `npm run lint` for code quality
+- [ ] Test responsive design
+- [ ] Verify PWA functionality
+- [ ] Check accessibility compliance
+- [ ] Test API integration
+- [ ] Validate mobile experience
+
+## File Structure
+```
+src/
+├── app/                 # Next.js App Router
+│   ├── layout.js       # Root layout with mobile container
+│   ├── page.js         # Home page
+│   └── globals.css     # Global styles and mobile container
+├── components/         # Reusable React components
+├── lib/               # Utility functions and API client
+│   └── api.js         # API configuration and endpoints
+└── hooks/             # Custom React hooks
+```
+
+## API Integration
+- Base URL: `http://localhost:8000` (configurable via environment)
+- RESTful API design
+- Error handling for network requests
+- Caching strategy for performance
+- Offline support considerations
+
+## Deployment
+- Vercel free tier deployment
+- Environment variables configuration
+- Automatic builds on git push
+- Performance monitoring
+- Error tracking
+
+## Testing Strategy
+- Unit tests for utility functions
+- Component tests for UI elements
+- Integration tests for API calls
+- E2E tests for critical user flows
+- Mobile device testing
+- Accessibility testing
+
+## Performance Targets
+- First Contentful Paint: < 1.5s
+- Largest Contentful Paint: < 2.5s
+- Cumulative Layout Shift: < 0.1
+- First Input Delay: < 100ms
+- Time to Interactive: < 3.5s
+
+## Browser Support
+- iOS Safari 14+
+- Chrome 90+
+- Firefox 88+
+- Edge 90+
+- Samsung Internet 14+
+
+## Future Enhancements
+- Push notifications for match updates
+- Social features for team sharing
+- Advanced analytics dashboard
+- Multi-language support
+- Dark mode optimization
+- Offline functionality
