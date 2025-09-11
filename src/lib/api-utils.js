@@ -135,6 +135,10 @@ export const api = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    getBestPlayers: (tournamentId) =>
+      apiRequest(`/best-players?tournament_id=${tournamentId}`),
+    getBestPlayersByTeams: (teams) =>
+      apiRequest(`/best-players?teams=${teams.join(',')}`),
   },
 
   // Generic function for custom endpoints

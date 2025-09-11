@@ -144,7 +144,9 @@ export default function TeamsPage() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-1">{team.name}</h3>
+                        <h3 className="font-semibold text-lg mb-1">
+                          {team.name}
+                        </h3>
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <div className="flex items-center space-x-1">
                             <Users className="w-4 h-4" />

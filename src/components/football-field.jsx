@@ -119,6 +119,18 @@ export function FootballField({
     return getCurrentPlayerCount(positionType) < positionLimits[positionType];
   };
 
+  // Check if a specific slot is available
+  const isSlotAvailable = (positionKey) => {
+    return !selectedPlayers[positionKey];
+  };
+
+  // Check if there are available slots for a position type
+  const hasAvailableSlots = (positionType) => {
+    const currentCount = getCurrentPlayerCount(positionType);
+    const maxCount = positionLimits[positionType] || 0;
+    return currentCount < maxCount;
+  };
+
   // Check if bench position is available
   const isBenchPositionAvailable = (positionType) => {
     return getCurrentBenchCount(positionType) < benchLimits[positionType];
@@ -145,11 +157,21 @@ export function FootballField({
   // Generate position buttons for a row
   const renderPositionRow = (rowIndex, count, rowLabel) => {
     const positions = [];
+    const positionTypeCounters = {}; // Track slot numbers per position type
 
     for (let i = 0; i < count; i++) {
       const positionType = getPositionType(rowIndex, i, count);
-      const positionKey = `${rowIndex}-${i}`;
-      const isAvailable = isPositionAvailable(positionType);
+      
+      // Initialize counter for this position type if not exists
+      if (!positionTypeCounters[positionType]) {
+        positionTypeCounters[positionType] = 0;
+      }
+      
+      // Increment counter for this position type
+      positionTypeCounters[positionType]++;
+      
+      const positionKey = `${positionType}-${positionTypeCounters[positionType]}`;
+      const isAvailable = hasAvailableSlots(positionType);
       const currentPlayer = selectedPlayers[positionKey];
 
       positions.push(

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Menu, Home, Users, BarChart3, User, Circle } from "lucide-react";
+import { Menu, Home, Users, BarChart3, User, Circle, Flag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,8 +21,7 @@ export function MobileMenu() {
 
   const menuItems = [
     { icon: Home, label: "Home", href: "/" },
-    { icon: Users, label: "Teams", href: "/teams" },
-    { icon: Circle, label: "Matches", href: "/matches" },
+    { icon: Flag, label: "Matches", href: "/matches" },
     { icon: BarChart3, label: "Stats", href: "/stats" },
     { icon: User, label: "Profile", href: "/profile" },
   ];
@@ -43,14 +42,16 @@ export function MobileMenu() {
                 G
               </span>
             </div>
-            <span>Goatip</span>
+            <span>GOATIP</span>
           </SheetTitle>
-          <SheetDescription>Fantasy soccer team helper</SheetDescription>
+          <SheetDescription className="w-full flex">
+            Assistente Fantasy
+          </SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">
-              Navigation
+              Navegação
             </h3>
             {menuItems.map((item) => (
               <Button
@@ -69,7 +70,7 @@ export function MobileMenu() {
           </div>
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">
-              Settings
+              Configurações
             </h3>
             <ThemeToggle />
           </div>

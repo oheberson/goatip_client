@@ -202,3 +202,192 @@ export const clearPlayerSortFromStorage = () => {
     console.error('Error clearing player sort from localStorage:', error);
   }
 };
+
+// Best Players Storage Keys
+const BEST_PLAYERS_STORAGE_KEY = 'goatip_best_players_data';
+const BEST_PLAYERS_TIMESTAMP_KEY = 'goatip_best_players_timestamp';
+const BEST_PLAYERS_CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+
+/**
+ * Get best players data from localStorage
+ * @param {string} tournamentId - The tournament ID to retrieve data for
+ * @returns {Object|null} The best players data or null if not found/expired
+ */
+export const getBestPlayersFromStorage = (tournamentId) => {
+  try {
+    const timestamp = localStorage.getItem(`${BEST_PLAYERS_TIMESTAMP_KEY}_${tournamentId}`);
+    const data = localStorage.getItem(`${BEST_PLAYERS_STORAGE_KEY}_${tournamentId}`);
+    
+    if (!timestamp || !data) {
+      return null;
+    }
+    
+    // Check if data is expired
+    const now = Date.now();
+    const storedTime = parseInt(timestamp);
+    
+    if (now - storedTime > BEST_PLAYERS_CACHE_DURATION) {
+      // Data is expired, remove it
+      clearBestPlayersFromStorage(tournamentId);
+      return null;
+    }
+    
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error getting best players from localStorage:', error);
+    return null;
+  }
+};
+
+/**
+ * Store best players data in localStorage
+ * @param {string} tournamentId - The tournament ID
+ * @param {Object} bestPlayersData - The best players data to store
+ * @returns {boolean} Success status
+ */
+export const setBestPlayersToStorage = (tournamentId, bestPlayersData) => {
+  try {
+    const timestamp = Date.now().toString();
+    localStorage.setItem(`${BEST_PLAYERS_STORAGE_KEY}_${tournamentId}`, JSON.stringify(bestPlayersData));
+    localStorage.setItem(`${BEST_PLAYERS_TIMESTAMP_KEY}_${tournamentId}`, timestamp);
+    return true;
+  } catch (error) {
+    console.error('Error storing best players to localStorage:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear best players data from localStorage
+ * @param {string} tournamentId - The tournament ID
+ */
+export const clearBestPlayersFromStorage = (tournamentId) => {
+  try {
+    localStorage.removeItem(`${BEST_PLAYERS_STORAGE_KEY}_${tournamentId}`);
+    localStorage.removeItem(`${BEST_PLAYERS_TIMESTAMP_KEY}_${tournamentId}`);
+  } catch (error) {
+    console.error('Error clearing best players from localStorage:', error);
+  }
+};
+
+/**
+ * Check if best players data exists and is not expired
+ * @param {string} tournamentId - The tournament ID
+ * @returns {boolean} True if valid data exists
+ */
+export const hasValidBestPlayersData = (tournamentId) => {
+  const data = getBestPlayersFromStorage(tournamentId);
+  return data !== null;
+};
+
+// Formation Storage Keys
+const FORMATIONS_STORAGE_KEY = 'goatip_formations_data';
+
+/**
+ * Get formations data from localStorage for a specific tournament
+ * @param {string} tournamentId - The tournament ID
+ * @returns {Object|null} The formations data or null if not found
+ */
+export const getFormationsFromStorage = (tournamentId) => {
+  try {
+    const data = localStorage.getItem(`${FORMATIONS_STORAGE_KEY}_${tournamentId}`);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error('Error getting formations from localStorage:', error);
+    return null;
+  }
+};
+
+/**
+ * Store formations data in localStorage for a specific tournament
+ * @param {string} tournamentId - The tournament ID
+ * @param {Object} formationsData - The formations data to store
+ * @returns {boolean} Success status
+ */
+export const setFormationsToStorage = (tournamentId, formationsData) => {
+  try {
+    localStorage.setItem(`${FORMATIONS_STORAGE_KEY}_${tournamentId}`, JSON.stringify(formationsData));
+    return true;
+  } catch (error) {
+    console.error('Error storing formations to localStorage:', error);
+    return false;
+  }
+};
+
+/**
+ * Save a specific formation to localStorage
+ * @param {string} tournamentId - The tournament ID
+ * @param {string} teamName - The team name (key)
+ * @param {Object} formationData - The formation data to save
+ * @returns {boolean} Success status
+ */
+export const saveFormationToStorage = (tournamentId, teamName, formationData) => {
+  try {
+    const existingFormations = getFormationsFromStorage(tournamentId) || {};
+    existingFormations[teamName] = formationData;
+    return setFormationsToStorage(tournamentId, existingFormations);
+  } catch (error) {
+    console.error('Error saving formation to localStorage:', error);
+    return false;
+  }
+};
+
+/**
+ * Get a specific formation from localStorage
+ * @param {string} tournamentId - The tournament ID
+ * @param {string} teamName - The team name (key)
+ * @returns {Object|null} The formation data or null if not found
+ */
+export const getFormationFromStorage = (tournamentId, teamName) => {
+  try {
+    const formations = getFormationsFromStorage(tournamentId);
+    return formations && formations[teamName] ? formations[teamName] : null;
+  } catch (error) {
+    console.error('Error getting formation from localStorage:', error);
+    return null;
+  }
+};
+
+/**
+ * Get all saved team names for a tournament
+ * @param {string} tournamentId - The tournament ID
+ * @returns {string[]} Array of team names
+ */
+export const getSavedTeamNames = (tournamentId) => {
+  try {
+    const formations = getFormationsFromStorage(tournamentId);
+    return formations ? Object.keys(formations) : [];
+  } catch (error) {
+    console.error('Error getting saved team names:', error);
+    return [];
+  }
+};
+
+/**
+ * Delete a specific formation from localStorage
+ * @param {string} tournamentId - The tournament ID
+ * @param {string} teamName - The team name (key)
+ * @returns {boolean} Success status
+ */
+export const deleteFormationFromStorage = (tournamentId, teamName) => {
+  try {
+    const existingFormations = getFormationsFromStorage(tournamentId) || {};
+    delete existingFormations[teamName];
+    return setFormationsToStorage(tournamentId, existingFormations);
+  } catch (error) {
+    console.error('Error deleting formation from localStorage:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear all formations for a tournament
+ * @param {string} tournamentId - The tournament ID
+ */
+export const clearFormationsFromStorage = (tournamentId) => {
+  try {
+    localStorage.removeItem(`${FORMATIONS_STORAGE_KEY}_${tournamentId}`);
+  } catch (error) {
+    console.error('Error clearing formations from localStorage:', error);
+  }
+};

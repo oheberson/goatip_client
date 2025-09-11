@@ -1,7 +1,7 @@
 {
-  "name": "Goatip - Fantasy Soccer Helper",
+  "name": "Goatip - Ajudante Fantasy",
   "short_name": "GOATIP",
-  "description": "Create the best fantasy soccer teams with player analysis and formation optimization",
+  "description": "Crie os melhores times fantasy com análises de dados",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

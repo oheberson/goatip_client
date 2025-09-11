@@ -8,13 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Users,
-  BarChart3,
-  Plus,
-  CheckCircle,
-  Circle,
-} from "lucide-react";
+import { Users, BarChart3, Plus, CheckCircle, Flag } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -41,23 +35,24 @@ export default function Home() {
       <main className="px-4 py-6">
         {/* Welcome Section */}
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold mb-2">Welcome to Goatip</h2>
+          <h2 className="text-2xl font-bold mb-2">Seu Assistente Fantasy</h2>
           <p className="text-muted-foreground">
-            Create the perfect fantasy soccer team with data-driven insights
+            Crie um time fantasy de futebol perfeito com insights a partir de
+            dados
           </p>
         </div>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Link href="/create-team">
+          <Link href="/matches">
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3">
-                  <Users className="w-6 h-6 text-primary" />
+                  <Flag className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-1">Create Team</h3>
+                <h3 className="font-semibold mb-1">Criar Time</h3>
                 <p className="text-sm text-muted-foreground">
-                  Build your fantasy squad
+                  Comece a criar seu time
                 </p>
               </CardContent>
             </Card>
@@ -70,14 +65,14 @@ export default function Home() {
               </div>
               <h3 className="font-semibold mb-1">Analytics</h3>
               <p className="text-sm text-muted-foreground">
-                Player performance data
+                Acompanhe dados de jogadores
               </p>
             </CardContent>
           </Card>
         </div>
 
         {/* Recent Activity */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle className="text-lg">Recent Activity</CardTitle>
           </CardHeader>
@@ -101,7 +96,7 @@ export default function Home() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </main>
 
       {/* Bottom Navigation */}

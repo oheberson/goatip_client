@@ -12,13 +12,25 @@ import {
 } from "@/components/ui/card";
 import { ArrowLeft, Users, Save, Plus, AlertCircle } from "lucide-react";
 import { api } from "@/lib/api-utils";
-import { getTournamentFromStorage } from "@/lib/localStorage-utils";
+import {
+  getTournamentFromStorage,
+  getBestPlayersFromStorage,
+  setBestPlayersToStorage,
+  hasValidBestPlayersData,
+  saveFormationToStorage,
+  getFormationFromStorage,
+  getSavedTeamNames,
+  deleteFormationFromStorage,
+} from "@/lib/localStorage-utils";
+import { TOURNAMENTS, mapTeamName } from "@/lib/constants";
 import { FootballField } from "@/components/football-field";
 import { PlayerSelectionDrawer } from "@/components/player-selection-drawer";
+import { TeamNameDialog } from "@/components/team-name-dialog";
 
 export default function CreateTeamPage({ params }) {
   const router = useRouter();
   const resolvedParams = use(params);
+  const tournamentId = resolvedParams.tournament_id;
   const [teamName, setTeamName] = useState("");
   const [formation, setFormation] = useState("4-3-3");
   const [loading, setLoading] = useState(false);
@@ -33,6 +45,144 @@ export default function CreateTeamPage({ params }) {
   const [selectedPositionType, setSelectedPositionType] = useState(null);
   const [teamAnalysis, setTeamAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [bestPlayersData, setBestPlayersData] = useState(null);
+  const [bestPlayersLoading, setBestPlayersLoading] = useState(false);
+
+  // Formation management state
+  const [savedTeamNames, setSavedTeamNames] = useState([]);
+  const [selectedSavedTeam, setSelectedSavedTeam] = useState("");
+  const [teamNameDialogOpen, setTeamNameDialogOpen] = useState(false);
+  const [isLoadingFormation, setIsLoadingFormation] = useState(false);
+
+  // Check if all required positions are filled
+  const isFormationComplete = () => {
+    const FORMATION_CONFIGS = {
+      "4-3-3": { defense: 4, midfield: 3, attack: 3 },
+      "4-4-2": { defense: 4, midfield: 4, attack: 2 },
+      "3-4-3": { defense: 3, midfield: 4, attack: 3 },
+      "4-5-1": { defense: 4, midfield: 5, attack: 1 },
+      "3-5-2": { defense: 3, midfield: 5, attack: 2 },
+      "5-3-2": { defense: 5, midfield: 3, attack: 2 },
+      "5-4-1": { defense: 5, midfield: 4, attack: 1 },
+    };
+
+    const config = FORMATION_CONFIGS[formation] || FORMATION_CONFIGS["4-3-3"];
+    const limits = {
+      GOL: 1,
+      ZAG: 0,
+      LAT: 0,
+      MEI: config.midfield,
+      ATA: config.attack,
+    };
+
+    if (config.defense >= 4) {
+      limits.ZAG = 2;
+      limits.LAT = 2;
+    } else {
+      limits.ZAG = config.defense;
+    }
+
+    // Check if all required positions are filled
+    for (const [positionType, requiredCount] of Object.entries(limits)) {
+      const currentCount = Object.values(selectedPlayers).filter(
+        (player) => player.position === positionType
+      ).length;
+
+      if (currentCount < requiredCount) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // Load saved team names when component mounts
+  useEffect(() => {
+    const teamNames = getSavedTeamNames(tournamentId);
+    setSavedTeamNames(teamNames);
+  }, [tournamentId]);
+
+  // Save formation
+  const handleSaveFormation = (teamName) => {
+    if (!isFormationComplete()) {
+      return;
+    }
+
+    const formationData = {
+      formation,
+      selectedPlayers: { ...selectedPlayers },
+      benchPlayers: { ...benchPlayers },
+      timestamp: Date.now(),
+    };
+
+    const success = saveFormationToStorage(
+      tournamentId,
+      teamName,
+      formationData
+    );
+    if (success) {
+      // Update saved team names list
+      const updatedTeamNames = getSavedTeamNames(tournamentId);
+      setSavedTeamNames(updatedTeamNames);
+      setTeamNameDialogOpen(false);
+    }
+  };
+
+  // Load formation
+  const handleLoadFormation = (teamName) => {
+    if (!teamName) return;
+
+    setIsLoadingFormation(true);
+    const formationData = getFormationFromStorage(tournamentId, teamName);
+
+    if (formationData) {
+      // Update formation
+      setFormation(formationData.formation);
+
+      // Clear current selections
+      setSelectedPlayers({});
+      setBenchPlayers({});
+
+      // Load players with proper slot assignment
+      setTimeout(() => {
+        // Load main team players
+        const newSelectedPlayers = {};
+        Object.entries(formationData.selectedPlayers).forEach(
+          ([slotKey, player]) => {
+            newSelectedPlayers[slotKey] = player;
+          }
+        );
+        setSelectedPlayers(newSelectedPlayers);
+
+        // Load bench players
+        const newBenchPlayers = {};
+        Object.entries(formationData.benchPlayers).forEach(
+          ([slotKey, player]) => {
+            newBenchPlayers[slotKey] = player;
+          }
+        );
+        setBenchPlayers(newBenchPlayers);
+
+        setIsLoadingFormation(false);
+      }, 100);
+    } else {
+      setIsLoadingFormation(false);
+    }
+  };
+
+  // Delete formation
+  const handleDeleteFormation = (teamName) => {
+    if (window.confirm(`Deseja deletar o time"${teamName}"?`)) {
+      const success = deleteFormationFromStorage(tournamentId, teamName);
+      if (success) {
+        const updatedTeamNames = getSavedTeamNames(tournamentId);
+        setSavedTeamNames(updatedTeamNames);
+        if (selectedSavedTeam === teamName) {
+          setSelectedSavedTeam("");
+        }
+      }
+    }
+  };
 
   const formations = [
     { value: "4-3-3", label: "4-3-3" },
@@ -44,14 +194,60 @@ export default function CreateTeamPage({ params }) {
     { value: "5-4-1", label: "5-4-1" },
   ];
 
+  // Function to fetch best players data for available tournaments
+  const fetchBestPlayersData = async (tournamentId, matches) => {
+    // Check if this tournament is in our available tournaments
+    if (!TOURNAMENTS[tournamentId]) {
+      return;
+    }
+
+    // Check if we have valid cached data
+    // if (hasValidBestPlayersData(tournamentId)) {
+    //   const cachedData = getBestPlayersFromStorage(tournamentId);
+    //   setBestPlayersData(cachedData);
+    //   return;
+    // }
+
+    try {
+      setBestPlayersLoading(true);
+
+      // Extract unique team names from matches
+      const teamNames = new Set();
+      matches.forEach((match) => {
+        if (match.firstTeamLongName) {
+          teamNames.add(mapTeamName(match.firstTeamLongName));
+        }
+        if (match.secondTeamLongName) {
+          teamNames.add(mapTeamName(match.secondTeamLongName));
+        }
+      });
+
+      if (teamNames.size === 0) {
+        console.log("No team names found in matches");
+        return;
+      }
+
+      // Fetch best players data
+      const teamsArray = Array.from(teamNames);
+      console.log("Fetching best players for teams:", teamsArray);
+
+      const data = await api.analytics.getBestPlayersByTeams(teamsArray);
+      setBestPlayersData(data.data || data);
+
+      // Cache the data
+      setBestPlayersToStorage(tournamentId, data.data || data);
+    } catch (error) {
+      console.error("Failed to fetch best players data:", error);
+    } finally {
+      setBestPlayersLoading(false);
+    }
+  };
+
   useEffect(() => {
     const loadTournamentData = async () => {
       try {
         setTournamentLoading(true);
         setTournamentError(null);
-
-        // Get tournament ID from params
-        const tournamentId = resolvedParams.tournament_id;
 
         if (!tournamentId) {
           setTournamentError("No tournament ID provided");
@@ -71,6 +267,9 @@ export default function CreateTeamPage({ params }) {
         setTournamentData(tournament);
         console.log("Loaded tournament data:", tournament);
 
+        // Fetch best players data if tournament is available
+        await fetchBestPlayersData(tournamentId, tournament.matches || []);
+
         // Fetch players data for this tournament
         console.log("fetching players with>>", tournament.matches[0]?.id);
         const playersData = await api.players.getByTournament(
@@ -87,7 +286,7 @@ export default function CreateTeamPage({ params }) {
     };
 
     loadTournamentData();
-  }, [resolvedParams.tournament_id]);
+  }, [tournamentId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -137,9 +336,54 @@ export default function CreateTeamPage({ params }) {
         },
       }));
     } else {
+      // For main team positions, find the next available slot
+      const getNextAvailableSlot = () => {
+        const FORMATION_CONFIGS = {
+          "4-3-3": { defense: 4, midfield: 3, attack: 3 },
+          "4-4-2": { defense: 4, midfield: 4, attack: 2 },
+          "3-4-3": { defense: 3, midfield: 4, attack: 3 },
+          "4-5-1": { defense: 4, midfield: 5, attack: 1 },
+          "3-5-2": { defense: 3, midfield: 5, attack: 2 },
+          "5-3-2": { defense: 5, midfield: 3, attack: 2 },
+          "5-4-1": { defense: 5, midfield: 4, attack: 1 },
+        };
+
+        const config =
+          FORMATION_CONFIGS[formation] || FORMATION_CONFIGS["4-3-3"];
+        const limits = {
+          GOL: 1,
+          ZAG: 0,
+          LAT: 0,
+          MEI: config.midfield,
+          ATA: config.attack,
+        };
+
+        if (config.defense >= 4) {
+          limits.ZAG = 2;
+          limits.LAT = 2;
+        } else {
+          limits.ZAG = config.defense;
+        }
+
+        const maxForPosition = limits[selectedPositionType] || 0;
+
+        // Always find the next available slot in order
+        for (let i = 1; i <= maxForPosition; i++) {
+          const slotKey = `${selectedPositionType}-${i}`;
+          if (!selectedPlayers[slotKey]) {
+            return slotKey;
+          }
+        }
+
+        // If no slots available, fallback to the original selectedPosition
+        return selectedPosition;
+      };
+
+      const slotKey = getNextAvailableSlot();
+
       setSelectedPlayers((prev) => ({
         ...prev,
-        [selectedPosition]: {
+        [slotKey]: {
           ...player,
           position: selectedPositionType,
         },
@@ -153,6 +397,34 @@ export default function CreateTeamPage({ params }) {
       delete newPlayers[positionKey];
       return newPlayers;
     });
+  };
+
+  const handleRemovePlayerByObject = (player) => {
+    // Check if it's a bench player first
+    const benchPlayerKey = Object.keys(benchPlayers).find(
+      (key) => benchPlayers[key] && benchPlayers[key].id === player.id
+    );
+
+    if (benchPlayerKey) {
+      // Remove from bench players
+      setBenchPlayers((prev) => {
+        const newBenchPlayers = { ...prev };
+        delete newBenchPlayers[benchPlayerKey];
+        return newBenchPlayers;
+      });
+    } else {
+      // Remove from main team players
+      setSelectedPlayers((prev) => {
+        const newPlayers = { ...prev };
+        // Find the position key for this player
+        Object.keys(newPlayers).forEach((key) => {
+          if (newPlayers[key].id === player.id) {
+            delete newPlayers[key];
+          }
+        });
+        return newPlayers;
+      });
+    }
   };
 
   const handleBenchClick = (benchKey, positionType) => {
@@ -469,6 +741,66 @@ export default function CreateTeamPage({ params }) {
                       ))}
                     </select>
                   </div>
+
+                  {/* Saved Teams Dropdown */}
+                  {savedTeamNames.length > 0 && (
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="saved-teams"
+                        className="text-sm font-medium"
+                      >
+                        Times Salvos
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          id="saved-teams"
+                          value={selectedSavedTeam}
+                          onChange={(e) => {
+                            setSelectedSavedTeam(e.target.value);
+                            handleLoadFormation(e.target.value);
+                          }}
+                          className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                        >
+                          <option value="">Selecione um time salvo...</option>
+                          {savedTeamNames.map((teamName) => (
+                            <option key={teamName} value={teamName}>
+                              {teamName}
+                            </option>
+                          ))}
+                        </select>
+                        {selectedSavedTeam && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleDeleteFormation(selectedSavedTeam)
+                            }
+                            className="px-3"
+                            title="Deletar time"
+                          >
+                            <AlertCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Save Button */}
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => setTeamNameDialogOpen(true)}
+                      disabled={!isFormationComplete() || isLoadingFormation}
+                      className="w-full"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {isLoadingFormation ? "Carregando..." : "Salvar Time"}
+                    </Button>
+                    {!isFormationComplete() && (
+                      <p className="text-xs text-muted-foreground">
+                        Complete todas as posições para salvar
+                      </p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -687,7 +1019,25 @@ export default function CreateTeamPage({ params }) {
         positionType={selectedPositionType}
         playersData={playersData}
         onSelectPlayer={handleSelectPlayer}
+        onRemovePlayer={handleRemovePlayerByObject}
         selectedPlayers={selectedPlayers}
+        bestPlayersData={bestPlayersData}
+        formation={formation}
+        selectedPosition={selectedPosition}
+        benchPlayers={benchPlayers}
+      />
+
+      {/* Team Name Dialog */}
+      <TeamNameDialog
+        isOpen={teamNameDialogOpen}
+        onOpenChange={setTeamNameDialogOpen}
+        onSave={handleSaveFormation}
+        onCancel={() => setTeamNameDialogOpen(false)}
+        title="Salvar Time"
+        description="Digite um nome para o seu time"
+        placeholder="Ex: Time Principal, Time Alternativo..."
+        saveButtonText="Salvar"
+        cancelButtonText="Cancelar"
       />
     </div>
   );

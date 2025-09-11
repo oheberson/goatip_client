@@ -11,6 +11,9 @@ import {
   BadgeQuestionMark,
   CircleSlash,
   ArrowDownUp,
+  ChartNoAxesColumn,
+  CirclePlus,
+  Minus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +26,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { PlayerFilterDialog } from "@/components/player-filter-dialog";
 import { PlayerSortDialog } from "@/components/player-sort-dialog";
+import { PlayerStatsDrawer } from "@/components/player-stats-drawer";
 import {
   getPlayerFiltersFromStorage,
   setPlayerFiltersToStorage,
@@ -46,7 +50,12 @@ export function PlayerSelectionDrawer({
   positionType,
   playersData,
   onSelectPlayer,
+  onRemovePlayer,
   selectedPlayers = {},
+  bestPlayersData = null,
+  formation = "4-3-3",
+  selectedPosition = null,
+  benchPlayers = {},
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPlayers, setFilteredPlayers] = useState([]);
@@ -57,6 +66,75 @@ export function PlayerSelectionDrawer({
   const [sortOption, setSortOption] = useState(null);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [sortDialogOpen, setSortDialogOpen] = useState(false);
+  const [statsDrawerOpen, setStatsDrawerOpen] = useState(false);
+  const [selectedPlayerForStats, setSelectedPlayerForStats] = useState(null);
+
+  // Formation configuration
+  const FORMATION_CONFIGS = {
+    "4-3-3": { defense: 4, midfield: 3, attack: 3 },
+    "4-4-2": { defense: 4, midfield: 4, attack: 2 },
+    "3-4-3": { defense: 3, midfield: 4, attack: 3 },
+    "4-5-1": { defense: 4, midfield: 5, attack: 1 },
+    "3-5-2": { defense: 3, midfield: 5, attack: 2 },
+    "5-3-2": { defense: 5, midfield: 3, attack: 2 },
+    "5-4-1": { defense: 5, midfield: 4, attack: 1 },
+  };
+
+  // Get position limits based on formation
+  const getPositionLimits = () => {
+    const config = FORMATION_CONFIGS[formation] || FORMATION_CONFIGS["4-3-3"];
+    const limits = {
+      GOL: 1,
+      ZAG: 0,
+      LAT: 0,
+      MEI: config.midfield,
+      ATA: config.attack,
+    };
+
+    if (config.defense >= 4) {
+      limits.ZAG = 2; // Center backs
+      limits.LAT = 2; // Laterals
+    } else {
+      limits.ZAG = config.defense; // Only center backs
+    }
+
+    return limits;
+  };
+
+  const positionLimits = getPositionLimits();
+
+  // Check if this is a bench position
+  const isBenchPosition = selectedPosition && selectedPosition.startsWith("bench-");
+  
+  // Get position limits - different for bench vs main team
+  const getPositionLimitsForContext = () => {
+    if (isBenchPosition) {
+      // Bench positions are always 1 player per position
+      return 1;
+    } else {
+      // Main team positions use formation limits
+      return positionLimits[positionType] || 0;
+    }
+  };
+
+  const maxPlayersForPosition = getPositionLimitsForContext();
+
+  // Count selected players for current position (context-specific)
+  const getSelectedPlayersForPosition = () => {
+    if (isBenchPosition) {
+      // For bench positions, check if the specific bench slot is filled
+      return selectedPosition && benchPlayers[selectedPosition] ? [benchPlayers[selectedPosition]] : [];
+    } else {
+      // For main team positions, count all players of this position type
+      return Object.values(selectedPlayers).filter(
+        player => player.position === positionType
+      );
+    }
+  };
+
+  const selectedPlayersForPosition = getSelectedPlayersForPosition();
+  const currentCount = selectedPlayersForPosition.length;
+  const canAddMore = currentCount < maxPlayersForPosition;
 
   // Load filters and sort from localStorage on component mount
   useEffect(() => {
@@ -82,6 +160,20 @@ export function PlayerSelectionDrawer({
   // Helper function to get scout value safely
   const getScoutValue = (player, key) => {
     return player.scouts?.total?.[key] || 0;
+  };
+
+  // Helper function to check if player has stats available
+  const hasPlayerStats = (player) => {
+    if (!bestPlayersData || !Array.isArray(bestPlayersData)) {
+      return false;
+    }
+
+    return bestPlayersData.some(
+      (bestPlayer) =>
+        bestPlayer.player === player.name &&
+        bestPlayer.team === player.teamName &&
+        bestPlayer.pos === player.position
+    );
   };
 
   // Filter and sort players by position, search term, filters, and sort option
@@ -176,7 +268,40 @@ export function PlayerSelectionDrawer({
 
   const handleSelectPlayer = (player) => {
     onSelectPlayer(player);
-    onClose();
+    
+    // Only close drawer if all slots for this position are filled
+    if (currentCount + 1 >= maxPlayersForPosition) {
+      onClose();
+    }
+  };
+
+  const handleRemovePlayer = (player) => {
+    if (onRemovePlayer) {
+      onRemovePlayer(player);
+    }
+  };
+
+  const handleOpenStats = (player) => {
+    if (!bestPlayersData || !Array.isArray(bestPlayersData)) {
+      return;
+    }
+
+    const matchingPlayer = bestPlayersData.find(
+      (bestPlayer) =>
+        bestPlayer.player === player.name &&
+        bestPlayer.team === player.teamName &&
+        bestPlayer.pos === player.position
+    );
+
+    if (matchingPlayer) {
+      setSelectedPlayerForStats(matchingPlayer);
+      setStatsDrawerOpen(true);
+    }
+  };
+
+  const handleCloseStats = () => {
+    setStatsDrawerOpen(false);
+    setSelectedPlayerForStats(null);
   };
 
   const handleFiltersChange = (newFilters) => {
@@ -200,9 +325,28 @@ export function PlayerSelectionDrawer({
   };
 
   const isPlayerSelected = (player) => {
-    return Object.values(selectedPlayers).some(
+    // Check if player is selected anywhere (main team or bench)
+    const isInMainTeam = Object.values(selectedPlayers).some(
       (selected) => selected.id === player.id
     );
+    const isInBench = Object.values(benchPlayers).some(
+      (selected) => selected.id === player.id
+    );
+    
+    return isInMainTeam || isInBench;
+  };
+
+  const getPlayerSelectionContext = (player) => {
+    const isInMainTeam = Object.values(selectedPlayers).some(
+      (selected) => selected.id === player.id
+    );
+    const isInBench = Object.values(benchPlayers).some(
+      (selected) => selected.id === player.id
+    );
+    
+    if (isInMainTeam) return "main";
+    if (isInBench) return "bench";
+    return null;
   };
 
   const hasActiveFilters = () => {
@@ -325,6 +469,24 @@ export function PlayerSelectionDrawer({
               POSITION_TYPES[positionType] || "a posição"
             }`}
           </DrawerDescription>
+          {isBenchPosition ? (
+            <div className="mt-2 text-sm text-muted-foreground">
+              {currentCount === 0 ? (
+                <span className="text-orange-600">Vaga disponível no banco</span>
+              ) : (
+                <span className="text-green-600">Vaga preenchida no banco</span>
+              )}
+            </div>
+          ) : maxPlayersForPosition > 1 ? (
+            <div className="mt-2 text-sm text-muted-foreground">
+              {currentCount} de {maxPlayersForPosition} selecionados
+              {currentCount < maxPlayersForPosition && (
+                <span className="text-green-600 ml-2">
+                  • {maxPlayersForPosition - currentCount} vaga(s) disponível(is)
+                </span>
+              )}
+            </div>
+          ) : null}
         </DrawerHeader>
 
         <div className="px-4 pb-4">
@@ -380,51 +542,79 @@ export function PlayerSelectionDrawer({
               filteredPlayers.map((player) => (
                 <Card
                   key={player.id}
-                  className={`cursor-pointer transition-colors ${
+                  className={`transition-colors ${
                     isPlayerSelected(player)
                       ? "bg-muted border-primary"
                       : "hover:bg-muted/50"
                   }`}
-                  onClick={() =>
-                    !isPlayerSelected(player) && handleSelectPlayer(player)
-                  }
                 >
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">
-                          <span className="flex gap-2 my-2">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      {/* Left Column - Player Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm mb-1">
+                          <span className="flex items-center gap-2">
                             {player.name || "Unknown Player"}
-                            <span className="text-muted-foreground w-4 h-4">
+                            <span className="text-muted-foreground">
                               {displayPlayerStatus(player.status)}
                             </span>
                           </span>
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground mb-2">
                           {player.teamName || "Unknown Team"} •{" "}
                           {player.position || positionType}
                         </div>
-                        <div className="flex items-center justify-between mt-1">
-                          {(() => {
-                            const displayData = getPlayerDisplayValue(player);
-                            return (
-                              <div className="flex flex-row items-center gap-2">
-                                <div className="text-xl text-muted-foreground">
-                                  {displayData.formatted}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {displayData.label}
-                                </div>
+                        {(() => {
+                          const displayData = getPlayerDisplayValue(player);
+                          return (
+                            <div className="flex items-center gap-2">
+                              <div className="text-lg font-semibold text-muted-foreground">
+                                {displayData.formatted}
                               </div>
-                            );
-                          })()}
-                        </div>
+                              <div className="text-xs text-muted-foreground">
+                                {displayData.label}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
-                      {isPlayerSelected(player) && (
-                        <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                          Selected
-                        </div>
-                      )}
+
+                      {/* Right Column - Action Buttons */}
+                      <div className="flex flex-col gap-2 items-center">
+                        {hasPlayerStats(player) && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleOpenStats(player)}
+                            className="p-2 h-12 w-12 size-12"
+                            title="View detailed statistics"
+                          >
+                            <ChartNoAxesColumn className="w-12 h-12 text-primary" />
+                          </Button>
+                        )}
+                         {isPlayerSelected(player) ? (
+                           <Button
+                             variant="outline"
+                             size="icon"
+                             onClick={() => handleRemovePlayer(player)}
+                             className="p-2 h-12 w-12 size-12"
+                             title={`Remove player from ${getPlayerSelectionContext(player) === 'main' ? 'starting eleven' : 'bench'}`}
+                           >
+                             <Minus className="w-12 h-12 text-red-600" />
+                           </Button>
+                         ) : (
+                           <Button
+                             variant="outline"
+                             size="icon"
+                             onClick={() => handleSelectPlayer(player)}
+                             disabled={!canAddMore}
+                             className="p-2 h-12 w-12 size-12"
+                             title={canAddMore ? `Add player to ${isBenchPosition ? 'bench' : 'starting eleven'}` : `All ${maxPlayersForPosition} slots filled`}
+                           >
+                             <CirclePlus className={`w-12 h-12 ${canAddMore ? 'text-green-600' : 'text-gray-400'}`} />
+                           </Button>
+                         )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -455,6 +645,13 @@ export function PlayerSelectionDrawer({
           onSortChange={handleSortChange}
         />
       </DrawerContent>
+
+      {/* Player Stats Drawer */}
+      <PlayerStatsDrawer
+        player={selectedPlayerForStats}
+        isOpen={statsDrawerOpen}
+        onClose={handleCloseStats}
+      />
     </Drawer>
   );
 }

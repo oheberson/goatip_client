@@ -1,5 +1,5 @@
 // API configuration for Goatip
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // API client with error handling
 class ApiClient {
@@ -11,7 +11,7 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
     const config = {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options.headers,
       },
       ...options,
@@ -19,7 +19,7 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -27,21 +27,21 @@ class ApiClient {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error("API request failed:", error);
       throw error;
     }
   }
 
   // GET request
   async get(endpoint, options = {}) {
-    return this.request(endpoint, { ...options, method: 'GET' });
+    return this.request(endpoint, { ...options, method: "GET" });
   }
 
   // POST request
   async post(endpoint, data, options = {}) {
     return this.request(endpoint, {
       ...options,
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
@@ -50,14 +50,14 @@ class ApiClient {
   async put(endpoint, data, options = {}) {
     return this.request(endpoint, {
       ...options,
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(data),
     });
   }
 
   // DELETE request
   async delete(endpoint, options = {}) {
-    return this.request(endpoint, { ...options, method: 'DELETE' });
+    return this.request(endpoint, { ...options, method: "DELETE" });
   }
 }
 
@@ -68,51 +68,62 @@ const apiClient = new ApiClient();
 export const api = {
   // Players
   players: {
-    getAll: () => apiClient.get('/api/players'),
+    getAll: () => apiClient.get("/api/players"),
     getById: (id) => apiClient.get(`/api/players/${id}`),
-    getByPosition: (position) => apiClient.get(`/api/players?position=${position}`),
+    getByPosition: (position) =>
+      apiClient.get(`/api/players?position=${position}`),
     getByTeam: (teamId) => apiClient.get(`/api/players?team=${teamId}`),
-    getPerformance: (playerId) => apiClient.get(`/api/players/${playerId}/performance`),
+    getPerformance: (playerId) =>
+      apiClient.get(`/api/players/${playerId}/performance`),
   },
 
   // Teams
   teams: {
-    getAll: () => apiClient.get('/api/teams'),
+    getAll: () => apiClient.get("/api/teams"),
     getById: (id) => apiClient.get(`/api/teams/${id}`),
     getFixtures: (teamId) => apiClient.get(`/api/teams/${teamId}/fixtures`),
   },
 
   // Fantasy Teams
   fantasyTeams: {
-    getAll: () => apiClient.get('/api/fantasy-teams'),
+    getAll: () => apiClient.get("/api/fantasy-teams"),
     getById: (id) => apiClient.get(`/api/fantasy-teams/${id}`),
-    create: (teamData) => apiClient.post('/api/fantasy-teams', teamData),
-    update: (id, teamData) => apiClient.put(`/api/fantasy-teams/${id}`, teamData),
+    create: (teamData) => apiClient.post("/api/fantasy-teams", teamData),
+    update: (id, teamData) =>
+      apiClient.put(`/api/fantasy-teams/${id}`, teamData),
     delete: (id) => apiClient.delete(`/api/fantasy-teams/${id}`),
     optimize: (id) => apiClient.post(`/api/fantasy-teams/${id}/optimize`),
   },
 
   // Formations
   formations: {
-    getAll: () => apiClient.get('/api/formations'),
+    getAll: () => apiClient.get("/api/formations"),
     getById: (id) => apiClient.get(`/api/formations/${id}`),
-    getRecommended: (players) => apiClient.post('/api/formations/recommend', { players }),
+    getRecommended: (players) =>
+      apiClient.post("/api/formations/recommend", { players }),
   },
 
   // Matches
   matches: {
-    getAll: () => apiClient.get('/api/matches'),
+    getAll: () => apiClient.get("/api/matches"),
     getById: (id) => apiClient.get(`/api/matches/${id}`),
-    getUpcoming: () => apiClient.get('/api/matches/upcoming'),
+    getUpcoming: () => apiClient.get("/api/matches/upcoming"),
     getByDate: (date) => apiClient.get(`/api/matches?date=${date}`),
   },
 
   // Analytics
   analytics: {
-    getPlayerStats: (playerId) => apiClient.get(`/api/analytics/players/${playerId}`),
+    getPlayerStats: (playerId) =>
+      apiClient.get(`/api/analytics/players/${playerId}`),
     getTeamStats: (teamId) => apiClient.get(`/api/analytics/teams/${teamId}`),
-    getFormationStats: (formationId) => apiClient.get(`/api/analytics/formations/${formationId}`),
-    getPredictions: (data) => apiClient.post('/api/analytics/predictions', data),
+    getFormationStats: (formationId) =>
+      apiClient.get(`/api/analytics/formations/${formationId}`),
+    getPredictions: (data) =>
+      apiClient.post("/api/analytics/predictions", data),
+    getBestPlayers: (tournamentId) =>
+      apiClient.get(`/best-players?tournament_id=${tournamentId}`),
+    getBestPlayersByTeams: (teams) =>
+      apiClient.get(`/best-players?teams=${teams.join(',')}`),
   },
 };
 

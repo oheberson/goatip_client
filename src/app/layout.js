@@ -4,14 +4,13 @@ import { DynamicThemeColor } from "@/components/dynamic-theme-color";
 import { ManifestUpdater } from "@/components/manifest-updater";
 
 export const metadata = {
-  title: "Goatip - Fantasy Soccer Helper",
-  description:
-    "Create the best fantasy soccer teams with player analysis and formation optimization",
+  title: "GOATIP - Ajudante Fantasy",
+  description: "Crie os melhores times fantasy com análises de dados",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Goatip",
+    title: "GOATIP",
   },
 };
 
@@ -46,7 +45,7 @@ export default function RootLayout({ children }) {
       <body className="antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >

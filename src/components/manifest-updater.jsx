@@ -9,12 +9,12 @@ export function ManifestUpdater() {
   useEffect(() => {
     const currentTheme = resolvedTheme || theme;
     const themeColor = currentTheme === "dark" ? "#0f172a" : "#ffffff";
-    
+
     // Create a dynamic manifest with the current theme color
     const manifest = {
-      name: "Goatip - Fantasy Soccer Helper",
+      name: "GOATIP - Ajudante Fantasy",
       short_name: "Goatip",
-      description: "Create the best fantasy soccer teams with player analysis and formation optimization",
+      description: "Crie os melhores times fantasy com análises de dados",
       start_url: "/",
       display: "standalone",
       background_color: themeColor,
@@ -26,17 +26,17 @@ export function ManifestUpdater() {
           src: "/icon.svg",
           sizes: "any",
           type: "image/svg+xml",
-          purpose: "maskable any"
-        }
+          purpose: "maskable any",
+        },
       ],
       categories: ["sports", "games", "entertainment"],
       lang: "en",
-      dir: "ltr"
+      dir: "ltr",
     };
 
     // Create a blob URL for the dynamic manifest
     const manifestBlob = new Blob([JSON.stringify(manifest)], {
-      type: "application/json"
+      type: "application/json",
     });
     const manifestURL = URL.createObjectURL(manifestBlob);
 
@@ -44,7 +44,7 @@ export function ManifestUpdater() {
     const manifestLink = document.querySelector('link[rel="manifest"]');
     if (manifestLink) {
       // Clean up the previous blob URL
-      if (manifestLink.href.startsWith('blob:')) {
+      if (manifestLink.href.startsWith("blob:")) {
         URL.revokeObjectURL(manifestLink.href);
       }
       manifestLink.href = manifestURL;
