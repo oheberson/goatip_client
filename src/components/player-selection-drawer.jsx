@@ -35,6 +35,7 @@ import {
   setPlayerSortToStorage,
   clearPlayerSortFromStorage,
 } from "@/lib/localStorage-utils";
+import { mapPlayerName } from "@/lib/constants";
 
 const POSITION_TYPES = {
   GK: "Goalkeeper",
@@ -104,8 +105,9 @@ export function PlayerSelectionDrawer({
   const positionLimits = getPositionLimits();
 
   // Check if this is a bench position
-  const isBenchPosition = selectedPosition && selectedPosition.startsWith("bench-");
-  
+  const isBenchPosition =
+    selectedPosition && selectedPosition.startsWith("bench-");
+
   // Get position limits - different for bench vs main team
   const getPositionLimitsForContext = () => {
     if (isBenchPosition) {
@@ -123,11 +125,13 @@ export function PlayerSelectionDrawer({
   const getSelectedPlayersForPosition = () => {
     if (isBenchPosition) {
       // For bench positions, check if the specific bench slot is filled
-      return selectedPosition && benchPlayers[selectedPosition] ? [benchPlayers[selectedPosition]] : [];
+      return selectedPosition && benchPlayers[selectedPosition]
+        ? [benchPlayers[selectedPosition]]
+        : [];
     } else {
       // For main team positions, count all players of this position type
       return Object.values(selectedPlayers).filter(
-        player => player.position === positionType
+        (player) => player.position === positionType
       );
     }
   };
@@ -168,9 +172,12 @@ export function PlayerSelectionDrawer({
       return false;
     }
 
+    // Map player name from players API to best-players API format
+    const mappedPlayerName = mapPlayerName(player.name);
+
     return bestPlayersData.some(
       (bestPlayer) =>
-        bestPlayer.player === player.name &&
+        bestPlayer.player === mappedPlayerName &&
         bestPlayer.team === player.teamName &&
         bestPlayer.pos === player.position
     );
@@ -268,7 +275,7 @@ export function PlayerSelectionDrawer({
 
   const handleSelectPlayer = (player) => {
     onSelectPlayer(player);
-    
+
     // Only close drawer if all slots for this position are filled
     if (currentCount + 1 >= maxPlayersForPosition) {
       onClose();
@@ -286,9 +293,12 @@ export function PlayerSelectionDrawer({
       return;
     }
 
+    // Map player name from players API to best-players API format
+    const mappedPlayerName = mapPlayerName(player.name);
+
     const matchingPlayer = bestPlayersData.find(
       (bestPlayer) =>
-        bestPlayer.player === player.name &&
+        bestPlayer.player === mappedPlayerName &&
         bestPlayer.team === player.teamName &&
         bestPlayer.pos === player.position
     );
@@ -332,7 +342,7 @@ export function PlayerSelectionDrawer({
     const isInBench = Object.values(benchPlayers).some(
       (selected) => selected.id === player.id
     );
-    
+
     return isInMainTeam || isInBench;
   };
 
@@ -343,7 +353,7 @@ export function PlayerSelectionDrawer({
     const isInBench = Object.values(benchPlayers).some(
       (selected) => selected.id === player.id
     );
-    
+
     if (isInMainTeam) return "main";
     if (isInBench) return "bench";
     return null;
@@ -472,7 +482,9 @@ export function PlayerSelectionDrawer({
           {isBenchPosition ? (
             <div className="mt-2 text-sm text-muted-foreground">
               {currentCount === 0 ? (
-                <span className="text-orange-600">Vaga disponível no banco</span>
+                <span className="text-orange-600">
+                  Vaga disponível no banco
+                </span>
               ) : (
                 <span className="text-green-600">Vaga preenchida no banco</span>
               )}
@@ -482,7 +494,8 @@ export function PlayerSelectionDrawer({
               {currentCount} de {maxPlayersForPosition} selecionados
               {currentCount < maxPlayersForPosition && (
                 <span className="text-green-600 ml-2">
-                  • {maxPlayersForPosition - currentCount} vaga(s) disponível(is)
+                  • {maxPlayersForPosition - currentCount} vaga(s)
+                  disponível(is)
                 </span>
               )}
             </div>
@@ -592,28 +605,44 @@ export function PlayerSelectionDrawer({
                             <ChartNoAxesColumn className="w-12 h-12 text-primary" />
                           </Button>
                         )}
-                         {isPlayerSelected(player) ? (
-                           <Button
-                             variant="outline"
-                             size="icon"
-                             onClick={() => handleRemovePlayer(player)}
-                             className="p-2 h-12 w-12 size-12"
-                             title={`Remove player from ${getPlayerSelectionContext(player) === 'main' ? 'starting eleven' : 'bench'}`}
-                           >
-                             <Minus className="w-12 h-12 text-red-600" />
-                           </Button>
-                         ) : (
-                           <Button
-                             variant="outline"
-                             size="icon"
-                             onClick={() => handleSelectPlayer(player)}
-                             disabled={!canAddMore}
-                             className="p-2 h-12 w-12 size-12"
-                             title={canAddMore ? `Add player to ${isBenchPosition ? 'bench' : 'starting eleven'}` : `All ${maxPlayersForPosition} slots filled`}
-                           >
-                             <CirclePlus className={`w-12 h-12 ${canAddMore ? 'text-green-600' : 'text-gray-400'}`} />
-                           </Button>
-                         )}
+                        {isPlayerSelected(player) ? (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleRemovePlayer(player)}
+                            className="p-2 h-12 w-12 size-12"
+                            title={`Remove player from ${
+                              getPlayerSelectionContext(player) === "main"
+                                ? "starting eleven"
+                                : "bench"
+                            }`}
+                          >
+                            <Minus className="w-12 h-12 text-red-600" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleSelectPlayer(player)}
+                            disabled={!canAddMore}
+                            className="p-2 h-12 w-12 size-12"
+                            title={
+                              canAddMore
+                                ? `Add player to ${
+                                    isBenchPosition
+                                      ? "bench"
+                                      : "starting eleven"
+                                  }`
+                                : `All ${maxPlayersForPosition} slots filled`
+                            }
+                          >
+                            <CirclePlus
+                              className={`w-12 h-12 ${
+                                canAddMore ? "text-green-600" : "text-gray-400"
+                              }`}
+                            />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>

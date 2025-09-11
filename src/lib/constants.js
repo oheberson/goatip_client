@@ -19,6 +19,15 @@ export const mapTeamName = (teamName) => {
   return TEAM_NAME_MAPPING[teamName] || teamName;
 };
 
+// Player name mapping from players API to best-players API
+export const PLAYER_NAME_MAPPING = {
+  "Chico da Costa": "Francisco da Costa",
+};
+
+export const mapPlayerName = (playerName) => {
+  return PLAYER_NAME_MAPPING[playerName] || playerName;
+};
+
 // Stat categories for player details drawer
 export const STAT_CATEGORIES = {
   attacking: {
