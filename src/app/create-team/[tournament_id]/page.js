@@ -31,6 +31,8 @@ import {
   getSavedTeamNames,
   deleteFormationFromStorage,
   getAllSavedTeams,
+  getRandomParamsFromStorage,
+  setRandomParamsToStorage,
 } from "@/lib/localStorage-utils";
 import {
   TOURNAMENTS,
@@ -40,6 +42,8 @@ import {
 import { FootballField } from "@/components/football-field";
 import { PlayerSelectionDrawer } from "@/components/player-selection-drawer";
 import { TeamNameDialog } from "@/components/team-name-dialog";
+import { RandomTeamCard } from "@/components/random-team-card";
+import { generateRandomTeam } from "@/lib/random-team-utils";
 
 export default function CreateTeamPage({ params }) {
   const router = useRouter();
@@ -69,6 +73,7 @@ export default function CreateTeamPage({ params }) {
   const [isLoadingFormation, setIsLoadingFormation] = useState(false);
   const [savedTeamsDropdownOpen, setSavedTeamsDropdownOpen] = useState(false);
   const [tournamentKey, setTournamentKey] = useState(null);
+  const [savedRandomParams, setSavedRandomParams] = useState(null);
 
   // Check if all required positions are filled
   const isFormationComplete = () => {
@@ -117,6 +122,10 @@ export default function CreateTeamPage({ params }) {
     if (tournamentKey) {
       const teamNames = getSavedTeamNames(tournamentKey);
       setSavedTeamNames(teamNames);
+      
+      // Load saved random parameters
+      const randomParams = getRandomParamsFromStorage(tournamentKey);
+      setSavedRandomParams(randomParams);
     }
   }, [tournamentKey]);
 
@@ -774,6 +783,39 @@ export default function CreateTeamPage({ params }) {
     }, 1000);
   };
 
+  // Handle random team generation
+  const handleGenerateRandomTeam = async (randomParams) => {
+    try {
+      // Save random parameters to localStorage
+      if (tournamentKey) {
+        setRandomParamsToStorage(tournamentKey, randomParams);
+        setSavedRandomParams(randomParams);
+      }
+
+      // Generate the random team
+      const { selectedPlayers: newSelectedPlayers, benchPlayers: newBenchPlayers } = generateRandomTeam(
+        playersData,
+        randomParams
+      );
+
+      // Update formation if different
+      if (randomParams.formation !== formation) {
+        setFormation(randomParams.formation);
+      }
+
+      // Clear current selections and set new ones
+      setSelectedPlayers(newSelectedPlayers);
+      setBenchPlayers(newBenchPlayers);
+
+      // Clear any existing analysis
+      setTeamAnalysis(null);
+    } catch (error) {
+      console.error("Error generating random team:", error);
+      alert("Erro ao gerar time aleatório. Tente novamente.");
+      throw error; // Re-throw to handle in dialog
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
@@ -928,6 +970,16 @@ export default function CreateTeamPage({ params }) {
               </CardContent>
             </Card>
           ) : null}
+
+          {/* Random Team Generation Card */}
+          {tournamentData && playersData && (
+            <RandomTeamCard
+              onGenerateTeam={handleGenerateRandomTeam}
+              playersData={playersData}
+              tournamentKey={tournamentKey}
+              savedRandomParams={savedRandomParams}
+            />
+          )}
 
           {/* Football Field */}
           {tournamentData && (

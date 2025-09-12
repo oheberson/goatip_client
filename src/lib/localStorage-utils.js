@@ -406,3 +406,49 @@ export const clearFormationsFromStorage = (tournamentKey) => {
     console.error('Error clearing formations from localStorage:', error);
   }
 };
+
+// Random Team Parameters Storage Keys
+const RANDOM_PARAMS_STORAGE_KEY = 'goatip_random_params';
+
+/**
+ * Get random team parameters from localStorage for a specific tournament
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
+ * @returns {Object|null} The random parameters or null if not found
+ */
+export const getRandomParamsFromStorage = (tournamentKey) => {
+  try {
+    const data = localStorage.getItem(`${RANDOM_PARAMS_STORAGE_KEY}_${tournamentKey}`);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error('Error getting random params from localStorage:', error);
+    return null;
+  }
+};
+
+/**
+ * Store random team parameters in localStorage for a specific tournament
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
+ * @param {Object} randomParams - The random parameters to store
+ * @returns {boolean} Success status
+ */
+export const setRandomParamsToStorage = (tournamentKey, randomParams) => {
+  try {
+    localStorage.setItem(`${RANDOM_PARAMS_STORAGE_KEY}_${tournamentKey}`, JSON.stringify(randomParams));
+    return true;
+  } catch (error) {
+    console.error('Error storing random params to localStorage:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear random team parameters from localStorage for a specific tournament
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
+ */
+export const clearRandomParamsFromStorage = (tournamentKey) => {
+  try {
+    localStorage.removeItem(`${RANDOM_PARAMS_STORAGE_KEY}_${tournamentKey}`);
+  } catch (error) {
+    console.error('Error clearing random params from localStorage:', error);
+  }
+};
