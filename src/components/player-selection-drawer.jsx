@@ -38,11 +38,11 @@ import {
 import { mapPlayerName } from "@/lib/constants";
 
 const POSITION_TYPES = {
-  GK: "Goalkeeper",
-  ZAG: "Defender",
+  GK: "Goleiro",
+  ZAG: "Zagueiro",
   LAT: "Lateral",
-  MEI: "Midfielder",
-  ATA: "Attacker",
+  MEI: "Meia",
+  ATA: "Atacante",
 };
 
 export function PlayerSelectionDrawer({
@@ -384,7 +384,7 @@ export function PlayerSelectionDrawer({
       case "expensive":
       case "cheapest":
         value = player.price || 0;
-        label = "Price";
+        label = "";
         formatted = `$${value.toLocaleString()}`;
         break;
       case "average":

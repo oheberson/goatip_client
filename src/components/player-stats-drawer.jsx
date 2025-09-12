@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { STAT_CATEGORIES } from "@/lib/constants";
+import { STAT_CATEGORIES, STATS_MAP } from "@/lib/constants";
 import { Target, Shield, ChevronsUp } from "lucide-react";
 
 const ICON_MAP = {
@@ -24,7 +24,8 @@ export function PlayerStatsDrawer({ player, isOpen, onClose }) {
   if (!player) return null;
 
   const formatStatName = (statName) => {
-    return statName
+    const translatedStatName = STATS_MAP[statName];
+    return translatedStatName
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");

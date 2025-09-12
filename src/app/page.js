@@ -58,17 +58,19 @@ export default function Home() {
             </Card>
           </Link>
 
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-3">
-                <BarChart3 className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="font-semibold mb-1">Analytics</h3>
-              <p className="text-sm text-muted-foreground">
-                Acompanhe dados de jogadores
-              </p>
-            </CardContent>
-          </Card>
+          <Link href="/stats">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-3">
+                  <BarChart3 className="w-6 h-6 text-green-600" />
+                </div>
+                <h3 className="font-semibold mb-1">Analytics</h3>
+                <p className="text-sm text-muted-foreground">
+                  Acompanhe dados de jogadores
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Recent Activity */}

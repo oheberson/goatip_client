@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getTeamColors } from "@/lib/constants";
 
 // Formation configurations
 const FORMATION_CONFIGS = {
@@ -161,15 +162,15 @@ export function FootballField({
 
     for (let i = 0; i < count; i++) {
       const positionType = getPositionType(rowIndex, i, count);
-      
+
       // Initialize counter for this position type if not exists
       if (!positionTypeCounters[positionType]) {
         positionTypeCounters[positionType] = 0;
       }
-      
+
       // Increment counter for this position type
       positionTypeCounters[positionType]++;
-      
+
       const positionKey = `${positionType}-${positionTypeCounters[positionType]}`;
       const isAvailable = hasAvailableSlots(positionType);
       const currentPlayer = selectedPlayers[positionKey];
@@ -183,7 +184,21 @@ export function FootballField({
         >
           {currentPlayer ? (
             <div className="relative">
-              <div className="w-12 h-12 bg-primary/20 border-2 border-primary rounded-full flex items-center justify-center text-xs font-bold text-black">
+              {console.log("carbonero>>>>", currentPlayer)}
+              <div
+                className="w-12 h-12 border-2 rounded-full flex items-center justify-center text-xs font-bold"
+                style={{
+                  background: getTeamColors(
+                    currentPlayer.teamName || currentPlayer.teamShortName
+                  ).gradient,
+                  color: getTeamColors(
+                    currentPlayer.teamName || currentPlayer.teamShortName
+                  ).textColor,
+                  borderColor: getTeamColors(
+                    currentPlayer.teamName || currentPlayer.teamShortName
+                  ).borderColor,
+                }}
+              >
                 {currentPlayer.teamShortName || "T"}
               </div>
               <Button
@@ -227,7 +242,7 @@ export function FootballField({
     return (
       <div
         key={rowIndex}
-        className="flex justify-center items-center space-x-4 mb-8"
+        className="flex justify-center items-center space-x-8 mb-8"
       >
         {positions}
       </div>
@@ -239,7 +254,7 @@ export function FootballField({
     const benchPositions = ["GOL", "ZAG", "LAT", "MEI", "ATA"];
 
     return (
-      <div className="flex justify-center items-center space-x-4 mt-4">
+      <div className="flex justify-center items-center space-x-6 mt-4">
         {benchPositions.map((positionType) => {
           const benchKey = `bench-${positionType}`;
           const isAvailable = isBenchPositionAvailable(positionType);
@@ -254,7 +269,20 @@ export function FootballField({
             >
               {currentPlayer ? (
                 <div className="relative">
-                  <div className="w-10 h-10 bg-secondary/20 border-2 border-secondary rounded-full flex items-center justify-center text-xs font-bold text-black">
+                  <div
+                    className="w-10 h-10 border-2 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{
+                      background: getTeamColors(
+                        currentPlayer.teamName || currentPlayer.teamShortName
+                      ).gradient,
+                      color: getTeamColors(
+                        currentPlayer.teamName || currentPlayer.teamShortName
+                      ).textColor,
+                      borderColor: getTeamColors(
+                        currentPlayer.teamName || currentPlayer.teamShortName
+                      ).borderColor,
+                    }}
+                  >
                     {currentPlayer.teamShortName || "T"}
                   </div>
                   <Button
@@ -279,7 +307,7 @@ export function FootballField({
               )}
 
               {/* Position label or player name underneath each button */}
-              <div className="absolute top-12 left-1/2 transform -translate-x-1/2 text-xs font-black text-center max-w-12">
+              <div className="absolute top-12 left-1/2 transform -translate-x-1/2 text-xs font-black text-center max-w-12 overflow-hidden">
                 {currentPlayer
                   ? formatPlayerName(currentPlayer.name)
                   : positionType}
@@ -324,7 +352,7 @@ export function FootballField({
 
   return (
     <div className="space-y-4">
-      <Card className="p-6">
+      <Card className="p-4">
         <div className="relative">
           {/* Football Field SVG */}
           <div className="relative w-full max-w-md mx-auto">
@@ -335,7 +363,7 @@ export function FootballField({
             />
 
             {/* Formation Overlay */}
-            <div className="absolute inset-0 flex flex-col justify-between py-8 px-4">
+            <div className="absolute inset-0 flex flex-col gap-8 justify-between py-8 px-4">
               {/* Attack Row (Top) */}
               {renderPositionRow(2, config.attack, "Attack")}
 
@@ -346,14 +374,14 @@ export function FootballField({
               {renderPositionRow(0, config.defense, "Defense")}
 
               {/* Goalkeeper Row (Very Bottom) */}
-              <div className="flex justify-center items-center mt-4">
+              <div className="flex justify-center items-center mt-2">
                 {renderPositionRow(3, 1, "")}
               </div>
             </div>
           </div>
 
           {/* Bench Row */}
-          <div className="my-6">
+          <div className="my-10">
             <div className="text-center mb-2">
               <div className="text-sm font-medium text-muted-foreground">
                 Banco de Reservas
@@ -384,7 +412,7 @@ export function FootballField({
       </Card>
 
       {/* Debug Card */}
-      <Card className="p-4">
+      {/* <Card className="p-4">
         <div className="text-sm font-medium mb-3">Debug - Selected Players</div>
         <div className="space-y-2 text-xs">
           <div>
@@ -412,7 +440,7 @@ export function FootballField({
               "None"}
           </div>
         </div>
-      </Card>
+      </Card> */}
     </div>
   );
 }

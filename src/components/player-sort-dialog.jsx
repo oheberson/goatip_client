@@ -11,17 +11,61 @@ import {
 } from "@/components/ui/dialog";
 
 const SORT_OPTIONS = [
-  { value: "expensive", label: "Expensive", description: "Sort by price (highest first)" },
-  { value: "cheapest", label: "Cheapest", description: "Sort by price (lowest first)" },
-  { value: "average", label: "Average", description: "Sort by average rating (highest first)" },
-  { value: "shots", label: "Shots", description: "Sort by total shots (highest first)" },
-  { value: "saves", label: "Saves", description: "Sort by saves (highest first)" },
-  { value: "sg", label: "SG", description: "Sort by SG (highest first)" },
-  { value: "tackles", label: "Tackles", description: "Sort by tackles (highest first)" },
-  { value: "interceptions", label: "Interceptions", description: "Sort by interceptions (highest first)" },
-  { value: "offsides", label: "Offsides", description: "Sort by offsides (highest first)" },
-  { value: "wrong_passes", label: "Wrong Passes", description: "Sort by wrong passes (highest first)" },
-  { value: "goals", label: "Goals", description: "Sort by goals (highest first)" },
+  {
+    value: "expensive",
+    label: "Mais caro",
+    description: "Ordene por preço (maior primeiro)",
+  },
+  {
+    value: "cheapest",
+    label: "Mais barato",
+    description: "Ordene por preço (menor primeiro)",
+  },
+  {
+    value: "average",
+    label: "Média",
+    description: "Ordene por média (maior primeiro)",
+  },
+  {
+    value: "shots",
+    label: "Chutes",
+    description: "Ordene por total de chutes (maior primeiro)",
+  },
+  {
+    value: "goals",
+    label: "Gols",
+    description: "Ordene por gols (maior primeiro)",
+  },
+  {
+    value: "saves",
+    label: "Defesas",
+    description: "Ordene por defesas (maior primeiro)",
+  },
+  {
+    value: "sg",
+    label: "SG",
+    description: "Ordene por SG (mais frequente primeiro)",
+  },
+  {
+    value: "tackles",
+    label: "Desarmes",
+    description: "Ordene por desarmes (maior primeiro)",
+  },
+  {
+    value: "interceptions",
+    label: "Interceptações",
+    description: "Ordene por interceptações (maior primeiro)",
+  },
+  {
+    value: "offsides",
+    label: "Impedimentos",
+    description: "Ordene por impedimentos (maior primeiro)",
+  },
+  {
+    value: "wrong_passes",
+    label: "Passes errados",
+    description: "Ordene por passes errados (maior primeiro)",
+  },
 ];
 
 export function PlayerSortDialog({
@@ -56,9 +100,9 @@ export function PlayerSortDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Sort Players</DialogTitle>
+          <DialogTitle>Ordenar</DialogTitle>
           <DialogDescription>
-            Choose how to sort the players by numerical parameters
+            Escolha como ordenar os jogadores pelas estatíticas numéricas
           </DialogDescription>
         </DialogHeader>
 
@@ -103,10 +147,10 @@ export function PlayerSortDialog({
               onClick={handleClearSort}
               className="flex-1"
             >
-              Clear Sort
+              Limpar
             </Button>
             <Button onClick={handleApplySort} className="flex-1">
-              Apply Sort
+              Aplicar
             </Button>
           </div>
         </div>

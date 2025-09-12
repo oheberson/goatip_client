@@ -285,12 +285,12 @@ const FORMATIONS_STORAGE_KEY = 'goatip_formations_data';
 
 /**
  * Get formations data from localStorage for a specific tournament
- * @param {string} tournamentId - The tournament ID
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
  * @returns {Object|null} The formations data or null if not found
  */
-export const getFormationsFromStorage = (tournamentId) => {
+export const getFormationsFromStorage = (tournamentKey) => {
   try {
-    const data = localStorage.getItem(`${FORMATIONS_STORAGE_KEY}_${tournamentId}`);
+    const data = localStorage.getItem(`${FORMATIONS_STORAGE_KEY}_${tournamentKey}`);
     return data ? JSON.parse(data) : null;
   } catch (error) {
     console.error('Error getting formations from localStorage:', error);
@@ -300,13 +300,13 @@ export const getFormationsFromStorage = (tournamentId) => {
 
 /**
  * Store formations data in localStorage for a specific tournament
- * @param {string} tournamentId - The tournament ID
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
  * @param {Object} formationsData - The formations data to store
  * @returns {boolean} Success status
  */
-export const setFormationsToStorage = (tournamentId, formationsData) => {
+export const setFormationsToStorage = (tournamentKey, formationsData) => {
   try {
-    localStorage.setItem(`${FORMATIONS_STORAGE_KEY}_${tournamentId}`, JSON.stringify(formationsData));
+    localStorage.setItem(`${FORMATIONS_STORAGE_KEY}_${tournamentKey}`, JSON.stringify(formationsData));
     return true;
   } catch (error) {
     console.error('Error storing formations to localStorage:', error);
@@ -316,16 +316,16 @@ export const setFormationsToStorage = (tournamentId, formationsData) => {
 
 /**
  * Save a specific formation to localStorage
- * @param {string} tournamentId - The tournament ID
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
  * @param {string} teamName - The team name (key)
  * @param {Object} formationData - The formation data to save
  * @returns {boolean} Success status
  */
-export const saveFormationToStorage = (tournamentId, teamName, formationData) => {
+export const saveFormationToStorage = (tournamentKey, teamName, formationData) => {
   try {
-    const existingFormations = getFormationsFromStorage(tournamentId) || {};
+    const existingFormations = getFormationsFromStorage(tournamentKey) || {};
     existingFormations[teamName] = formationData;
-    return setFormationsToStorage(tournamentId, existingFormations);
+    return setFormationsToStorage(tournamentKey, existingFormations);
   } catch (error) {
     console.error('Error saving formation to localStorage:', error);
     return false;
@@ -334,13 +334,13 @@ export const saveFormationToStorage = (tournamentId, teamName, formationData) =>
 
 /**
  * Get a specific formation from localStorage
- * @param {string} tournamentId - The tournament ID
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
  * @param {string} teamName - The team name (key)
  * @returns {Object|null} The formation data or null if not found
  */
-export const getFormationFromStorage = (tournamentId, teamName) => {
+export const getFormationFromStorage = (tournamentKey, teamName) => {
   try {
-    const formations = getFormationsFromStorage(tournamentId);
+    const formations = getFormationsFromStorage(tournamentKey);
     return formations && formations[teamName] ? formations[teamName] : null;
   } catch (error) {
     console.error('Error getting formation from localStorage:', error);
@@ -350,12 +350,12 @@ export const getFormationFromStorage = (tournamentId, teamName) => {
 
 /**
  * Get all saved team names for a tournament
- * @param {string} tournamentId - The tournament ID
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
  * @returns {string[]} Array of team names
  */
-export const getSavedTeamNames = (tournamentId) => {
+export const getSavedTeamNames = (tournamentKey) => {
   try {
-    const formations = getFormationsFromStorage(tournamentId);
+    const formations = getFormationsFromStorage(tournamentKey);
     return formations ? Object.keys(formations) : [];
   } catch (error) {
     console.error('Error getting saved team names:', error);
@@ -364,16 +364,31 @@ export const getSavedTeamNames = (tournamentId) => {
 };
 
 /**
+ * Get all saved teams data for analysis
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
+ * @returns {Object} Object containing all saved teams
+ */
+export const getAllSavedTeams = (tournamentKey) => {
+  try {
+    const formations = getFormationsFromStorage(tournamentKey);
+    return formations || {};
+  } catch (error) {
+    console.error('Error getting all saved teams:', error);
+    return {};
+  }
+};
+
+/**
  * Delete a specific formation from localStorage
- * @param {string} tournamentId - The tournament ID
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
  * @param {string} teamName - The team name (key)
  * @returns {boolean} Success status
  */
-export const deleteFormationFromStorage = (tournamentId, teamName) => {
+export const deleteFormationFromStorage = (tournamentKey, teamName) => {
   try {
-    const existingFormations = getFormationsFromStorage(tournamentId) || {};
+    const existingFormations = getFormationsFromStorage(tournamentKey) || {};
     delete existingFormations[teamName];
-    return setFormationsToStorage(tournamentId, existingFormations);
+    return setFormationsToStorage(tournamentKey, existingFormations);
   } catch (error) {
     console.error('Error deleting formation from localStorage:', error);
     return false;
@@ -382,11 +397,11 @@ export const deleteFormationFromStorage = (tournamentId, teamName) => {
 
 /**
  * Clear all formations for a tournament
- * @param {string} tournamentId - The tournament ID
+ * @param {string} tournamentKey - The unique tournament key (tournamentId + team names)
  */
-export const clearFormationsFromStorage = (tournamentId) => {
+export const clearFormationsFromStorage = (tournamentKey) => {
   try {
-    localStorage.removeItem(`${FORMATIONS_STORAGE_KEY}_${tournamentId}`);
+    localStorage.removeItem(`${FORMATIONS_STORAGE_KEY}_${tournamentKey}`);
   } catch (error) {
     console.error('Error clearing formations from localStorage:', error);
   }

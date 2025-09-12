@@ -27,6 +27,7 @@ import {
   setMatchesToStorage,
   hasValidMatchesData,
 } from "@/lib/localStorage-utils";
+import { TOURNAMENTS } from "@/lib/constants";
 
 export default function MatchesPage() {
   const router = useRouter();
@@ -40,6 +41,24 @@ export default function MatchesPage() {
     fetchMatches();
   }, []);
 
+  // Filter matches to only include supported tournaments
+  const filterSupportedTournaments = (matchesData) => {
+    if (!matchesData || typeof matchesData !== 'object') {
+      return {};
+    }
+
+    const supportedTournamentIds = Object.keys(TOURNAMENTS);
+    const filteredMatches = {};
+
+    Object.entries(matchesData).forEach(([tournamentId, tournamentData]) => {
+      if (supportedTournamentIds.includes(tournamentId)) {
+        filteredMatches[tournamentId] = tournamentData;
+      }
+    });
+
+    return filteredMatches;
+  };
+
   const fetchMatches = async () => {
     try {
       setLoading(true);
@@ -49,7 +68,8 @@ export default function MatchesPage() {
       const cachedData = getMatchesFromStorage();
       if (cachedData) {
         console.log("Using cached matches data");
-        setMatches(cachedData);
+        const filteredCachedData = filterSupportedTournaments(cachedData);
+        setMatches(filteredCachedData);
         setLoading(false);
         return;
       }
@@ -58,9 +78,12 @@ export default function MatchesPage() {
       console.log("Fetching matches from API");
       const data = await api.matches.getAll();
 
+      // Filter to only include supported tournaments
+      const filteredData = filterSupportedTournaments(data);
+
       // Store in localStorage for future use
-      setMatchesToStorage(data);
-      setMatches(data);
+      setMatchesToStorage(filteredData);
+      setMatches(filteredData);
     } catch (err) {
       console.error("Failed to fetch matches:", err);
       setError(`Failed to load matches. Please try again.`);
@@ -69,11 +92,12 @@ export default function MatchesPage() {
       const fallbackData = getMatchesFromStorage();
       if (fallbackData) {
         console.log("Using expired cached data as fallback");
-        setMatches(fallbackData);
+        const filteredFallbackData = filterSupportedTournaments(fallbackData);
+        setMatches(filteredFallbackData);
         setError(null);
       } else {
         // Mock data for development
-        setMatches({
+        const mockData = {
           brasileiro_2025: {
             championshipName: "Brasileiro 2025",
             matches: [
@@ -125,7 +149,9 @@ export default function MatchesPage() {
               },
             ],
           },
-        });
+        };
+        const filteredMockData = filterSupportedTournaments(mockData);
+        setMatches(filteredMockData);
       }
     } finally {
       setLoading(false);

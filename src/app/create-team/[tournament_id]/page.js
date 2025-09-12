@@ -10,7 +10,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, Users, Save, Plus, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  Save,
+  Plus,
+  AlertCircle,
+  Loader,
+  ArrowBigDownDash,
+  Trash2,
+} from "lucide-react";
 import { api } from "@/lib/api-utils";
 import {
   getTournamentFromStorage,
@@ -21,8 +30,13 @@ import {
   getFormationFromStorage,
   getSavedTeamNames,
   deleteFormationFromStorage,
+  getAllSavedTeams,
 } from "@/lib/localStorage-utils";
-import { TOURNAMENTS, mapTeamName } from "@/lib/constants";
+import {
+  TOURNAMENTS,
+  mapTeamName,
+  generateTournamentKey,
+} from "@/lib/constants";
 import { FootballField } from "@/components/football-field";
 import { PlayerSelectionDrawer } from "@/components/player-selection-drawer";
 import { TeamNameDialog } from "@/components/team-name-dialog";
@@ -53,6 +67,8 @@ export default function CreateTeamPage({ params }) {
   const [selectedSavedTeam, setSelectedSavedTeam] = useState("");
   const [teamNameDialogOpen, setTeamNameDialogOpen] = useState(false);
   const [isLoadingFormation, setIsLoadingFormation] = useState(false);
+  const [savedTeamsDropdownOpen, setSavedTeamsDropdownOpen] = useState(false);
+  const [tournamentKey, setTournamentKey] = useState(null);
 
   // Check if all required positions are filled
   const isFormationComplete = () => {
@@ -98,13 +114,32 @@ export default function CreateTeamPage({ params }) {
 
   // Load saved team names when component mounts
   useEffect(() => {
-    const teamNames = getSavedTeamNames(tournamentId);
-    setSavedTeamNames(teamNames);
-  }, [tournamentId]);
+    if (tournamentKey) {
+      const teamNames = getSavedTeamNames(tournamentKey);
+      setSavedTeamNames(teamNames);
+    }
+  }, [tournamentKey]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        savedTeamsDropdownOpen &&
+        !event.target.closest(".saved-teams-dropdown")
+      ) {
+        setSavedTeamsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [savedTeamsDropdownOpen]);
 
   // Save formation
   const handleSaveFormation = (teamName) => {
-    if (!isFormationComplete()) {
+    if (!isFormationComplete() || !tournamentKey) {
       return;
     }
 
@@ -116,13 +151,13 @@ export default function CreateTeamPage({ params }) {
     };
 
     const success = saveFormationToStorage(
-      tournamentId,
+      tournamentKey,
       teamName,
       formationData
     );
     if (success) {
       // Update saved team names list
-      const updatedTeamNames = getSavedTeamNames(tournamentId);
+      const updatedTeamNames = getSavedTeamNames(tournamentKey);
       setSavedTeamNames(updatedTeamNames);
       setTeamNameDialogOpen(false);
     }
@@ -130,10 +165,10 @@ export default function CreateTeamPage({ params }) {
 
   // Load formation
   const handleLoadFormation = (teamName) => {
-    if (!teamName) return;
+    if (!teamName || !tournamentKey) return;
 
     setIsLoadingFormation(true);
-    const formationData = getFormationFromStorage(tournamentId, teamName);
+    const formationData = getFormationFromStorage(tournamentKey, teamName);
 
     if (formationData) {
       // Update formation
@@ -172,10 +207,10 @@ export default function CreateTeamPage({ params }) {
 
   // Delete formation
   const handleDeleteFormation = (teamName) => {
-    if (window.confirm(`Deseja deletar o time"${teamName}"?`)) {
-      const success = deleteFormationFromStorage(tournamentId, teamName);
+    if (window.confirm(`Deseja deletar o time "${teamName}"?`)) {
+      const success = deleteFormationFromStorage(tournamentKey, teamName);
       if (success) {
-        const updatedTeamNames = getSavedTeamNames(tournamentId);
+        const updatedTeamNames = getSavedTeamNames(tournamentKey);
         setSavedTeamNames(updatedTeamNames);
         if (selectedSavedTeam === teamName) {
           setSelectedSavedTeam("");
@@ -266,6 +301,14 @@ export default function CreateTeamPage({ params }) {
 
         setTournamentData(tournament);
         console.log("Loaded tournament data:", tournament);
+
+        // Generate unique tournament key
+        const uniqueKey = generateTournamentKey(
+          tournamentId,
+          tournament.matches || []
+        );
+        setTournamentKey(uniqueKey);
+        console.log("Generated tournament key:", uniqueKey);
 
         // Fetch best players data if tournament is available
         await fetchBestPlayersData(tournamentId, tournament.matches || []);
@@ -449,13 +492,111 @@ export default function CreateTeamPage({ params }) {
     setTeamAnalysis(null); // Clear analysis when formation changes
   };
 
-  // Team analysis function
-  const analyzeTeam = () => {
+  // Team analysis function - analyzes all saved teams
+  const analyzeAllTeams = () => {
+    if (!tournamentKey) return null;
+
+    const allSavedTeams = getAllSavedTeams(tournamentKey);
+    const teamNames = Object.keys(allSavedTeams);
+
+    if (teamNames.length === 0) {
+      return {
+        totalTeams: 0,
+        teams: [],
+        overallAnalysis: {
+          completeness: ["Nenhum time salvo para análise"],
+          positionComposition: {},
+          teamDistribution: {},
+          expectedScore: 0,
+        },
+      };
+    }
+
     const analysis = {
+      totalTeams: teamNames.length,
+      teams: [],
+      overallAnalysis: {
+        completeness: [],
+        positionComposition: {},
+        teamDistribution: {},
+        expectedScore: 0,
+      },
+    };
+
+    // Analyze each saved team
+    teamNames.forEach((teamName) => {
+      const teamData = allSavedTeams[teamName];
+      const teamAnalysis = analyzeSingleTeam(teamData, teamName);
+      analysis.teams.push(teamAnalysis);
+    });
+
+    // Calculate overall analysis
+    const allPlayers = [];
+    analysis.teams.forEach((team) => {
+      allPlayers.push(...team.allPlayers);
+    });
+
+    // Overall team distribution
+    const calculateTeamPercentages = (players) => {
+      if (players.length === 0) return {};
+
+      const teamCounts = {};
+      players.forEach((player) => {
+        const team = player.teamShortName || "Unknown";
+        teamCounts[team] = (teamCounts[team] || 0) + 1;
+      });
+
+      const percentages = {};
+      Object.entries(teamCounts).forEach(([team, count]) => {
+        percentages[team] = Math.round((count / players.length) * 100);
+      });
+
+      return percentages;
+    };
+
+    analysis.overallAnalysis.teamDistribution =
+      calculateTeamPercentages(allPlayers);
+
+    // Overall expected score
+    const calculatePlayerExpectedScore = (player) => {
+      if (!player.scouts?.average) return 0;
+
+      const averages = player.scouts.average;
+      let totalScore = 0;
+      let statCount = 0;
+
+      Object.values(averages).forEach((value) => {
+        if (typeof value === "number") {
+          totalScore += value;
+          statCount++;
+        }
+      });
+
+      return statCount > 0 ? totalScore : 0;
+    };
+
+    analysis.overallAnalysis.expectedScore = allPlayers.reduce(
+      (total, player) => {
+        return total + calculatePlayerExpectedScore(player);
+      },
+      0
+    );
+
+    return analysis;
+  };
+
+  // Analyze a single team
+  const analyzeSingleTeam = (teamData, teamName) => {
+    const { formation, selectedPlayers, benchPlayers } = teamData;
+
+    const analysis = {
+      teamName,
+      formation,
       completeness: [],
       positionComposition: {},
       teamDistribution: {},
       expectedScore: 0,
+      allPlayers: [],
     };
 
     // Get formation configuration
@@ -493,25 +634,6 @@ export default function CreateTeamPage({ params }) {
 
     const positionLimits = getPositionLimits();
 
-    // Get bench limits
-    const getBenchLimits = () => {
-      const benchLimits = {
-        GOL: 1,
-        ZAG: 1,
-        LAT: 1,
-        MEI: 1,
-        ATA: 1,
-      };
-
-      if (formation === "3-5-2" || formation === "3-4-3") {
-        benchLimits.LAT = 0;
-      }
-
-      return benchLimits;
-    };
-
-    const benchLimits = getBenchLimits();
-
     // Count current players by position
     const getCurrentPlayerCount = (positionType) => {
       return Object.values(selectedPlayers).filter(
@@ -529,17 +651,10 @@ export default function CreateTeamPage({ params }) {
     Object.entries(positionLimits).forEach(([pos, limit]) => {
       const currentCount = getCurrentPlayerCount(pos);
       const benchCount = getCurrentBenchCount(pos);
-      const benchLimit = benchLimits[pos] || 0;
 
       if (currentCount < limit) {
         analysis.completeness.push(
           `Faltam ${limit - currentCount} jogador(es) para a posição ${pos}`
-        );
-      }
-
-      if (benchLimit > 0 && benchCount < benchLimit) {
-        analysis.completeness.push(
-          `Falta 1 jogador reserva para a posição ${pos}`
         );
       }
     });
@@ -620,6 +735,7 @@ export default function CreateTeamPage({ params }) {
       ...Object.values(selectedPlayers),
       ...Object.values(benchPlayers),
     ];
+    analysis.allPlayers = allPlayers;
     analysis.teamDistribution = calculateTeamPercentages(allPlayers);
 
     // 4. Expected fantasy score calculation
@@ -652,7 +768,7 @@ export default function CreateTeamPage({ params }) {
 
     // Simulate analysis delay for better UX
     setTimeout(() => {
-      const analysis = analyzeTeam();
+      const analysis = analyzeAllTeams();
       setTeamAnalysis(analysis);
       setAnalyzing(false);
     }, 1000);
@@ -710,7 +826,7 @@ export default function CreateTeamPage({ params }) {
                   className="mt-3"
                   onClick={() => router.push("/matches")}
                 >
-                  Back to Matches
+                  Voltar aos Torneios
                 </Button>
               </CardContent>
             </Card>
@@ -723,16 +839,14 @@ export default function CreateTeamPage({ params }) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* Formation Selector */}
-                  <div className="space-y-2">
-                    <label htmlFor="formation" className="text-sm font-medium">
-                      Formação
-                    </label>
+                  {/* Formation and Controls Row */}
+                  <div className="flex items-center gap-2">
+                    {/* Formation Selector */}
                     <select
                       id="formation"
                       value={formation}
                       onChange={(e) => handleFormationChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                     >
                       {formations.map((form) => (
                         <option key={form.value} value={form.value}>
@@ -740,67 +854,76 @@ export default function CreateTeamPage({ params }) {
                         </option>
                       ))}
                     </select>
-                  </div>
 
-                  {/* Saved Teams Dropdown */}
-                  {savedTeamNames.length > 0 && (
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="saved-teams"
-                        className="text-sm font-medium"
+                    {/* Saved Teams Dropdown Trigger */}
+                    {savedTeamNames.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setSavedTeamsDropdownOpen(!savedTeamsDropdownOpen)
+                        }
+                        className="px-3"
+                        title="Times Salvos"
                       >
-                        Times Salvos
-                      </label>
-                      <div className="flex gap-2">
-                        <select
-                          id="saved-teams"
-                          value={selectedSavedTeam}
-                          onChange={(e) => {
-                            setSelectedSavedTeam(e.target.value);
-                            handleLoadFormation(e.target.value);
-                          }}
-                          className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                        >
-                          <option value="">Selecione um time salvo...</option>
-                          {savedTeamNames.map((teamName) => (
-                            <option key={teamName} value={teamName}>
-                              {teamName}
-                            </option>
-                          ))}
-                        </select>
-                        {selectedSavedTeam && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleDeleteFormation(selectedSavedTeam)
-                            }
-                            className="px-3"
-                            title="Deletar time"
-                          >
-                            <AlertCircle className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                        <ArrowBigDownDash className="w-4 h-4" />
+                      </Button>
+                    )}
 
-                  {/* Save Button */}
-                  <div className="space-y-2">
+                    {/* Delete Team Button */}
+                    {savedTeamNames.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteFormation(selectedSavedTeam)}
+                        disabled={!selectedSavedTeam}
+                        className="px-3"
+                        title="Deletar time"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+
+                    {/* Save Button */}
                     <Button
                       onClick={() => setTeamNameDialogOpen(true)}
                       disabled={!isFormationComplete() || isLoadingFormation}
-                      className="w-full"
+                      size="sm"
+                      className="px-3"
+                      title="Salvar time"
                     >
-                      <Save className="w-4 h-4 mr-2" />
-                      {isLoadingFormation ? "Carregando..." : "Salvar Time"}
+                      {isLoadingFormation ? (
+                        <Loader className="w-4 h-4" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
                     </Button>
-                    {!isFormationComplete() && (
-                      <p className="text-xs text-muted-foreground">
-                        Complete todas as posições para salvar
-                      </p>
-                    )}
                   </div>
+
+                  {/* Saved Teams Dropdown */}
+                  {savedTeamsDropdownOpen && savedTeamNames.length > 0 && (
+                    <div className="saved-teams-dropdown border border-input rounded-md bg-background">
+                      <div className="max-h-32 overflow-y-auto">
+                        {savedTeamNames.map((teamName) => (
+                          <button
+                            key={teamName}
+                            onClick={() => {
+                              setSelectedSavedTeam(teamName);
+                              handleLoadFormation(teamName);
+                              setSavedTeamsDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
+                              selectedSavedTeam === teamName
+                                ? "bg-muted font-medium"
+                                : ""
+                            }`}
+                          >
+                            {teamName}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -820,189 +943,180 @@ export default function CreateTeamPage({ params }) {
             />
           )}
 
-          {/* Create Team Button */}
-          <Card className="mt-6">
-            <CardContent className="p-4">
-              <Button
-                onClick={handleAnalyzeTeam}
-                className="w-full"
-                disabled={analyzing || !tournamentData || tournamentError}
-              >
-                {analyzing ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    <span>Analisando...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Save className="w-4 h-4" />
-                    <span>Analisar Time</span>
-                  </div>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Analyze Teams Button - Only show if teams are saved */}
+          {savedTeamNames.length > 0 && (
+            <Card className="mt-6">
+              <CardContent className="p-4">
+                <Button
+                  onClick={handleAnalyzeTeam}
+                  className="w-full"
+                  disabled={analyzing || !tournamentData || tournamentError}
+                >
+                  {analyzing ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <span>Analisando {savedTeamNames.length} time(s)...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Save className="w-4 h-4" />
+                      <span>
+                        Analisar {savedTeamNames.length} Time(s) Salvos
+                      </span>
+                    </div>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Analysis */}
           {teamAnalysis && (
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle className="text-lg">Análise do Time</CardTitle>
+                <CardTitle className="text-lg">
+                  Análise de {teamAnalysis.totalTeams} Time(s)
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {/* 1. Completeness Analysis */}
-                {teamAnalysis.completeness.length > 0 && (
+              <CardContent className="space-y-6">
+                {/* Overall Analysis */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-base">Análise Geral</h3>
+
+                  {/* Overall Team Distribution */}
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-orange-600">
-                      Posições Incompletas
+                    <h4 className="text-sm font-medium">
+                      Distribuição de Times
                     </h4>
-                    <ul className="space-y-1">
-                      {teamAnalysis.completeness.map((item, index) => (
-                        <li
-                          key={index}
-                          className="text-sm text-muted-foreground"
-                        >
-                          • {item}
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="text-sm text-muted-foreground">
+                      {Object.keys(
+                        teamAnalysis.overallAnalysis.teamDistribution
+                      ).length > 0
+                        ? Object.entries(
+                            teamAnalysis.overallAnalysis.teamDistribution
+                          )
+                            .map(
+                              ([team, percentage]) => `${percentage}% ${team}`
+                            )
+                            .join(", ")
+                        : "Nenhum jogador selecionado"}
+                    </div>
                   </div>
-                )}
 
-                {/* 2. Position Composition */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-black">Composição por Posição</h4>
-
-                  {/* Defense */}
-                  {Object.keys(teamAnalysis.positionComposition.defense)
-                    .length > 0 && (
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium">Defesa:</div>
-                      <div className="text-sm text-muted-foreground">
-                        {Object.entries(
-                          teamAnalysis.positionComposition.defense
-                        )
-                          .map(([team, percentage]) => `${percentage}% ${team}`)
-                          .join(", ")}
-                      </div>
+                  {/* Overall Expected Score */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">
+                      Pontuação Total Esperada
+                    </h4>
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium text-lg">
+                        {(
+                          teamAnalysis.overallAnalysis.expectedScore.toFixed(
+                            1
+                          ) / teamAnalysis.totalTeams
+                        ).toFixed(1)}
+                      </span>{" "}
+                      pontos (média de todos os times)
                     </div>
-                  )}
-
-                  {/* Midfield */}
-                  {Object.keys(teamAnalysis.positionComposition.midfield)
-                    .length > 0 && (
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium">Meio-campo:</div>
-                      <div className="text-sm text-muted-foreground">
-                        {Object.entries(
-                          teamAnalysis.positionComposition.midfield
-                        )
-                          .map(([team, percentage]) => `${percentage}% ${team}`)
-                          .join(", ")}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Attack */}
-                  {Object.keys(teamAnalysis.positionComposition.attack).length >
-                    0 && (
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium">Ataque:</div>
-                      <div className="text-sm text-muted-foreground">
-                        {Object.entries(teamAnalysis.positionComposition.attack)
-                          .map(([team, percentage]) => `${percentage}% ${team}`)
-                          .join(", ")}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 3. Strategic Analysis */}
-                <div className="space-y-2">
-                  <h4 className="font-black text-sm">Análise Estratégica</h4>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    {(() => {
-                      const insights = [];
-                      const defense = teamAnalysis.positionComposition.defense;
-                      const midfield =
-                        teamAnalysis.positionComposition.midfield;
-                      const attack = teamAnalysis.positionComposition.attack;
-
-                      // Defense analysis
-                      const defenseTeams = Object.keys(defense);
-                      if (
-                        defenseTeams.length === 1 &&
-                        defense[defenseTeams[0]] === 100
-                      ) {
-                        insights.push(
-                          `Sua defesa é 100% ${defenseTeams[0]} - você espera que esta seleção não sofra gols.`
-                        );
-                      } else if (defenseTeams.length > 0) {
-                        insights.push(
-                          `Defesa diversificada entre ${defenseTeams.join(
-                            ", "
-                          )} - estratégia equilibrada.`
-                        );
-                      }
-
-                      // Midfield analysis
-                      const midfieldTeams = Object.keys(midfield);
-                      if (midfieldTeams.length > 0) {
-                        const dominantTeam = Object.entries(midfield).find(
-                          ([_, p]) => p >= 66
-                        );
-                        if (dominantTeam) {
-                          insights.push(
-                            `Meio-campo dominado por ${dominantTeam[0]} (${dominantTeam[1]}%) - espera-se muitos desarmes e interceptações.`
-                          );
-                        } else {
-                          insights.push(
-                            `Meio-campo equilibrado - boa distribuição de responsabilidades.`
-                          );
-                        }
-                      }
-
-                      // Attack analysis
-                      const attackTeams = Object.keys(attack);
-                      if (
-                        attackTeams.length === 1 &&
-                        attack[attackTeams[0]] === 100
-                      ) {
-                        insights.push(
-                          `Ataque 100% ${attackTeams[0]} - você espera muitos gols desta seleção.`
-                        );
-                      } else if (attackTeams.length > 0) {
-                        insights.push(
-                          `Ataque diversificado - múltiplas fontes de gols.`
-                        );
-                      }
-
-                      return insights.length > 0
-                        ? insights
-                        : [
-                            "Time ainda em construção - complete as posições para análise completa.",
-                          ];
-                    })().map((insight, index) => (
-                      <div key={index}>• {insight}</div>
-                    ))}
                   </div>
                 </div>
 
-                {/* 4. Expected Fantasy Score */}
-                <div className="space-y-2">
-                  <h4 className="font-black text-sm">Pontuação Esperada</h4>
-                  <div className="text-sm text-muted-foreground">
-                    Pontuação total esperada:{" "}
-                    <span className="font-medium text-lg">
-                      {teamAnalysis.expectedScore.toFixed(1)}
-                    </span>{" "}
-                    pontos
+                {/* Individual Team Analysis */}
+                {teamAnalysis.teams.map((team, index) => (
+                  <div key={index} className="space-y-4 border-t pt-4">
+                    <h3 className="font-bold text-base">{team.teamName}</h3>
+                    <div className="text-sm text-muted-foreground">
+                      Formação: {team.formation}
+                    </div>
+
+                    {/* Team Completeness */}
+                    {team.completeness.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm text-orange-600">
+                          Posições Incompletas
+                        </h4>
+                        <ul className="space-y-1">
+                          {team.completeness.map((item, itemIndex) => (
+                            <li
+                              key={itemIndex}
+                              className="text-sm text-muted-foreground"
+                            >
+                              • {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Team Position Composition */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium">
+                        Composição por Posição
+                      </h4>
+
+                      {/* Defense */}
+                      {Object.keys(team.positionComposition.defense).length >
+                        0 && (
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium">Defesa:</div>
+                          <div className="text-sm text-muted-foreground">
+                            {Object.entries(team.positionComposition.defense)
+                              .map(
+                                ([teamName, percentage]) =>
+                                  `${percentage}% ${teamName}`
+                              )
+                              .join(", ")}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Midfield */}
+                      {Object.keys(team.positionComposition.midfield).length >
+                        0 && (
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium">Meio-campo:</div>
+                          <div className="text-sm text-muted-foreground">
+                            {Object.entries(team.positionComposition.midfield)
+                              .map(
+                                ([teamName, percentage]) =>
+                                  `${percentage}% ${teamName}`
+                              )
+                              .join(", ")}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Attack */}
+                      {Object.keys(team.positionComposition.attack).length >
+                        0 && (
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium">Ataque:</div>
+                          <div className="text-sm text-muted-foreground">
+                            {Object.entries(team.positionComposition.attack)
+                              .map(
+                                ([teamName, percentage]) =>
+                                  `${percentage}% ${teamName}`
+                              )
+                              .join(", ")}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Team Expected Score */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">
+                        Pontuação Esperada
+                      </h4>
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium">
+                          {team.expectedScore.toFixed(1)}
+                        </span>{" "}
+                        pontos
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Baseado na média de estatísticas de todos os jogadores
-                    selecionados
-                  </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
           )}

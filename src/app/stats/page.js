@@ -16,11 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
 import { TOURNAMENTS } from "@/lib/constants";
 import { PlayerStatsDrawer } from "@/components/player-stats-drawer";
-import {
-  Trophy,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { Trophy, TrendingUp, Users, ArrowDownUp } from "lucide-react";
 
 function PlayerCard({ player, onClick }) {
   return (
@@ -59,14 +55,13 @@ function PlayerCard({ player, onClick }) {
   );
 }
 
-
 function TournamentSelector({
   tournaments,
   selectedTournament,
   onSelectTournament,
 }) {
   return (
-    <div className="mb-6">
+    <div className="mb-6 px-2">
       <h3 className="text-sm font-medium text-muted-foreground mb-3">
         Campeonatos disponíveis
       </h3>
@@ -95,7 +90,7 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedTournament, setSelectedTournament] =
-    useState("brasileirao-2025");
+    useState("brasileirao_2025");
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -159,7 +154,7 @@ export default function StatsPage() {
           onSelectTournament={handleTournamentChange}
         />
 
-        <div className="mb-6">
+        <div className="mb-2 px-2 w-full">
           <p className="text-muted-foreground text-sm italic">
             Dados das últimas 8 rodadas
           </p>
@@ -197,15 +192,22 @@ export default function StatsPage() {
 
         {/* Players List */}
         {!loading && !error && players.length > 0 && (
-          <div className="space-y-3">
-            {players.map((player, index) => (
-              <PlayerCard
-                key={`${player.player}-${index}`}
-                player={player}
-                onClick={() => handlePlayerClick(player)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="my-4 px-2 flex flex-row justify-between">
+              <h1 className="font-black">Melhores Jogadores</h1>
+              {/* <ArrowDownUp /> */}
+            </div>
+
+            <div className="space-y-3">
+              {players.map((player, index) => (
+                <PlayerCard
+                  key={`${player.player}-${index}`}
+                  player={player}
+                  onClick={() => handlePlayerClick(player)}
+                />
+              ))}
+            </div>
+          </>
         )}
 
         {/* Empty State */}

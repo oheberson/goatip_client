@@ -63,7 +63,6 @@ export function PlayerFilterDialog({
     }));
   };
 
-
   const handleApplyFilters = () => {
     onFiltersChange(localFilters);
     onOpenChange(false);
@@ -79,10 +78,7 @@ export function PlayerFilterDialog({
   };
 
   const hasActiveFilters = () => {
-    return (
-      localFilters.teams?.length > 0 ||
-      localFilters.statuses?.length > 0
-    );
+    return localFilters.teams?.length > 0 || localFilters.statuses?.length > 0;
   };
 
   return (
@@ -90,9 +86,9 @@ export function PlayerFilterDialog({
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Filtro</DialogTitle>
-          {/* <DialogDescription>
-            Select filters to narrow down your player search
-          </DialogDescription> */}
+          <DialogDescription>
+            Escolha como filtrar os jogadores
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -150,7 +146,6 @@ export function PlayerFilterDialog({
             </div>
           </div>
 
-
           {/* Action Buttons */}
           <div className="flex space-x-2 pt-4">
             <Button
@@ -158,10 +153,10 @@ export function PlayerFilterDialog({
               onClick={handleClearFilters}
               className="flex-1"
             >
-              Clear All
+              Limpar
             </Button>
             <Button onClick={handleApplyFilters} className="flex-1">
-              Apply Filters
+              Aplicar
             </Button>
           </div>
         </div>
