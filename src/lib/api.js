@@ -12,6 +12,7 @@ class ApiClient {
     const config = {
       headers: {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "69420",
         ...options.headers,
       },
       ...options,
@@ -123,7 +124,7 @@ export const api = {
     getBestPlayers: (tournamentId) =>
       apiClient.get(`/best-players?tournament_id=${tournamentId}`),
     getBestPlayersByTeams: (teams) =>
-      apiClient.get(`/best-players?teams=${teams.join(',')}`),
+      apiClient.get(`/best-players?teams=${teams.join(",")}`),
   },
 };
 
