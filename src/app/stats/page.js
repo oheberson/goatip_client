@@ -286,7 +286,11 @@ export default function StatsPage() {
         {/* Players List */}
         {!loading && !error && players.length > 0 && (
           <>
-            <div className="my-4 px-2 flex flex-row justify-between items-center">
+            <div
+              className={`my-4 px-2 flex flex-row items-center ${
+                currentView === "list" ? "justify-between" : "justify-end"
+              }`}
+            >
               {currentView === "list" && (
                 <PlayerSortDialog
                   currentSort={sortBy}
