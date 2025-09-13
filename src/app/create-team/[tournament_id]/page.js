@@ -513,11 +513,12 @@ export default function CreateTeamPage({ params }) {
         totalTeams: 0,
         teams: [],
         overallAnalysis: {
-          completeness: ["Nenhum time salvo para análise"],
           positionComposition: {},
           teamDistribution: {},
           expectedScore: 0,
         },
+        playerDependency: [],
+        playerGrouping: {},
       };
     }
 
@@ -525,11 +526,12 @@ export default function CreateTeamPage({ params }) {
       totalTeams: teamNames.length,
       teams: [],
       overallAnalysis: {
-        completeness: [],
         positionComposition: {},
         teamDistribution: {},
         expectedScore: 0,
       },
+      playerDependency: [],
+      playerGrouping: {},
     };
 
     // Analyze each saved team
@@ -591,7 +593,149 @@ export default function CreateTeamPage({ params }) {
       0
     );
 
+    // Player dependency analysis
+    analysis.playerDependency = calculatePlayerDependency(allSavedTeams, teamNames.length);
+
+    // Player grouping analysis
+    analysis.playerGrouping = calculatePlayerGrouping(allSavedTeams);
+
     return analysis;
+  };
+
+  // Calculate player dependency - how often each player appears across teams
+  const calculatePlayerDependency = (allSavedTeams, totalTeams) => {
+    const playerCounts = {};
+    
+    // Count how many teams each player appears in
+    Object.values(allSavedTeams).forEach((teamData) => {
+      const allPlayers = [
+        ...Object.values(teamData.selectedPlayers),
+        ...Object.values(teamData.benchPlayers),
+      ];
+      
+      // Use a Set to avoid counting the same player multiple times in the same team
+      const uniquePlayers = new Set();
+      allPlayers.forEach((player) => {
+        uniquePlayers.add(player.id);
+      });
+      
+      uniquePlayers.forEach((playerId) => {
+        const player = allPlayers.find(p => p.id === playerId);
+        if (player) {
+          const key = `${player.name} (${player.teamShortName})`;
+          if (!playerCounts[key]) {
+            playerCounts[key] = {
+              name: player.name,
+              team: player.teamShortName,
+              position: player.position,
+              count: 0,
+              percentage: 0,
+            };
+          }
+          playerCounts[key].count++;
+        }
+      });
+    });
+    
+    // Calculate percentages and sort by dependency
+    const dependencyList = Object.values(playerCounts).map(player => ({
+      ...player,
+      percentage: Math.round((player.count / totalTeams) * 100),
+    }));
+    
+    return dependencyList.sort((a, b) => b.percentage - a.percentage);
+  };
+
+  // Calculate player grouping - find frequent player combinations per position
+  const calculatePlayerGrouping = (allSavedTeams) => {
+    const positionGroups = {
+      GOL: {},
+      ZAG: {},
+      LAT: {},
+      MEI: {},
+      ATA: {},
+    };
+    
+    // Group players by position and find combinations
+    Object.values(allSavedTeams).forEach((teamData) => {
+      const allPlayers = [
+        ...Object.values(teamData.selectedPlayers),
+        ...Object.values(teamData.benchPlayers),
+      ];
+      
+      // Group players by position
+      const playersByPosition = {};
+      allPlayers.forEach((player) => {
+        if (!playersByPosition[player.position]) {
+          playersByPosition[player.position] = [];
+        }
+        playersByPosition[player.position].push(player);
+      });
+      
+      // For each position, find combinations of 2 or more players
+      Object.entries(playersByPosition).forEach(([position, players]) => {
+        if (players.length >= 2) {
+          // Create all possible combinations of 2 or more players
+          const combinations = generateCombinations(players, 2);
+          
+          combinations.forEach((combination) => {
+            const key = combination
+              .map(p => `${p.name} (${p.teamShortName})`)
+              .sort()
+              .join(' + ');
+            
+            if (!positionGroups[position][key]) {
+              positionGroups[position][key] = {
+                players: combination,
+                count: 0,
+                percentage: 0,
+              };
+            }
+            positionGroups[position][key].count++;
+          });
+        }
+      });
+    });
+    
+    // Calculate percentages and filter out single occurrences
+    const totalTeams = Object.keys(allSavedTeams).length;
+    const result = {};
+    
+    Object.entries(positionGroups).forEach(([position, groups]) => {
+      const validGroups = Object.values(groups)
+        .filter(group => group.count > 1)
+        .map(group => ({
+          ...group,
+          percentage: Math.round((group.count / totalTeams) * 100),
+        }))
+        .sort((a, b) => b.percentage - a.percentage);
+      
+      if (validGroups.length > 0) {
+        result[position] = validGroups;
+      }
+    });
+    
+    return result;
+  };
+
+  // Helper function to generate combinations
+  const generateCombinations = (arr, minSize) => {
+    const combinations = [];
+    
+    const combine = (start, current) => {
+      if (current.length >= minSize) {
+        combinations.push([...current]);
+      }
+      
+      for (let i = start; i < arr.length; i++) {
+        current.push(arr[i]);
+        combine(i + 1, current);
+        current.pop();
+      }
+    };
+    
+    combine(0, []);
+    return combinations;
   };
 
   // Analyze a single team
@@ -601,7 +745,6 @@ export default function CreateTeamPage({ params }) {
     const analysis = {
       teamName,
       formation,
-      completeness: [],
       positionComposition: {},
       teamDistribution: {},
       expectedScore: 0,
@@ -656,17 +799,7 @@ export default function CreateTeamPage({ params }) {
       ).length;
     };
 
-    // 1. Check completeness
-    Object.entries(positionLimits).forEach(([pos, limit]) => {
-      const currentCount = getCurrentPlayerCount(pos);
-      const benchCount = getCurrentBenchCount(pos);
-
-      if (currentCount < limit) {
-        analysis.completeness.push(
-          `Faltam ${limit - currentCount} jogador(es) para a posição ${pos}`
-        );
-      }
-    });
+    // Completeness check removed - teams can only be saved when complete
 
     // 2. Position composition analysis
     const getAllPlayersByPosition = () => {
@@ -1073,102 +1206,90 @@ export default function CreateTeamPage({ params }) {
                   </div>
                 </div>
 
-                {/* Individual Team Analysis */}
-                {teamAnalysis.teams.map((team, index) => (
-                  <div key={index} className="space-y-4 border-t pt-4">
-                    <h3 className="font-bold text-base">{team.teamName}</h3>
-                    <div className="text-sm text-muted-foreground">
-                      Formação: {team.formation}
+                {/* Player Dependency Analysis */}
+                {teamAnalysis.playerDependency.length > 0 && (
+                  <div className="space-y-4 border-t pt-4">
+                    <h3 className="font-bold text-base">Dependência de Jogadores</h3>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Frequência de cada jogador nos times salvos
                     </div>
-
-                    {/* Team Completeness */}
-                    {team.completeness.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-sm text-orange-600">
-                          Posições Incompletas
-                        </h4>
-                        <ul className="space-y-1">
-                          {team.completeness.map((item, itemIndex) => (
-                            <li
-                              key={itemIndex}
-                              className="text-sm text-muted-foreground"
-                            >
-                              • {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Team Position Composition */}
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium">
-                        Composição por Posição
-                      </h4>
-
-                      {/* Defense */}
-                      {Object.keys(team.positionComposition.defense).length >
-                        0 && (
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium">Defesa:</div>
-                          <div className="text-sm text-muted-foreground">
-                            {Object.entries(team.positionComposition.defense)
-                              .map(
-                                ([teamName, percentage]) =>
-                                  `${percentage}% ${teamName}`
-                              )
-                              .join(", ")}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Midfield */}
-                      {Object.keys(team.positionComposition.midfield).length >
-                        0 && (
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium">Meio-campo:</div>
-                          <div className="text-sm text-muted-foreground">
-                            {Object.entries(team.positionComposition.midfield)
-                              .map(
-                                ([teamName, percentage]) =>
-                                  `${percentage}% ${teamName}`
-                              )
-                              .join(", ")}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Attack */}
-                      {Object.keys(team.positionComposition.attack).length >
-                        0 && (
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium">Ataque:</div>
-                          <div className="text-sm text-muted-foreground">
-                            {Object.entries(team.positionComposition.attack)
-                              .map(
-                                ([teamName, percentage]) =>
-                                  `${percentage}% ${teamName}`
-                              )
-                              .join(", ")}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Team Expected Score */}
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium">
-                        Pontuação Esperada
-                      </h4>
-                      <div className="text-sm text-muted-foreground">
-                        <span className="font-medium">
-                          {team.expectedScore.toFixed(1)}
-                        </span>{" "}
-                        pontos
-                      </div>
+                      {teamAnalysis.playerDependency.map((player, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{player.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {player.team} • {player.position}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium text-sm">
+                              {player.count}/{teamAnalysis.totalTeams}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {player.percentage}%
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
+
+                {/* Player Grouping Analysis */}
+                {Object.keys(teamAnalysis.playerGrouping).length > 0 && (
+                  <div className="space-y-4 border-t pt-4">
+                    <h3 className="font-bold text-base">Grupos de Jogadores Frequentes</h3>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Jogadores que aparecem juntos frequentemente por posição
+                    </div>
+                    <div className="space-y-4">
+                      {Object.entries(teamAnalysis.playerGrouping).map(([position, groups]) => (
+                        <div key={position} className="space-y-2">
+                          <h4 className="font-medium text-sm capitalize">
+                            {position === 'GOL' ? 'Goleiro' :
+                             position === 'ZAG' ? 'Zagueiro' :
+                             position === 'LAT' ? 'Lateral' :
+                             position === 'MEI' ? 'Meio-campo' :
+                             position === 'ATA' ? 'Ataque' : position}
+                          </h4>
+                          <div className="space-y-2">
+                            {groups.map((group, groupIndex) => (
+                              <div key={groupIndex} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">
+                                    {group.players.map(p => p.name).join(' + ')}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {group.players.map(p => p.teamShortName).join(', ')}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-medium text-sm">
+                                    {group.count}/{teamAnalysis.totalTeams}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {group.percentage}%
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No grouping message */}
+                {Object.keys(teamAnalysis.playerGrouping).length === 0 && teamAnalysis.totalTeams > 1 && (
+                  <div className="space-y-4 border-t pt-4">
+                    <h3 className="font-bold text-base">Grupos de Jogadores Frequentes</h3>
+                    <div className="text-sm text-muted-foreground">
+                      Nenhum grupo de jogadores frequente encontrado
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

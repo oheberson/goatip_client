@@ -5,9 +5,15 @@ export const TOURNAMENTS = {
     name: "Brasileirão",
     season: "2025",
   },
+  /*
   elite_brasileira: {
     id: "elite_brasileira",
     name: "Elite Brasileira",
+    season: "2025",
+  },
+  unicos_brasileirao_2025: {
+    id: "unicos_brasileirao_2025",
+    name: "Únicos Brasileirão",
     season: "2025",
   },
   laliga_2526: {
@@ -20,11 +26,7 @@ export const TOURNAMENTS = {
     name: "Premier League",
     season: "2526",
   },
-  unicos_brasileirao_2025: {
-    id: "unicos_brasileirao_2025",
-    name: "Únicos Brasileirão",
-    season: "2025",
-  },
+  
   bundesliga_2526: {
     id: "bundesliga_2526",
     name: "Bundesliga",
@@ -34,7 +36,7 @@ export const TOURNAMENTS = {
     id: "italiano_2526",
     name: "Italiano",
     season: "2526",
-  },
+  }, */
 };
 
 // Team name mapping for API compatibility
@@ -58,6 +60,8 @@ export const mapPlayerName = (playerName) => {
 };
 
 export const STATS_MAP = {
+  weighted_fantasy_score: "fantasy_score",
+  games_played: "jogos_totais",
   goals: "gols",
   assists: "assistências",
   off_target_shot: "finalização_para_fora",
@@ -66,7 +70,7 @@ export const STATS_MAP = {
   tackles: "desarmes",
   interceptions: "interceptações",
   saves: "defesas",
-  goals_against: "gols_contra",
+  goals_against: "gols_concedidos",
   team_total_goals_conceded: "gols_concedidos_pelo_time",
   fouls_commited: "faltas_cometidas",
   fouls_drawn: "faltas_recebidas",
@@ -447,10 +451,10 @@ export const generateTournamentKey = (tournamentId, matches = []) => {
 
   // Extract team names from matches and create unique identifier
   const teamNames = matches
-    .map(match => [match.firstTeamName, match.secondTeamName])
+    .map((match) => [match.firstTeamName, match.secondTeamName])
     .flat()
     .filter(Boolean)
-    .join('_');
+    .join("_");
 
   return `${tournamentId}_${teamNames}`;
 };

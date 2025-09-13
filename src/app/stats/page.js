@@ -14,11 +14,62 @@ import {
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
-import { TOURNAMENTS } from "@/lib/constants";
+import { TOURNAMENTS, STATS_MAP } from "@/lib/constants";
 import { PlayerStatsDrawer } from "@/components/player-stats-drawer";
+import { PlayerSortDialog } from "@/components/player-sort-dialog";
+import {
+  ViewToggle,
+  PositionStatsChart,
+  PositionRadarChart,
+  Top10PlayersChart,
+  TopTeamsChart,
+  transformPlayerDataByPosition,
+} from "@/components/charts";
 import { Trophy, TrendingUp, Users, ArrowDownUp } from "lucide-react";
 
-function PlayerCard({ player, onClick }) {
+function PlayerCard({ player, onClick, sortBy = "weighted_fantasy_score" }) {
+  const formatStatName = (statName) => {
+    const translatedStatName = STATS_MAP[statName];
+    return translatedStatName
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+  const getDisplayValue = (player, statKey) => {
+    const value = player[statKey] || 0;
+    const label = formatStatName(statKey) || statKey;
+
+    // Format the value based on the stat type
+    let formattedValue;
+    if (statKey === "weighted_fantasy_score") {
+      formattedValue = value.toFixed(1);
+    } else if (statKey === "games_played") {
+      formattedValue = value.toString();
+    } else if (
+      statKey === "goals" ||
+      statKey === "assists" ||
+      statKey === "saves" ||
+      statKey === "tackles" ||
+      statKey === "interceptions" ||
+      statKey === "yellow_cards" ||
+      statKey === "red_cards" ||
+      statKey === "offsides" ||
+      statKey === "penalties_lost" ||
+      statKey === "penalties_saved" ||
+      statKey === "wrong_passes"
+    ) {
+      formattedValue = value.toString();
+    } else {
+      // For other stats, show with 1 decimal place
+      formattedValue = value.toFixed(1);
+    }
+
+    return { value, label, formattedValue };
+  };
+
+  const displayData = getDisplayValue(player, sortBy);
+
   return (
     <Card
       className="cursor-pointer hover:shadow-md transition-shadow"
@@ -42,9 +93,11 @@ function PlayerCard({ player, onClick }) {
                 {player.team}
               </p>
               <div className="flex flex-col items-end">
-                <p className="text-sm text-muted-foreground mb-2">Méd. Pts.</p>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {displayData.label}
+                </p>
                 <span className="font-bold text-primary">
-                  {player.weighted_fantasy_score.toFixed(1)}
+                  {displayData.formattedValue}
                 </span>
               </div>
             </div>
@@ -93,6 +146,8 @@ export default function StatsPage() {
     useState("brasileirao_2025");
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [currentView, setCurrentView] = useState("list"); // 'list' or 'dynamic'
+  const [sortBy, setSortBy] = useState("weighted_fantasy_score");
 
   const fetchBestPlayers = async (tournamentId) => {
     setLoading(true);
@@ -126,6 +181,42 @@ export default function StatsPage() {
     setSelectedTournament(tournamentId);
   };
 
+  const handleViewChange = (view) => {
+    setCurrentView(view);
+  };
+
+  const handleSortChange = (sortKey) => {
+    setSortBy(sortKey);
+  };
+
+  // Sort players based on selected criteria
+  const sortedPlayers = [...players].sort((a, b) => {
+    const aValue = a[sortBy] || 0;
+    const bValue = b[sortBy] || 0;
+
+    // For most stats, higher is better, but for some defensive stats, lower is better
+    const reverseSortStats = [
+      "goals_against",
+      "team_total_goals_conceded",
+      "fouls_commited",
+      "yellow_cards",
+      "red_cards",
+      "offsides",
+      "penalties_lost",
+      "wrong_passes",
+    ];
+
+    if (reverseSortStats.includes(sortBy)) {
+      return aValue - bValue; // Lower is better
+    }
+
+    return bValue - aValue; // Higher is better
+  });
+
+  // Transform data for charts when in dynamic view
+  const positionData =
+    currentView === "dynamic" ? transformPlayerDataByPosition(players) : [];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
@@ -147,6 +238,7 @@ export default function StatsPage() {
 
       {/* Main Content */}
       <main className="px-4 py-6">
+        <h1 className="font-black px-2 mb-2">Melhores Jogadores</h1>
         {/* Tournament Selector */}
         <TournamentSelector
           tournaments={TOURNAMENTS}
@@ -154,9 +246,12 @@ export default function StatsPage() {
           onSelectTournament={handleTournamentChange}
         />
 
-        <div className="mb-2 px-2 w-full">
-          <p className="text-muted-foreground text-sm italic">
-            Dados das últimas 8 rodadas
+        <div className="flex flex-col gap-0 mb-2 -mt-2 px-2 w-full">
+          <p className="text-muted-foreground text-xs italic">
+            *Dados das últimas 8 rodadas
+          </p>
+          <p className="text-muted-foreground text-xs italic">
+            *Lista de 150 jogadores
           </p>
         </div>
 
@@ -191,20 +286,98 @@ export default function StatsPage() {
         {/* Players List */}
         {!loading && !error && players.length > 0 && (
           <>
-            <div className="my-4 px-2 flex flex-row justify-between">
-              <h1 className="font-black">Melhores Jogadores</h1>
-              {/* <ArrowDownUp /> */}
+            <div className="my-4 px-2 flex flex-row justify-between items-center">
+              {currentView === "list" && (
+                <PlayerSortDialog
+                  currentSort={sortBy}
+                  onSortChange={handleSortChange}
+                />
+              )}
+              <div className="flex items-center gap-2">
+                <ViewToggle
+                  currentView={currentView}
+                  onViewChange={handleViewChange}
+                />
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {players.map((player, index) => (
-                <PlayerCard
-                  key={`${player.player}-${index}`}
-                  player={player}
-                  onClick={() => handlePlayerClick(player)}
-                />
-              ))}
-            </div>
+            {currentView === "list" ? (
+              <div className="space-y-3">
+                {sortedPlayers.map((player, index) => (
+                  <PlayerCard
+                    key={`${player.player}-${index}`}
+                    player={player}
+                    onClick={() => handlePlayerClick(player)}
+                    sortBy={sortBy}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Position Statistics Chart */}
+                <Card>
+                  <CardContent className="flex flex-col p-6">
+                    <div className="mb-4">
+                      <h2 className="text-lg font-semibold mb-2">
+                        Média de Pontos por Posição
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Comparação da pontuação média dos jogadores agrupados
+                        por posição
+                      </p>
+                    </div>
+                    <PositionStatsChart data={positionData} />
+                  </CardContent>
+                </Card>
+
+                {/* Position Radar Analysis Chart */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="mb-4">
+                      <h2 className="text-lg font-semibold mb-2">
+                        Análise Detalhada por Posição
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Estatísticas que mais contribuem para a pontuação de
+                        cada posição
+                      </p>
+                    </div>
+                    <PositionRadarChart players={players} />
+                  </CardContent>
+                </Card>
+
+                {/* Top 10 Players by Category Chart */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="mb-4">
+                      <h2 className="text-lg font-semibold mb-2">
+                        Top 10 Jogadores por Categoria
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Ranking dos melhores jogadores em cada categoria de
+                        estatísticas
+                      </p>
+                    </div>
+                    <Top10PlayersChart players={players} />
+                  </CardContent>
+                </Card>
+
+                {/* Top Teams by Category Chart */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="mb-4">
+                      <h2 className="text-lg font-semibold mb-2">
+                        Ranking dos Times por Categoria
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Comparação dos times em cada categoria de estatísticas
+                      </p>
+                    </div>
+                    <TopTeamsChart players={players} />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </>
         )}
 

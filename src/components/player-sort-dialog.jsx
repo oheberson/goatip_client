@@ -1,158 +1,92 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ArrowDownUp } from "lucide-react";
+import { STATS_MAP } from "@/lib/constants";
 
-const SORT_OPTIONS = [
-  {
-    value: "expensive",
-    label: "Mais caro",
-    description: "Ordene por preço (maior primeiro)",
-  },
-  {
-    value: "cheapest",
-    label: "Mais barato",
-    description: "Ordene por preço (menor primeiro)",
-  },
-  {
-    value: "average",
-    label: "Média",
-    description: "Ordene por média (maior primeiro)",
-  },
-  {
-    value: "shots",
-    label: "Chutes",
-    description: "Ordene por total de chutes (maior primeiro)",
-  },
-  {
-    value: "goals",
-    label: "Gols",
-    description: "Ordene por gols (maior primeiro)",
-  },
-  {
-    value: "saves",
-    label: "Defesas",
-    description: "Ordene por defesas (maior primeiro)",
-  },
-  {
-    value: "sg",
-    label: "SG",
-    description: "Ordene por SG (mais frequente primeiro)",
-  },
-  {
-    value: "tackles",
-    label: "Desarmes",
-    description: "Ordene por desarmes (maior primeiro)",
-  },
-  {
-    value: "interceptions",
-    label: "Interceptações",
-    description: "Ordene por interceptações (maior primeiro)",
-  },
-  {
-    value: "offsides",
-    label: "Impedimentos",
-    description: "Ordene por impedimentos (maior primeiro)",
-  },
-  {
-    value: "wrong_passes",
-    label: "Passes errados",
-    description: "Ordene por passes errados (maior primeiro)",
-  },
+const SORTABLE_STATS = [
+  "weighted_fantasy_score",
+  "games_played",
+  "goals",
+  "assists",
+  "off_target_shot",
+  "saved_shot",
+  "woodwork_shot",
+  "tackles",
+  "interceptions",
+  "saves",
+  "goals_against",
+  "team_total_goals_conceded",
+  "fouls_commited",
+  "fouls_drawn",
+  "yellow_cards",
+  "red_cards",
+  "offsides",
+  "penalties_lost",
+  "penalties_saved",
+  "wrong_passes",
 ];
 
-export function PlayerSortDialog({
-  isOpen,
-  onOpenChange,
-  sortOption,
-  onSortChange,
-}) {
-  const [localSortOption, setLocalSortOption] = useState(sortOption);
+export function PlayerSortDialog({ currentSort, onSortChange }) {
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Update local sort option when props change
-  useEffect(() => {
-    setLocalSortOption(sortOption);
-  }, [sortOption]);
-
-  const handleSortSelect = (option) => {
-    const newSortOption = localSortOption === option ? null : option;
-    setLocalSortOption(newSortOption);
+  const handleSortSelect = (sortKey) => {
+    onSortChange(sortKey);
+    setIsOpen(false);
   };
 
-  const handleApplySort = () => {
-    onSortChange(localSortOption);
-    onOpenChange(false);
+  const hasActiveSort = () => {
+    return currentSort !== "weighted_fantasy_score";
   };
 
-  const handleClearSort = () => {
-    setLocalSortOption(null);
-    onSortChange(null);
+  const formatStatName = (statName) => {
+    const translatedStatName = STATS_MAP[statName];
+    return translatedStatName
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={`flex items-center gap-2 ${
+            hasActiveSort() ? "border-primary bg-primary/5" : ""
+          }`}
+        >
+          <ArrowDownUp className="w-4 h-4" />
+          Ordenar
+          {hasActiveSort() && (
+            <div className="w-2 h-2 bg-primary rounded-full ml-1" />
+          )}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Ordenar</DialogTitle>
-          <DialogDescription>
-            Escolha como ordenar os jogadores pelas estatíticas numéricas
-          </DialogDescription>
+          <DialogTitle>Ordenar por</DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Sort Options */}
-          <div className="space-y-2">
-            {SORT_OPTIONS.map((option) => (
-              <div
-                key={option.value}
-                className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg border transition-colors ${
-                  localSortOption === option.value
-                    ? "bg-primary/10 border-primary"
-                    : "hover:bg-muted/50 border-border"
-                }`}
-                onClick={() => handleSortSelect(option.value)}
-              >
-                <div
-                  className={`w-4 h-4 border-2 rounded-full flex items-center justify-center ${
-                    localSortOption === option.value
-                      ? "bg-primary border-primary"
-                      : "border-muted-foreground"
-                  }`}
-                >
-                  {localSortOption === option.value && (
-                    <div className="w-2 h-2 bg-primary-foreground rounded-full" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-sm">{option.label}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {option.description}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex space-x-2 pt-4">
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {SORTABLE_STATS.map((statKey) => (
             <Button
-              variant="outline"
-              onClick={handleClearSort}
-              className="flex-1"
+              key={statKey}
+              variant={currentSort === statKey ? "default" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => handleSortSelect(statKey)}
             >
-              Limpar
+              {formatStatName(statKey) || statKey}
             </Button>
-            <Button onClick={handleApplySort} className="flex-1">
-              Aplicar
-            </Button>
-          </div>
+          ))}
         </div>
       </DialogContent>
     </Dialog>
