@@ -32,9 +32,9 @@ export default function Home() {
     if (!loading) {
       if (!user) {
         router.replace("/subscribe");
-      } else if (user && !isSubscribed) {
-        router.replace("/subscribe");
       }
+      // Removed the redirect for authenticated but non-subscribed users
+      // They can now access the home page and explore with demo data
     }
   }, [user, loading, isSubscribed, router]);
 

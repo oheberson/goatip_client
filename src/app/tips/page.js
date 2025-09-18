@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import DemoWarning from "@/components/demo-warning";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Navigation } from "@/components/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { STATS_MAP, TOURNAMENTS_MAP_NAMES } from "@/lib/constants";
 import { TipsDrawer } from "@/components/tips-drawer";
 import { Questions } from "@/components/questions";
@@ -141,6 +143,7 @@ function ViewToggle({ currentView, onViewChange }) {
 }
 
 export default function TipsPage() {
+  const { isSubscribed } = useAuth();
   const [tipsData, setTipsData] = useState({
     teams: [],
     players: [],
@@ -192,7 +195,7 @@ export default function TipsPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.tips.getTips();
+      const data = await api.tips.getTips(isSubscribed);
       setTipsData(data);
       // Set default tournament to the first available one
       if (data.teams.length > 0 || data.players.length > 0) {
@@ -241,7 +244,7 @@ export default function TipsPage() {
   };
 
   return (
-    <ProtectedRoute requireSubscription={true}>
+    <ProtectedRoute allowDemo={true}>
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
         {/* Header */}
         <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -262,6 +265,8 @@ export default function TipsPage() {
 
         {/* Main Content */}
         <main className="px-4 py-6">
+          {/* Demo Warning for non-subscribers */}
+          {!isSubscribed && <DemoWarning />}
           <div className="flex items-center gap-2 px-2 mb-2">
             <h1 className="font-black">Dicas de Valor</h1>
             <Questions

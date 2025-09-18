@@ -13,7 +13,7 @@ import {
 import {
   Check,
   X,
-  LogIn,
+  ArrowLeft,
   Crown,
   ArrowRight,
   Star,
@@ -139,6 +139,15 @@ export default function SubscribePage() {
 
       {/* Main Content */}
       <main className="px-4 py-8">
+        {user && !isSubscribed && (
+          <Link
+            href="/"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Link>
+        )}
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-12">
@@ -167,7 +176,7 @@ export default function SubscribePage() {
                   {message && (
                     <p
                       className={`text-sm ${
-                        message.includes("Confira no seu")
+                        message.includes("Confira em seu")
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
@@ -313,7 +322,7 @@ export default function SubscribePage() {
                   {message && (
                     <p
                       className={`text-sm ${
-                        message.includes("Confira no seu")
+                        message.includes("Confira em seu")
                           ? "text-green-600"
                           : "text-red-600"
                       }`}

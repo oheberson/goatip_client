@@ -13,6 +13,7 @@ import {
   Mail,
   Crown,
   LogOut,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,10 @@ export function MobileMenu() {
     { icon: BarChart3, label: "Stats", href: "/stats" },
     { icon: User, label: "Tips", href: "/tips" },
   ];
+
+  const handleSubscribe = () => {
+    router.push("/subscribe");
+  };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -84,23 +89,33 @@ export function MobileMenu() {
                     </>
                   ) : (
                     <>
-                      <Circle className="h-4 w-4 text-muted-foreground" />
-                      <Badge variant="secondary">Free</Badge>
+                      <AlertTriangle className="h-4 w-4 text-muted-foreground text-amber-600 dark:text-amber-400" />
+                      <Badge variant="secondary">Demo</Badge>
                     </>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    signOut();
-                    setOpen(false);
-                  }}
-                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sair
-                </Button>
+                <div className="w-full flex flex-col gap-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      signOut();
+                      setOpen(false);
+                    }}
+                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sair
+                  </Button>
+                  <Button
+                    onClick={handleSubscribe}
+                    size="sm"
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 flex-shrink-0"
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    Assinar
+                  </Button>
+                </div>
               </div>
             </div>
           )}

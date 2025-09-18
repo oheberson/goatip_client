@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function ProtectedRoute({ children, requireSubscription = false }) {
+export default function ProtectedRoute({ children, requireSubscription = false, allowDemo = false }) {
   const { user, loading, isSubscribed } = useAuth();
   const router = useRouter();
 
@@ -15,12 +15,16 @@ export default function ProtectedRoute({ children, requireSubscription = false }
         return;
       }
       
-      if (requireSubscription && !isSubscribed) {
+      // If requireSubscription is true and allowDemo is false, redirect to subscribe
+      if (requireSubscription && !allowDemo && !isSubscribed) {
         router.replace('/subscribe');
         return;
       }
+      
+      // If requireSubscription is true and allowDemo is true, allow access but show demo content
+      // This is handled by the component itself
     }
-  }, [user, loading, isSubscribed, requireSubscription, router]);
+  }, [user, loading, isSubscribed, requireSubscription, allowDemo, router]);
 
   if (loading) {
     return (
@@ -37,7 +41,8 @@ export default function ProtectedRoute({ children, requireSubscription = false }
     return null; // Will redirect to login
   }
 
-  if (requireSubscription && !isSubscribed) {
+  // If requireSubscription is true, allowDemo is false, and user is not subscribed, redirect
+  if (requireSubscription && !allowDemo && !isSubscribed) {
     return null; // Will redirect to subscribe
   }
 

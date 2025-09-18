@@ -3,6 +3,8 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/contexts/AuthContext";
+import DemoWarning from "@/components/demo-warning";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +23,7 @@ import {
   ArrowBigDownDash,
   Trash2,
 } from "lucide-react";
-import { api } from "@/lib/api-utils";
+import { api } from "@/lib/api";
 import {
   getTournamentFromStorage,
   getBestPlayersFromStorage,
@@ -50,6 +52,7 @@ export default function CreateTeamPage({ params }) {
   const router = useRouter();
   const resolvedParams = use(params);
   const tournamentId = resolvedParams.tournament_id;
+  const { isSubscribed } = useAuth();
   const [teamName, setTeamName] = useState("");
   const [formation, setFormation] = useState("4-3-3");
   const [loading, setLoading] = useState(false);
@@ -278,7 +281,8 @@ export default function CreateTeamPage({ params }) {
 
       const data = await api.analytics.getBestPlayersByTeams(
         teamsArray,
-        tournamentId
+        tournamentId,
+        isSubscribed
       );
       setBestPlayersData(data.data || data);
 
@@ -326,7 +330,7 @@ export default function CreateTeamPage({ params }) {
 
         const playersData = await api.players.getByTournament(
           tournamentId,
-          tournament.matches[0]?.id
+          isSubscribed
         );
         setPlayersData(playersData);
       } catch (error) {
@@ -355,7 +359,7 @@ export default function CreateTeamPage({ params }) {
         created_at: new Date().toISOString(),
       };
 
-      await api.fantasyTeams.create(teamData);
+      await api.fantasyTeams.create(teamData, isSubscribed);
 
       // Redirect to teams page after successful creation
       router.push("/teams");
@@ -981,6 +985,8 @@ export default function CreateTeamPage({ params }) {
 
         {/* Main Content */}
         <main className="px-4 py-6">
+          {/* Demo Warning for non-subscribers */}
+          {!isSubscribed && <DemoWarning />}
           <div className="max-w-md mx-auto">
             {/* Tournament Info Card */}
             {tournamentLoading ? (

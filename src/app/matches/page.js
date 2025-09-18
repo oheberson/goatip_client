@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import DemoWarning from "@/components/demo-warning";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Navigation } from "@/components/navigation";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,8 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Circle, Clock, Calendar, MapPin, MoveRight } from "lucide-react";
-import { api } from "@/lib/api-utils";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   getMatchesFromStorage,
   setMatchesToStorage,
@@ -32,6 +34,7 @@ import { TOURNAMENTS } from "@/lib/constants";
 
 export default function MatchesPage() {
   const router = useRouter();
+  const { isSubscribed } = useAuth();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -77,7 +80,7 @@ export default function MatchesPage() {
 
       // If no cached data, fetch from API
       console.log("Fetching matches from API");
-      const data = await api.matches.getAll();
+      const data = await api.matches.getAll(isSubscribed);
 
       // Filter to only include supported tournaments
       const filteredData = filterSupportedTournaments(data);
@@ -189,7 +192,7 @@ export default function MatchesPage() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowDemo={true}>
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
       <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -210,6 +213,8 @@ export default function MatchesPage() {
 
       {/* Main Content */}
       <main className="px-4 py-6">
+        {/* Demo Warning for non-subscribers */}
+        {!isSubscribed && <DemoWarning />}
         {/* Header Section */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-1">Próximos torneios fantasy</h2>

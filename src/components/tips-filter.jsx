@@ -27,6 +27,7 @@ export function TipsFilter({
 
   const formatStatName = (statName) => {
     const translatedStatName = STATS_MAP[statName];
+
     return translatedStatName
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
