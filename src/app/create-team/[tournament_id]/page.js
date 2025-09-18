@@ -122,7 +122,7 @@ export default function CreateTeamPage({ params }) {
     if (tournamentKey) {
       const teamNames = getSavedTeamNames(tournamentKey);
       setSavedTeamNames(teamNames);
-      
+
       // Load saved random parameters
       const randomParams = getRandomParamsFromStorage(tournamentKey);
       setSavedRandomParams(randomParams);
@@ -275,13 +275,16 @@ export default function CreateTeamPage({ params }) {
       const teamsArray = Array.from(teamNames);
       console.log("Fetching best players for teams:", teamsArray);
 
-      const data = await api.analytics.getBestPlayersByTeams(teamsArray);
+      const data = await api.analytics.getBestPlayersByTeams(
+        teamsArray,
+        tournamentId
+      );
       setBestPlayersData(data.data || data);
 
       // Cache the data
       setBestPlayersToStorage(tournamentId, data.data || data);
     } catch (error) {
-      console.error("Failed to fetch best players data:", error);
+      console.error("Falha ao buscar dados de jogadores:", error);
     } finally {
       setBestPlayersLoading(false);
     }
@@ -331,7 +334,7 @@ export default function CreateTeamPage({ params }) {
         setPlayersData(playersData);
       } catch (error) {
         console.error("Error loading tournament data:", error);
-        setTournamentError("Failed to load tournament data");
+        setTournamentError("Falha ao buscar dados do torneio");
       } finally {
         setTournamentLoading(false);
       }
@@ -360,7 +363,7 @@ export default function CreateTeamPage({ params }) {
       // Redirect to teams page after successful creation
       router.push("/teams");
     } catch (error) {
-      console.error("Failed to create team:", error);
+      console.error("Falha ao criar time:", error);
       // For development, still redirect even if API fails
       router.push("/teams");
     } finally {
@@ -594,7 +597,10 @@ export default function CreateTeamPage({ params }) {
     );
 
     // Player dependency analysis
-    analysis.playerDependency = calculatePlayerDependency(allSavedTeams, teamNames.length);
+    analysis.playerDependency = calculatePlayerDependency(
+      allSavedTeams,
+      teamNames.length
+    );
 
     // Player grouping analysis
     analysis.playerGrouping = calculatePlayerGrouping(allSavedTeams);
@@ -605,22 +611,22 @@ export default function CreateTeamPage({ params }) {
   // Calculate player dependency - how often each player appears across teams
   const calculatePlayerDependency = (allSavedTeams, totalTeams) => {
     const playerCounts = {};
-    
+
     // Count how many teams each player appears in
     Object.values(allSavedTeams).forEach((teamData) => {
       const allPlayers = [
         ...Object.values(teamData.selectedPlayers),
         ...Object.values(teamData.benchPlayers),
       ];
-      
+
       // Use a Set to avoid counting the same player multiple times in the same team
       const uniquePlayers = new Set();
       allPlayers.forEach((player) => {
         uniquePlayers.add(player.id);
       });
-      
+
       uniquePlayers.forEach((playerId) => {
-        const player = allPlayers.find(p => p.id === playerId);
+        const player = allPlayers.find((p) => p.id === playerId);
         if (player) {
           const key = `${player.name} (${player.teamShortName})`;
           if (!playerCounts[key]) {
@@ -636,13 +642,13 @@ export default function CreateTeamPage({ params }) {
         }
       });
     });
-    
+
     // Calculate percentages and sort by dependency
-    const dependencyList = Object.values(playerCounts).map(player => ({
+    const dependencyList = Object.values(playerCounts).map((player) => ({
       ...player,
       percentage: Math.round((player.count / totalTeams) * 100),
     }));
-    
+
     return dependencyList.sort((a, b) => b.percentage - a.percentage);
   };
 
@@ -655,14 +661,14 @@ export default function CreateTeamPage({ params }) {
       MEI: {},
       ATA: {},
     };
-    
+
     // Group players by position and find combinations
     Object.values(allSavedTeams).forEach((teamData) => {
       const allPlayers = [
         ...Object.values(teamData.selectedPlayers),
         ...Object.values(teamData.benchPlayers),
       ];
-      
+
       // Group players by position
       const playersByPosition = {};
       allPlayers.forEach((player) => {
@@ -671,19 +677,19 @@ export default function CreateTeamPage({ params }) {
         }
         playersByPosition[player.position].push(player);
       });
-      
+
       // For each position, find combinations of 2 or more players
       Object.entries(playersByPosition).forEach(([position, players]) => {
         if (players.length >= 2) {
           // Create all possible combinations of 2 or more players
           const combinations = generateCombinations(players, 2);
-          
+
           combinations.forEach((combination) => {
             const key = combination
-              .map(p => `${p.name} (${p.teamShortName})`)
+              .map((p) => `${p.name} (${p.teamShortName})`)
               .sort()
-              .join(' + ');
-            
+              .join(" + ");
+
             if (!positionGroups[position][key]) {
               positionGroups[position][key] = {
                 players: combination,
@@ -696,44 +702,44 @@ export default function CreateTeamPage({ params }) {
         }
       });
     });
-    
+
     // Calculate percentages and filter out single occurrences
     const totalTeams = Object.keys(allSavedTeams).length;
     const result = {};
-    
+
     Object.entries(positionGroups).forEach(([position, groups]) => {
       const validGroups = Object.values(groups)
-        .filter(group => group.count > 1)
-        .map(group => ({
+        .filter((group) => group.count > 1)
+        .map((group) => ({
           ...group,
           percentage: Math.round((group.count / totalTeams) * 100),
         }))
         .sort((a, b) => b.percentage - a.percentage);
-      
+
       if (validGroups.length > 0) {
         result[position] = validGroups;
       }
     });
-    
+
     return result;
   };
 
   // Helper function to generate combinations
   const generateCombinations = (arr, minSize) => {
     const combinations = [];
-    
+
     const combine = (start, current) => {
       if (current.length >= minSize) {
         combinations.push([...current]);
       }
-      
+
       for (let i = start; i < arr.length; i++) {
         current.push(arr[i]);
         combine(i + 1, current);
         current.pop();
       }
     };
-    
+
     combine(0, []);
     return combinations;
   };
@@ -926,10 +932,10 @@ export default function CreateTeamPage({ params }) {
       }
 
       // Generate the random team
-      const { selectedPlayers: newSelectedPlayers, benchPlayers: newBenchPlayers } = generateRandomTeam(
-        playersData,
-        randomParams
-      );
+      const {
+        selectedPlayers: newSelectedPlayers,
+        benchPlayers: newBenchPlayers,
+      } = generateRandomTeam(playersData, randomParams);
 
       // Update formation if different
       if (randomParams.formation !== formation) {
@@ -969,7 +975,7 @@ export default function CreateTeamPage({ params }) {
                   G
                 </span>
               </div>
-              <h1 className="text-xl font-bold">Criar Time</h1>
+              <h1 className="text-xl font-bold">Criar Time Fantasy</h1>
             </div>
           </div>
         </div>
@@ -1209,15 +1215,22 @@ export default function CreateTeamPage({ params }) {
                 {/* Player Dependency Analysis */}
                 {teamAnalysis.playerDependency.length > 0 && (
                   <div className="space-y-4 border-t pt-4">
-                    <h3 className="font-bold text-base">Dependência de Jogadores</h3>
+                    <h3 className="font-bold text-base">
+                      Dependência de Jogadores
+                    </h3>
                     <div className="text-sm text-muted-foreground mb-3">
                       Frequência de cada jogador nos times salvos
                     </div>
                     <div className="space-y-2">
                       {teamAnalysis.playerDependency.map((player, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+                        >
                           <div className="flex-1">
-                            <div className="font-medium text-sm">{player.name}</div>
+                            <div className="font-medium text-sm">
+                              {player.name}
+                            </div>
                             <div className="text-xs text-muted-foreground">
                               {player.team} • {player.position}
                             </div>
@@ -1239,57 +1252,77 @@ export default function CreateTeamPage({ params }) {
                 {/* Player Grouping Analysis */}
                 {Object.keys(teamAnalysis.playerGrouping).length > 0 && (
                   <div className="space-y-4 border-t pt-4">
-                    <h3 className="font-bold text-base">Grupos de Jogadores Frequentes</h3>
+                    <h3 className="font-bold text-base">
+                      Grupos de Jogadores Frequentes
+                    </h3>
                     <div className="text-sm text-muted-foreground mb-3">
                       Jogadores que aparecem juntos frequentemente por posição
                     </div>
                     <div className="space-y-4">
-                      {Object.entries(teamAnalysis.playerGrouping).map(([position, groups]) => (
-                        <div key={position} className="space-y-2">
-                          <h4 className="font-medium text-sm capitalize">
-                            {position === 'GOL' ? 'Goleiro' :
-                             position === 'ZAG' ? 'Zagueiro' :
-                             position === 'LAT' ? 'Lateral' :
-                             position === 'MEI' ? 'Meio-campo' :
-                             position === 'ATA' ? 'Ataque' : position}
-                          </h4>
-                          <div className="space-y-2">
-                            {groups.map((group, groupIndex) => (
-                              <div key={groupIndex} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm">
-                                    {group.players.map(p => p.name).join(' + ')}
+                      {Object.entries(teamAnalysis.playerGrouping).map(
+                        ([position, groups]) => (
+                          <div key={position} className="space-y-2">
+                            <h4 className="font-medium text-sm capitalize">
+                              {position === "GOL"
+                                ? "Goleiro"
+                                : position === "ZAG"
+                                ? "Zagueiro"
+                                : position === "LAT"
+                                ? "Lateral"
+                                : position === "MEI"
+                                ? "Meio-campo"
+                                : position === "ATA"
+                                ? "Ataque"
+                                : position}
+                            </h4>
+                            <div className="space-y-2">
+                              {groups.map((group, groupIndex) => (
+                                <div
+                                  key={groupIndex}
+                                  className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+                                >
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">
+                                      {group.players
+                                        .map((p) => p.name)
+                                        .join(" + ")}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {group.players
+                                        .map((p) => p.teamShortName)
+                                        .join(", ")}
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {group.players.map(p => p.teamShortName).join(', ')}
+                                  <div className="text-right">
+                                    <div className="font-medium text-sm">
+                                      {group.count}/{teamAnalysis.totalTeams}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {group.percentage}%
+                                    </div>
                                   </div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="font-medium text-sm">
-                                    {group.count}/{teamAnalysis.totalTeams}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {group.percentage}%
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   </div>
                 )}
 
                 {/* No grouping message */}
-                {Object.keys(teamAnalysis.playerGrouping).length === 0 && teamAnalysis.totalTeams > 1 && (
-                  <div className="space-y-4 border-t pt-4">
-                    <h3 className="font-bold text-base">Grupos de Jogadores Frequentes</h3>
-                    <div className="text-sm text-muted-foreground">
-                      Nenhum grupo de jogadores frequente encontrado
+                {Object.keys(teamAnalysis.playerGrouping).length === 0 &&
+                  teamAnalysis.totalTeams > 1 && (
+                    <div className="space-y-4 border-t pt-4">
+                      <h3 className="font-bold text-base">
+                        Grupos de Jogadores Frequentes
+                      </h3>
+                      <div className="text-sm text-muted-foreground">
+                        Nenhum grupo de jogadores frequente encontrado
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </CardContent>
             </Card>
           )}

@@ -8,7 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Users, BarChart3, Plus, CheckCircle, Flag } from "lucide-react";
+import {
+  Users,
+  BarChart3,
+  Plus,
+  CheckCircle,
+  Flag,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -35,23 +42,24 @@ export default function Home() {
       <main className="px-4 py-6">
         {/* Welcome Section */}
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold mb-2">Seu Assistente Fantasy</h2>
+          <h2 className="text-2xl font-bold mb-2">
+            Assistente para Fantasy e Odds de valor
+          </h2>
           <p className="text-muted-foreground">
-            Crie um time fantasy de futebol perfeito com insights a partir de
-            dados
+            Melhores decisões para partidas de futebol com análise de dados
           </p>
         </div>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <Link href="/matches">
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+              <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3">
                   <Flag className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-1">Criar Time</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-semibold mb-1">Criar Time Fantasy</h3>
+                <p className="text-sm text-muted-foreground flex-1">
                   Comece a criar seu time
                 </p>
               </CardContent>
@@ -59,14 +67,28 @@ export default function Home() {
           </Link>
 
           <Link href="/stats">
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+              <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-3">
                   <BarChart3 className="w-6 h-6 text-green-600" />
                 </div>
                 <h3 className="font-semibold mb-1">Analytics</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground flex-1">
                   Acompanhe dados de jogadores
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/tips" className="col-span-2">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+              <CardContent className="p-4 h-full flex flex-col">
+                <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mb-3">
+                  <TrendingUp className="w-6 h-6 text-orange-600" />
+                </div>
+                <h3 className="font-semibold mb-1">Tips</h3>
+                <p className="text-sm text-muted-foreground flex-1">
+                  Confira odds de valor
                 </p>
               </CardContent>
             </Card>

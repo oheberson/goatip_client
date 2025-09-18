@@ -5,17 +5,6 @@ export const TOURNAMENTS = {
     name: "Brasileirão",
     season: "2025",
   },
-  /*
-  elite_brasileira: {
-    id: "elite_brasileira",
-    name: "Elite Brasileira",
-    season: "2025",
-  },
-  unicos_brasileirao_2025: {
-    id: "unicos_brasileirao_2025",
-    name: "Únicos Brasileirão",
-    season: "2025",
-  },
   laliga_2526: {
     id: "laliga_2526",
     name: "LaLiga",
@@ -26,7 +15,6 @@ export const TOURNAMENTS = {
     name: "Premier League",
     season: "2526",
   },
-  
   bundesliga_2526: {
     id: "bundesliga_2526",
     name: "Bundesliga",
@@ -36,13 +24,26 @@ export const TOURNAMENTS = {
     id: "italiano_2526",
     name: "Italiano",
     season: "2526",
-  }, */
+  },
+  libertadores_2025: {
+    id: "libertadores_2025",
+    name: "Libertadores",
+    season: "2025",
+  },
 };
 
 // Team name mapping for API compatibility
+// their -> mine
 export const TEAM_NAME_MAPPING = {
   Botafogo: "Botafogo (RJ)",
-  // Add more team mappings as needed
+  "Atlético-MG": "Atlético Mineiro",
+  Estudiantes: "Estudiantes–LP",
+  Colônia: "Köln",
+  Bayern: "Bayern Munich",
+  Hamburgo: "Hamburger SV",
+  Wolverhampton: "Wolverhampton Wanderers",
+  Tottenham: "Tottenham Hotspur",
+  "West Ham": "West Ham United",
 };
 
 // Function to map team names for API compatibility
@@ -59,11 +60,24 @@ export const mapPlayerName = (playerName) => {
   return PLAYER_NAME_MAPPING[playerName] || playerName;
 };
 
+export const TOURNAMENTS_MAP_NAMES = {
+  brasileiro_A: "Brasileirão Série A",
+  libertadores: "Libertadores",
+  premier_league: "Premier League",
+  italiano: "Serie A Italiana",
+  bundesliga: "Bundesliga",
+  laliga: "La Liga",
+  champions: "Champions League",
+};
+
 export const STATS_MAP = {
   weighted_fantasy_score: "fantasy_score",
   games_played: "jogos_totais",
   goals: "gols",
   assists: "assistências",
+  shots_total: "chutes_totais",
+  corner_kicks: "escanteios",
+  shots_on_target: "chutes_no_alvo",
   off_target_shot: "finalização_para_fora",
   saved_shot: "finalização_defendida",
   woodwork_shot: "finalização_na_trave",

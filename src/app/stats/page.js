@@ -156,8 +156,8 @@ export default function StatsPage() {
       const data = await api.analytics.getBestPlayers(tournamentId);
       setPlayers(data.data);
     } catch (err) {
-      console.error("Failed to fetch best players:", err);
-      setError("Failed to load player statistics");
+      console.error("Falha ao buscar jogadores:", err);
+      setError("Falha ao carregar estatística de jogadores");
     } finally {
       setLoading(false);
     }
@@ -277,7 +277,7 @@ export default function StatsPage() {
                 onClick={() => fetchBestPlayers(selectedTournament)}
                 className="mt-3"
               >
-                Try Again
+                Tentar novamente
               </Button>
             </CardContent>
           </Card>

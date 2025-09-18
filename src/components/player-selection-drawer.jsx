@@ -35,7 +35,7 @@ import {
   setPlayerSortToStorage,
   clearPlayerSortFromStorage,
 } from "@/lib/localStorage-utils";
-import { mapPlayerName } from "@/lib/constants";
+import { mapPlayerName, TEAM_NAME_MAPPING } from "@/lib/constants";
 
 const POSITION_TYPES = {
   GK: "Goleiro",
@@ -175,11 +175,18 @@ export function PlayerSelectionDrawer({
     // Map player name from players API to best-players API format
     const mappedPlayerName = mapPlayerName(player.name);
 
+    if (mappedPlayerName == "Harry Kane") {
+      console.log("harry kane>>>", player);
+      console.log("mapped team", TEAM_NAME_MAPPING[player.teamName]);
+    }
+
     return bestPlayersData.some(
       (bestPlayer) =>
         bestPlayer.player === mappedPlayerName &&
-        bestPlayer.team === player.teamName &&
-        bestPlayer.pos === player.position
+        bestPlayer.team ===
+          (TEAM_NAME_MAPPING[player.teamName]
+            ? TEAM_NAME_MAPPING[player.teamName]
+            : player.teamName)
     );
   };
 
@@ -299,8 +306,10 @@ export function PlayerSelectionDrawer({
     const matchingPlayer = bestPlayersData.find(
       (bestPlayer) =>
         bestPlayer.player === mappedPlayerName &&
-        bestPlayer.team === player.teamName &&
-        bestPlayer.pos === player.position
+        bestPlayer.team ===
+          (TEAM_NAME_MAPPING[player.teamName]
+            ? TEAM_NAME_MAPPING[player.teamName]
+            : player.teamName)
     );
 
     if (matchingPlayer) {
@@ -670,7 +679,7 @@ export function PlayerSelectionDrawer({
         <PlayerSortDialog
           isOpen={sortDialogOpen}
           onOpenChange={setSortDialogOpen}
-          sortOption={sortOption}
+          currentSort={sortOption}
           onSortChange={handleSortChange}
         />
       </DrawerContent>

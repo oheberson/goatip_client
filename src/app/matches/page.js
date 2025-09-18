@@ -43,7 +43,7 @@ export default function MatchesPage() {
 
   // Filter matches to only include supported tournaments
   const filterSupportedTournaments = (matchesData) => {
-    if (!matchesData || typeof matchesData !== 'object') {
+    if (!matchesData || typeof matchesData !== "object") {
       return {};
     }
 
@@ -85,8 +85,8 @@ export default function MatchesPage() {
       setMatchesToStorage(filteredData);
       setMatches(filteredData);
     } catch (err) {
-      console.error("Failed to fetch matches:", err);
-      setError(`Failed to load matches. Please try again.`);
+      console.error("Falha ao buscar partidas:", err);
+      setError(`Erro ao carregar partidas. Tente novamente.`);
 
       // Try to use cached data as fallback even if expired
       const fallbackData = getMatchesFromStorage();
@@ -233,7 +233,7 @@ export default function MatchesPage() {
             <CardContent className="p-6 text-center">
               <p className="text-muted-foreground mb-4">{error}</p>
               <Button onClick={fetchMatches} variant="outline">
-                Try Again
+                Tente novamente
               </Button>
             </CardContent>
           </Card>
@@ -241,9 +241,9 @@ export default function MatchesPage() {
           <Card>
             <CardContent className="p-6 text-center">
               <Circle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">No matches found</h3>
+              <h3 className="font-semibold mb-2">Nenhuma partida encontrada</h3>
               <p className="text-muted-foreground">
-                Check back later for upcoming fixtures
+                Volte e confira partidas disponíveis
               </p>
             </CardContent>
           </Card>
@@ -280,9 +280,6 @@ export default function MatchesPage() {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{selectedTournament?.championshipName}</DrawerTitle>
-            <DrawerDescription>
-              View all matches for this tournament
-            </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-4">
             <div className="mb-4">
@@ -293,7 +290,7 @@ export default function MatchesPage() {
                   router.push(`/create-team/${selectedTournament.id}`);
                 }}
               >
-                View Tournament Details
+                Conferir detalhes do torneio
               </Button>
             </div>
             <div className="max-h-[60vh] overflow-y-auto space-y-4">
@@ -314,7 +311,6 @@ export default function MatchesPage() {
                         className={`px-2 py-1 rounded-full text-xs font-medium`}
                       >
                         {/* {match.status.toUpperCase()} */}
-                        'status'
                       </div>
                     </div>
 
@@ -333,21 +329,6 @@ export default function MatchesPage() {
                         {match.secondTeamName}
                       </div>
                     </div>
-
-                    {/* <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <Circle className="w-4 h-4" />
-                       
-                      
-                        'time'
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="w-4 h-4" />
-                        
-                      
-                        'venue'
-                      </div>
-                    </div> */}
                   </CardContent>
                 </Card>
               ))}

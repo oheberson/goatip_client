@@ -12,9 +12,9 @@ export function ManifestUpdater() {
 
     // Create a dynamic manifest with the current theme color
     const manifest = {
-      name: "GOATIP - Ajudante Fantasy",
+      name: "GOATIP - Ofertas de valor",
       short_name: "Goatip",
-      description: "Crie os melhores times fantasy com análises de dados",
+      description: "Encontre melhores oportunidades com análises de dados",
       start_url: "/",
       display: "standalone",
       background_color: themeColor,

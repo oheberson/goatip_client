@@ -4,8 +4,8 @@ import { DynamicThemeColor } from "@/components/dynamic-theme-color";
 import { ManifestUpdater } from "@/components/manifest-updater";
 
 export const metadata = {
-  title: "GOATIP - Ajudante Fantasy",
-  description: "Crie os melhores times fantasy com análises de dados",
+  title: "GOATIP - Ofertas de valor",
+  description: "Encontre melhores oportunidades com análises de dados",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

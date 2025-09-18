@@ -123,8 +123,15 @@ export const api = {
       apiClient.post("/api/analytics/predictions", data),
     getBestPlayers: (tournamentId) =>
       apiClient.get(`/best-players?tournament_id=${tournamentId}`),
-    getBestPlayersByTeams: (teams) =>
-      apiClient.get(`/best-players?teams=${teams.join(",")}`),
+    getBestPlayersByTeams: (teams, tournamentId) =>
+      apiClient.get(
+        `/best-players?teams=${teams.join(",")}&tournament_id=${tournamentId}`
+      ),
+  },
+
+  // Tips
+  tips: {
+    getTips: () => apiClient.get("/tips/get-tips"),
   },
 };
 

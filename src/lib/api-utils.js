@@ -2,13 +2,13 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // Log API URL in development for debugging
-if (process.env.NODE_ENV === 'development') {
-  console.log('API Base URL:', API_BASE_URL);
+if (process.env.NODE_ENV === "development") {
+  console.log("API Base URL:", API_BASE_URL);
 }
 
 // Log API URL in production for debugging
-if (process.env.NODE_ENV === 'production') {
-  console.log('Production API Base URL:', API_BASE_URL);
+if (process.env.NODE_ENV === "production") {
+  console.log("Production API Base URL:", API_BASE_URL);
 }
 
 // Generic API request function
@@ -137,8 +137,10 @@ export const api = {
       }),
     getBestPlayers: (tournamentId) =>
       apiRequest(`/best-players?tournament_id=${tournamentId}`),
-    getBestPlayersByTeams: (teams) =>
-      apiRequest(`/best-players?teams=${teams.join(',')}`),
+    getBestPlayersByTeams: (teams, tournamentId) =>
+      apiRequest(
+        `/best-players?teams=${teams.join(",")}&tournament_id=${tournamentId}`
+      ),
   },
 
   // Generic function for custom endpoints

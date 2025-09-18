@@ -23,7 +23,7 @@ export function MobileMenu() {
     { icon: Home, label: "Home", href: "/" },
     { icon: Flag, label: "Matches", href: "/matches" },
     { icon: BarChart3, label: "Stats", href: "/stats" },
-    { icon: User, label: "Profile", href: "/profile" },
+    { icon: User, label: "Tips", href: "/tips" },
   ];
 
   return (
@@ -44,9 +44,6 @@ export function MobileMenu() {
             </div>
             <span>GOATIP</span>
           </SheetTitle>
-          <SheetDescription className="w-full flex">
-            Assistente Fantasy
-          </SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <div className="space-y-2">

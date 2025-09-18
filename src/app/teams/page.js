@@ -31,8 +31,8 @@ export default function TeamsPage() {
       const data = await api.teams.getAll();
       setTeams(data);
     } catch (err) {
-      console.error("Failed to fetch teams:", err);
-      setError("Failed to load teams. Please try again.");
+      console.error("Falha ao buscar times:", err);
+      setError("Falha ao carregar times. Tente novamente.");
       // Mock data for development
       setTeams([
         {
@@ -119,7 +119,7 @@ export default function TeamsPage() {
             <CardContent className="p-6 text-center">
               <p className="text-muted-foreground mb-4">{error}</p>
               <Button onClick={fetchTeams} variant="outline">
-                Try Again
+                Tentar novamente
               </Button>
             </CardContent>
           </Card>
