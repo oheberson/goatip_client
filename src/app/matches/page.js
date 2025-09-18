@@ -210,7 +210,7 @@ export default function MatchesPage() {
       <main className="px-4 py-6">
         {/* Header Section */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-1">Próximos torneios</h2>
+          <h2 className="text-2xl font-bold mb-1">Próximos torneios fantasy</h2>
           {/* <p className="text-muted-foreground">
             Track live scores and upcoming fixtures
           </p> */}
