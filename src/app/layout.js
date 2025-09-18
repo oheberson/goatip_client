@@ -2,6 +2,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DynamicThemeColor } from "@/components/dynamic-theme-color";
 import { ManifestUpdater } from "@/components/manifest-updater";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata = {
   title: "GOATIP - Ofertas de valor",
@@ -49,9 +50,11 @@ export default function RootLayout({ children }) {
           enableSystem
           disableTransitionOnChange
         >
-          <DynamicThemeColor />
-          <ManifestUpdater />
-          <div className="mobile-container">{children}</div>
+          <AuthProvider>
+            <DynamicThemeColor />
+            <ManifestUpdater />
+            <div className="mobile-container">{children}</div>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -312,7 +313,6 @@ export default function CreateTeamPage({ params }) {
         }
 
         setTournamentData(tournament);
-        console.log("Loaded tournament data:", tournament);
 
         // Generate unique tournament key
         const uniqueKey = generateTournamentKey(
@@ -320,13 +320,10 @@ export default function CreateTeamPage({ params }) {
           tournament.matches || []
         );
         setTournamentKey(uniqueKey);
-        console.log("Generated tournament key:", uniqueKey);
 
         // Fetch best players data if tournament is available
         await fetchBestPlayersData(tournamentId, tournament.matches || []);
 
-        // Fetch players data for this tournament
-        console.log("fetching players with>>", tournament.matches[0]?.id);
         const playersData = await api.players.getByTournament(
           tournamentId,
           tournament.matches[0]?.id
@@ -956,409 +953,415 @@ export default function CreateTeamPage({ params }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="px-4 py-4">
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="p-2"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
+        {/* Header */}
+        <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="px-4 py-4">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">
-                  G
-                </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                className="p-2"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">
+                    G
+                  </span>
+                </div>
+                <h1 className="text-xl font-bold">Criar Time Fantasy</h1>
               </div>
-              <h1 className="text-xl font-bold">Criar Time Fantasy</h1>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="px-4 py-6">
-        <div className="max-w-md mx-auto">
-          {/* Tournament Info Card */}
-          {tournamentLoading ? (
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <div className="animate-pulse">
-                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : tournamentError ? (
-            <Card className="mb-6 border-destructive">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2 text-destructive">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">{tournamentError}</span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={() => router.push("/matches")}
-                >
-                  Voltar aos Torneios
-                </Button>
-              </CardContent>
-            </Card>
-          ) : tournamentData ? (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {tournamentData.championshipName}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Formation and Controls Row */}
-                  <div className="flex items-center gap-2">
-                    {/* Formation Selector */}
-                    <select
-                      id="formation"
-                      value={formation}
-                      onChange={(e) => handleFormationChange(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                    >
-                      {formations.map((form) => (
-                        <option key={form.value} value={form.value}>
-                          {form.label}
-                        </option>
-                      ))}
-                    </select>
-
-                    {/* Saved Teams Dropdown Trigger */}
-                    {savedTeamNames.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setSavedTeamsDropdownOpen(!savedTeamsDropdownOpen)
-                        }
-                        className="px-3"
-                        title="Times Salvos"
+        {/* Main Content */}
+        <main className="px-4 py-6">
+          <div className="max-w-md mx-auto">
+            {/* Tournament Info Card */}
+            {tournamentLoading ? (
+              <Card className="mb-6">
+                <CardContent className="p-4">
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : tournamentError ? (
+              <Card className="mb-6 border-destructive">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 text-destructive">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-sm">{tournamentError}</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => router.push("/matches")}
+                  >
+                    Voltar aos Torneios
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : tournamentData ? (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    {tournamentData.championshipName}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Formation and Controls Row */}
+                    <div className="flex items-center gap-2">
+                      {/* Formation Selector */}
+                      <select
+                        id="formation"
+                        value={formation}
+                        onChange={(e) => handleFormationChange(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                       >
-                        <ArrowBigDownDash className="w-4 h-4" />
-                      </Button>
-                    )}
+                        {formations.map((form) => (
+                          <option key={form.value} value={form.value}>
+                            {form.label}
+                          </option>
+                        ))}
+                      </select>
 
-                    {/* Delete Team Button */}
-                    {savedTeamNames.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteFormation(selectedSavedTeam)}
-                        disabled={!selectedSavedTeam}
-                        className="px-3"
-                        title="Deletar time"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-
-                    {/* Save Button */}
-                    <Button
-                      onClick={() => setTeamNameDialogOpen(true)}
-                      disabled={!isFormationComplete() || isLoadingFormation}
-                      size="sm"
-                      className="px-3"
-                      title="Salvar time"
-                    >
-                      {isLoadingFormation ? (
-                        <Loader className="w-4 h-4" />
-                      ) : (
-                        <Save className="w-4 h-4" />
+                      {/* Saved Teams Dropdown Trigger */}
+                      {savedTeamNames.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setSavedTeamsDropdownOpen(!savedTeamsDropdownOpen)
+                          }
+                          className="px-3"
+                          title="Times Salvos"
+                        >
+                          <ArrowBigDownDash className="w-4 h-4" />
+                        </Button>
                       )}
-                    </Button>
+
+                      {/* Delete Team Button */}
+                      {savedTeamNames.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleDeleteFormation(selectedSavedTeam)
+                          }
+                          disabled={!selectedSavedTeam}
+                          className="px-3"
+                          title="Deletar time"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+
+                      {/* Save Button */}
+                      <Button
+                        onClick={() => setTeamNameDialogOpen(true)}
+                        disabled={!isFormationComplete() || isLoadingFormation}
+                        size="sm"
+                        className="px-3"
+                        title="Salvar time"
+                      >
+                        {isLoadingFormation ? (
+                          <Loader className="w-4 h-4" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Saved Teams Dropdown */}
+                    {savedTeamsDropdownOpen && savedTeamNames.length > 0 && (
+                      <div className="saved-teams-dropdown border border-input rounded-md bg-background">
+                        <div className="max-h-32 overflow-y-auto">
+                          {savedTeamNames.map((teamName) => (
+                            <button
+                              key={teamName}
+                              onClick={() => {
+                                setSelectedSavedTeam(teamName);
+                                handleLoadFormation(teamName);
+                                setSavedTeamsDropdownOpen(false);
+                              }}
+                              className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
+                                selectedSavedTeam === teamName
+                                  ? "bg-muted font-medium"
+                                  : ""
+                              }`}
+                            >
+                              {teamName}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
+
+            {/* Random Team Generation Card */}
+            {tournamentData && playersData && (
+              <RandomTeamCard
+                onGenerateTeam={handleGenerateRandomTeam}
+                playersData={playersData}
+                tournamentKey={tournamentKey}
+                savedRandomParams={savedRandomParams}
+              />
+            )}
+
+            {/* Football Field */}
+            {tournamentData && (
+              <FootballField
+                formation={formation}
+                selectedPlayers={selectedPlayers}
+                onPositionClick={handlePositionClick}
+                onRemovePlayer={handleRemovePlayer}
+                playersData={playersData}
+                benchPlayers={benchPlayers}
+                onBenchClick={handleBenchClick}
+                onRemoveBenchPlayer={handleRemoveBenchPlayer}
+              />
+            )}
+
+            {/* Analyze Teams Button - Only show if teams are saved */}
+            {savedTeamNames.length > 0 && (
+              <Card className="mt-6">
+                <CardContent className="p-4">
+                  <Button
+                    onClick={handleAnalyzeTeam}
+                    className="w-full"
+                    disabled={analyzing || !tournamentData || tournamentError}
+                  >
+                    {analyzing ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <span>
+                          Analisando {savedTeamNames.length} time(s)...
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <Save className="w-4 h-4" />
+                        <span>
+                          Analisar {savedTeamNames.length} Time(s) Salvos
+                        </span>
+                      </div>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Analysis */}
+            {teamAnalysis && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    Análise de {teamAnalysis.totalTeams} Time(s)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Overall Analysis */}
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-base">Análise Geral</h3>
+
+                    {/* Overall Team Distribution */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">
+                        Distribuição de Times
+                      </h4>
+                      <div className="text-sm text-muted-foreground">
+                        {Object.keys(
+                          teamAnalysis.overallAnalysis.teamDistribution
+                        ).length > 0
+                          ? Object.entries(
+                              teamAnalysis.overallAnalysis.teamDistribution
+                            )
+                              .map(
+                                ([team, percentage]) => `${percentage}% ${team}`
+                              )
+                              .join(", ")
+                          : "Nenhum jogador selecionado"}
+                      </div>
+                    </div>
+
+                    {/* Overall Expected Score */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">
+                        Pontuação Total Esperada
+                      </h4>
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium text-lg">
+                          {(
+                            teamAnalysis.overallAnalysis.expectedScore.toFixed(
+                              1
+                            ) / teamAnalysis.totalTeams
+                          ).toFixed(1)}
+                        </span>{" "}
+                        pontos (média de todos os times)
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Saved Teams Dropdown */}
-                  {savedTeamsDropdownOpen && savedTeamNames.length > 0 && (
-                    <div className="saved-teams-dropdown border border-input rounded-md bg-background">
-                      <div className="max-h-32 overflow-y-auto">
-                        {savedTeamNames.map((teamName) => (
-                          <button
-                            key={teamName}
-                            onClick={() => {
-                              setSelectedSavedTeam(teamName);
-                              handleLoadFormation(teamName);
-                              setSavedTeamsDropdownOpen(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
-                              selectedSavedTeam === teamName
-                                ? "bg-muted font-medium"
-                                : ""
-                            }`}
+                  {/* Player Dependency Analysis */}
+                  {teamAnalysis.playerDependency.length > 0 && (
+                    <div className="space-y-4 border-t pt-4">
+                      <h3 className="font-bold text-base">
+                        Dependência de Jogadores
+                      </h3>
+                      <div className="text-sm text-muted-foreground mb-3">
+                        Frequência de cada jogador nos times salvos
+                      </div>
+                      <div className="space-y-2">
+                        {teamAnalysis.playerDependency.map((player, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
                           >
-                            {teamName}
-                          </button>
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">
+                                {player.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {player.team} • {player.position}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium text-sm">
+                                {player.count}/{teamAnalysis.totalTeams}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {player.percentage}%
+                              </div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          ) : null}
 
-          {/* Random Team Generation Card */}
-          {tournamentData && playersData && (
-            <RandomTeamCard
-              onGenerateTeam={handleGenerateRandomTeam}
-              playersData={playersData}
-              tournamentKey={tournamentKey}
-              savedRandomParams={savedRandomParams}
-            />
-          )}
-
-          {/* Football Field */}
-          {tournamentData && (
-            <FootballField
-              formation={formation}
-              selectedPlayers={selectedPlayers}
-              onPositionClick={handlePositionClick}
-              onRemovePlayer={handleRemovePlayer}
-              playersData={playersData}
-              benchPlayers={benchPlayers}
-              onBenchClick={handleBenchClick}
-              onRemoveBenchPlayer={handleRemoveBenchPlayer}
-            />
-          )}
-
-          {/* Analyze Teams Button - Only show if teams are saved */}
-          {savedTeamNames.length > 0 && (
-            <Card className="mt-6">
-              <CardContent className="p-4">
-                <Button
-                  onClick={handleAnalyzeTeam}
-                  className="w-full"
-                  disabled={analyzing || !tournamentData || tournamentError}
-                >
-                  {analyzing ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      <span>Analisando {savedTeamNames.length} time(s)...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <Save className="w-4 h-4" />
-                      <span>
-                        Analisar {savedTeamNames.length} Time(s) Salvos
-                      </span>
-                    </div>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Analysis */}
-          {teamAnalysis && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  Análise de {teamAnalysis.totalTeams} Time(s)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Overall Analysis */}
-                <div className="space-y-4">
-                  <h3 className="font-bold text-base">Análise Geral</h3>
-
-                  {/* Overall Team Distribution */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">
-                      Distribuição de Times
-                    </h4>
-                    <div className="text-sm text-muted-foreground">
-                      {Object.keys(
-                        teamAnalysis.overallAnalysis.teamDistribution
-                      ).length > 0
-                        ? Object.entries(
-                            teamAnalysis.overallAnalysis.teamDistribution
-                          )
-                            .map(
-                              ([team, percentage]) => `${percentage}% ${team}`
-                            )
-                            .join(", ")
-                        : "Nenhum jogador selecionado"}
-                    </div>
-                  </div>
-
-                  {/* Overall Expected Score */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">
-                      Pontuação Total Esperada
-                    </h4>
-                    <div className="text-sm text-muted-foreground">
-                      <span className="font-medium text-lg">
-                        {(
-                          teamAnalysis.overallAnalysis.expectedScore.toFixed(
-                            1
-                          ) / teamAnalysis.totalTeams
-                        ).toFixed(1)}
-                      </span>{" "}
-                      pontos (média de todos os times)
-                    </div>
-                  </div>
-                </div>
-
-                {/* Player Dependency Analysis */}
-                {teamAnalysis.playerDependency.length > 0 && (
-                  <div className="space-y-4 border-t pt-4">
-                    <h3 className="font-bold text-base">
-                      Dependência de Jogadores
-                    </h3>
-                    <div className="text-sm text-muted-foreground mb-3">
-                      Frequência de cada jogador nos times salvos
-                    </div>
-                    <div className="space-y-2">
-                      {teamAnalysis.playerDependency.map((player, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
-                        >
-                          <div className="flex-1">
-                            <div className="font-medium text-sm">
-                              {player.name}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {player.team} • {player.position}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-medium text-sm">
-                              {player.count}/{teamAnalysis.totalTeams}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {player.percentage}%
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Player Grouping Analysis */}
-                {Object.keys(teamAnalysis.playerGrouping).length > 0 && (
-                  <div className="space-y-4 border-t pt-4">
-                    <h3 className="font-bold text-base">
-                      Grupos de Jogadores Frequentes
-                    </h3>
-                    <div className="text-sm text-muted-foreground mb-3">
-                      Jogadores que aparecem juntos frequentemente por posição
-                    </div>
-                    <div className="space-y-4">
-                      {Object.entries(teamAnalysis.playerGrouping).map(
-                        ([position, groups]) => (
-                          <div key={position} className="space-y-2">
-                            <h4 className="font-medium text-sm capitalize">
-                              {position === "GOL"
-                                ? "Goleiro"
-                                : position === "ZAG"
-                                ? "Zagueiro"
-                                : position === "LAT"
-                                ? "Lateral"
-                                : position === "MEI"
-                                ? "Meio-campo"
-                                : position === "ATA"
-                                ? "Ataque"
-                                : position}
-                            </h4>
-                            <div className="space-y-2">
-                              {groups.map((group, groupIndex) => (
-                                <div
-                                  key={groupIndex}
-                                  className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
-                                >
-                                  <div className="flex-1">
-                                    <div className="font-medium text-sm">
-                                      {group.players
-                                        .map((p) => p.name)
-                                        .join(" + ")}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {group.players
-                                        .map((p) => p.teamShortName)
-                                        .join(", ")}
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="font-medium text-sm">
-                                      {group.count}/{teamAnalysis.totalTeams}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {group.percentage}%
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* No grouping message */}
-                {Object.keys(teamAnalysis.playerGrouping).length === 0 &&
-                  teamAnalysis.totalTeams > 1 && (
+                  {/* Player Grouping Analysis */}
+                  {Object.keys(teamAnalysis.playerGrouping).length > 0 && (
                     <div className="space-y-4 border-t pt-4">
                       <h3 className="font-bold text-base">
                         Grupos de Jogadores Frequentes
                       </h3>
-                      <div className="text-sm text-muted-foreground">
-                        Nenhum grupo de jogadores frequente encontrado
+                      <div className="text-sm text-muted-foreground mb-3">
+                        Jogadores que aparecem juntos frequentemente por posição
+                      </div>
+                      <div className="space-y-4">
+                        {Object.entries(teamAnalysis.playerGrouping).map(
+                          ([position, groups]) => (
+                            <div key={position} className="space-y-2">
+                              <h4 className="font-medium text-sm capitalize">
+                                {position === "GOL"
+                                  ? "Goleiro"
+                                  : position === "ZAG"
+                                  ? "Zagueiro"
+                                  : position === "LAT"
+                                  ? "Lateral"
+                                  : position === "MEI"
+                                  ? "Meio-campo"
+                                  : position === "ATA"
+                                  ? "Ataque"
+                                  : position}
+                              </h4>
+                              <div className="space-y-2">
+                                {groups.map((group, groupIndex) => (
+                                  <div
+                                    key={groupIndex}
+                                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+                                  >
+                                    <div className="flex-1">
+                                      <div className="font-medium text-sm">
+                                        {group.players
+                                          .map((p) => p.name)
+                                          .join(" + ")}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {group.players
+                                          .map((p) => p.teamShortName)
+                                          .join(", ")}
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-medium text-sm">
+                                        {group.count}/{teamAnalysis.totalTeams}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {group.percentage}%
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        )}
                       </div>
                     </div>
                   )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </main>
 
-      {/* Bottom padding */}
-      <div className="h-6"></div>
+                  {/* No grouping message */}
+                  {Object.keys(teamAnalysis.playerGrouping).length === 0 &&
+                    teamAnalysis.totalTeams > 1 && (
+                      <div className="space-y-4 border-t pt-4">
+                        <h3 className="font-bold text-base">
+                          Grupos de Jogadores Frequentes
+                        </h3>
+                        <div className="text-sm text-muted-foreground">
+                          Nenhum grupo de jogadores frequente encontrado
+                        </div>
+                      </div>
+                    )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </main>
 
-      {/* Player Selection Drawer */}
-      <PlayerSelectionDrawer
-        isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        positionType={selectedPositionType}
-        playersData={playersData}
-        onSelectPlayer={handleSelectPlayer}
-        onRemovePlayer={handleRemovePlayerByObject}
-        selectedPlayers={selectedPlayers}
-        bestPlayersData={bestPlayersData}
-        formation={formation}
-        selectedPosition={selectedPosition}
-        benchPlayers={benchPlayers}
-      />
+        {/* Bottom padding */}
+        <div className="h-6"></div>
 
-      {/* Team Name Dialog */}
-      <TeamNameDialog
-        isOpen={teamNameDialogOpen}
-        onOpenChange={setTeamNameDialogOpen}
-        onSave={handleSaveFormation}
-        onCancel={() => setTeamNameDialogOpen(false)}
-        title="Salvar Time"
-        description="Digite um nome para o seu time"
-        placeholder="Ex: Time Principal, Time Alternativo..."
-        saveButtonText="Salvar"
-        cancelButtonText="Cancelar"
-      />
-    </div>
+        {/* Player Selection Drawer */}
+        <PlayerSelectionDrawer
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          positionType={selectedPositionType}
+          playersData={playersData}
+          onSelectPlayer={handleSelectPlayer}
+          onRemovePlayer={handleRemovePlayerByObject}
+          selectedPlayers={selectedPlayers}
+          bestPlayersData={bestPlayersData}
+          formation={formation}
+          selectedPosition={selectedPosition}
+          benchPlayers={benchPlayers}
+        />
+
+        {/* Team Name Dialog */}
+        <TeamNameDialog
+          isOpen={teamNameDialogOpen}
+          onOpenChange={setTeamNameDialogOpen}
+          onSave={handleSaveFormation}
+          onCancel={() => setTeamNameDialogOpen(false)}
+          title="Salvar Time"
+          description="Digite um nome para o seu time"
+          placeholder="Ex: Time Principal, Time Alternativo..."
+          saveButtonText="Salvar"
+          cancelButtonText="Cancelar"
+        />
+      </div>
+    </ProtectedRoute>
   );
 }

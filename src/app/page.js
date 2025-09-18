@@ -1,3 +1,8 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Navigation } from "@/components/navigation";
 import { Button } from "@/components/ui/button";
@@ -15,10 +20,35 @@ import {
   CheckCircle,
   Flag,
   TrendingUp,
+  LogIn,
 } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
+  const { user, loading, isSubscribed } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.replace("/subscribe");
+      } else if (user && !isSubscribed) {
+        router.replace("/subscribe");
+      }
+    }
+  }, [user, loading, isSubscribed, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
@@ -33,7 +63,15 @@ export default function Home() {
               </div>
               <h1 className="text-xl font-bold">GOATIP</h1>
             </div>
-            <MobileMenu />
+            <div className="flex items-center gap-2">
+              {/* <Link href="/auth/login">
+                <Button size="sm">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
+              </Link> */}
+              <MobileMenu />
+            </div>
           </div>
         </div>
       </header>

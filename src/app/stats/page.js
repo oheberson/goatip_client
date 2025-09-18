@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Navigation } from "@/components/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -218,7 +219,8 @@ export default function StatsPage() {
     currentView === "dynamic" ? transformPlayerDataByPosition(players) : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
       <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
         <div className="px-4 py-4">
@@ -411,6 +413,7 @@ export default function StatsPage() {
 
       {/* Bottom padding to account for fixed navigation */}
       <div className="h-20"></div>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

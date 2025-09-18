@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Navigation } from "@/components/navigation";
 import { Button } from "@/components/ui/button";
@@ -188,7 +189,8 @@ export default function MatchesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
       <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
         <div className="px-4 py-4">
@@ -336,6 +338,7 @@ export default function MatchesPage() {
           </div>
         </DrawerContent>
       </Drawer>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

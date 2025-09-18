@@ -175,11 +175,6 @@ export function PlayerSelectionDrawer({
     // Map player name from players API to best-players API format
     const mappedPlayerName = mapPlayerName(player.name);
 
-    if (mappedPlayerName == "Harry Kane") {
-      console.log("harry kane>>>", player);
-      console.log("mapped team", TEAM_NAME_MAPPING[player.teamName]);
-    }
-
     return bestPlayersData.some(
       (bestPlayer) =>
         bestPlayer.player === mappedPlayerName &&

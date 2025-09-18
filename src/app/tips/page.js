@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Navigation } from "@/components/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +18,7 @@ import { formatPlayerName } from "../../lib/utils";
 function TipsCard({ tip, onClick, type = "teams" }) {
   const formatStatName = (statName) => {
     const translatedStatName = STATS_MAP[statName];
-    console.log("received>>>>", statName);
+
     return translatedStatName
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -240,160 +241,162 @@ export default function TipsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">
-                  G
-                </span>
+    <ProtectedRoute requireSubscription={true}>
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
+        {/* Header */}
+        <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">
+                    G
+                  </span>
+                </div>
+                <h1 className="text-xl font-bold">Tips</h1>
               </div>
-              <h1 className="text-xl font-bold">Tips</h1>
-            </div>
-            <MobileMenu />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="px-4 py-6">
-        <div className="flex items-center gap-2 px-2 mb-2">
-          <h1 className="font-black">Dicas de Valor</h1>
-          <Questions
-            questionsText={[
-              "Não é aconselhável fazer múltiplas com todas as seleções apresentadas.",
-              "As dicas são baseadas em análises estatísticas de todo o campeonato.",
-              "As probabilidades mostradas indicam a confiança na sugestão.",
-              "Tenha um método de gestão de banca.",
-              "As odds apresentadas são com base na probabilidade calculada. O método utilizado é a Distribuição de Poisson com base na média então ponderado pela frequência da ocorrência da estatística.",
-              "Você encontrará valor quando houver discrepância entre a odd apresentada aqui e pela casa de apostas.",
-            ]}
-          />
-        </div>
-
-        {/* Stats Summary */}
-        {tipsData.count && (
-          <div className="mb-6 px-2">
-            <div className="flex gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
-                <span className="text-muted-foreground">
-                  Times: {tipsData.count.teams_tips || 0}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-primary" />
-                <span className="text-muted-foreground">
-                  Jogadores: {tipsData.count.players_tips || 0}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <span className="text-muted-foreground">
-                  Total: {tipsData.count.total_tips || 0}
-                </span>
-              </div>
+              <MobileMenu />
             </div>
           </div>
-        )}
+        </header>
 
-        {/* Tournament Selector */}
-        {availableTournaments.length > 0 && (
-          <TournamentSelector
-            tournaments={availableTournaments}
-            selectedTournament={selectedTournament}
-            onSelectTournament={handleTournamentChange}
-          />
-        )}
+        {/* Main Content */}
+        <main className="px-4 py-6">
+          <div className="flex items-center gap-2 px-2 mb-2">
+            <h1 className="font-black">Dicas de Valor</h1>
+            <Questions
+              questionsText={[
+                "Não é aconselhável fazer múltiplas com todas as seleções apresentadas.",
+                "As dicas são baseadas em análises estatísticas de todo o campeonato.",
+                "As probabilidades mostradas indicam a confiança na sugestão.",
+                "Tenha um método de gestão de banca.",
+                "As odds apresentadas são com base na probabilidade calculada. O método utilizado é a Distribuição de Poisson com base na média então ponderado pela frequência da ocorrência da estatística.",
+                "Você encontrará valor quando houver discrepância entre a odd apresentada aqui e pela casa de apostas.",
+              ]}
+            />
+          </div>
 
-        {/* Filter and View Toggle */}
-        <div className="flex justify-between items-center mb-4 px-2">
-          <TipsFilter
-            availableVariables={availableVariables}
-            availableTeams={availableTeams}
-            selectedVariables={selectedVariables}
-            selectedTeams={selectedTeams}
-            onVariablesChange={setSelectedVariables}
-            onTeamsChange={setSelectedTeams}
-          />
-          <ViewToggle
-            currentView={currentView}
-            onViewChange={handleViewChange}
-          />
-        </div>
-
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Carregando dicas</p>
+          {/* Stats Summary */}
+          {tipsData.count && (
+            <div className="mb-6 px-2">
+              <div className="flex gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">
+                    Times: {tipsData.count.teams_tips || 0}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">
+                    Jogadores: {tipsData.count.players_tips || 0}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">
+                    Total: {tipsData.count.total_tips || 0}
+                  </span>
+                </div>
+              </div>
             </div>
+          )}
+
+          {/* Tournament Selector */}
+          {availableTournaments.length > 0 && (
+            <TournamentSelector
+              tournaments={availableTournaments}
+              selectedTournament={selectedTournament}
+              onSelectTournament={handleTournamentChange}
+            />
+          )}
+
+          {/* Filter and View Toggle */}
+          <div className="flex justify-between items-center mb-4 px-2">
+            <TipsFilter
+              availableVariables={availableVariables}
+              availableTeams={availableTeams}
+              selectedVariables={selectedVariables}
+              selectedTeams={selectedTeams}
+              onVariablesChange={setSelectedVariables}
+              onTeamsChange={setSelectedTeams}
+            />
+            <ViewToggle
+              currentView={currentView}
+              onViewChange={handleViewChange}
+            />
           </div>
-        )}
 
-        {/* Error State */}
-        {error && (
-          <Card className="mb-6">
-            <CardContent className="p-6 text-center">
-              <div className="text-destructive mb-2">⚠️</div>
-              <p className="text-destructive font-medium">{error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fetchTips}
-                className="mt-3"
-              >
-                Tentar novamente
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Carregando dicas</p>
+              </div>
+            </div>
+          )}
 
-        {/* Tips List */}
-        {!loading && !error && filteredData.length > 0 && (
-          <div className="space-y-3">
-            {filteredData.map((tip, index) => (
-              <TipsCard
-                key={`${currentView}-${index}`}
-                tip={tip}
-                onClick={() => handleTipClick(tip)}
-                type={currentView}
-              />
-            ))}
-          </div>
-        )}
+          {/* Error State */}
+          {error && (
+            <Card className="mb-6">
+              <CardContent className="p-6 text-center">
+                <div className="text-destructive mb-2">⚠️</div>
+                <p className="text-destructive font-medium">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchTips}
+                  className="mt-3"
+                >
+                  Tentar novamente
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
-        {/* Empty State */}
-        {!loading && !error && filteredData.length === 0 && (
-          <Card>
-            <CardContent className="p-6 text-center">
-              <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Nenhuma dica encontrada</h3>
-              <p className="text-muted-foreground">
-                Não há dicas disponíveis para o campeonato selecionado
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </main>
+          {/* Tips List */}
+          {!loading && !error && filteredData.length > 0 && (
+            <div className="space-y-3">
+              {filteredData.map((tip, index) => (
+                <TipsCard
+                  key={`${currentView}-${index}`}
+                  tip={tip}
+                  onClick={() => handleTipClick(tip)}
+                  type={currentView}
+                />
+              ))}
+            </div>
+          )}
 
-      {/* Tips Details Drawer */}
-      <TipsDrawer
-        tip={selectedTip}
-        isOpen={isDrawerOpen}
-        onClose={handleCloseDrawer}
-        type={currentView}
-      />
+          {/* Empty State */}
+          {!loading && !error && filteredData.length === 0 && (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">Nenhuma dica encontrada</h3>
+                <p className="text-muted-foreground">
+                  Não há dicas disponíveis para o campeonato selecionado
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </main>
 
-      {/* Bottom Navigation */}
-      <Navigation />
+        {/* Tips Details Drawer */}
+        <TipsDrawer
+          tip={selectedTip}
+          isOpen={isDrawerOpen}
+          onClose={handleCloseDrawer}
+          type={currentView}
+        />
 
-      {/* Bottom padding to account for fixed navigation */}
-      <div className="h-20"></div>
-    </div>
+        {/* Bottom Navigation */}
+        <Navigation />
+
+        {/* Bottom padding to account for fixed navigation */}
+        <div className="h-20"></div>
+      </div>
+    </ProtectedRoute>
   );
 }
