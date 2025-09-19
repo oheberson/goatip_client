@@ -24,8 +24,16 @@ import {
 import Link from "next/link";
 
 export default function SubscribePage() {
-  const { user, isSubscribed, signInWithMagicLink, signOut, loading } =
-    useAuth();
+  const {
+    user,
+    isSubscribed,
+    isFreeTrial,
+    trialInfo,
+    signInWithMagicLink,
+    signOut,
+    loading,
+    startFreeTrial,
+  } = useAuth();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +52,35 @@ export default function SubscribePage() {
     }
 
     setIsLoading(false);
+  };
+
+  const handleStartFreeTrial = async () => {
+    if (!user) {
+      setMessage("Faça login para começar seu Teste Grátis");
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const result = await startFreeTrial(user.email);
+
+      if (result.success) {
+        setMessage(
+          `🎉 Teste Grátis começou! Você tem ${result.data.daysRemaining} dias para explorar todas as funcionalidades.`
+        );
+      } else {
+        setMessage(
+          result.error || "Falha ao iniciar teste grátis. Tente novamente."
+        );
+      }
+    } catch (error) {
+      console.error("Erro iniciando teste grátis:", error);
+      setMessage("Falha ao iniciar teste grátis. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubscribe = async () => {
@@ -199,14 +236,56 @@ export default function SubscribePage() {
                 Você está logado! Se inscreva agora para ter acesso a todas as
                 funcionalidades.
               </p>
-              <Button
-                size="lg"
-                onClick={handleSubscribe}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Crown className="w-5 h-5 mr-2" />
-                Inscreva-se agora
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Button
+                  size="lg"
+                  onClick={handleStartFreeTrial}
+                  variant="outline"
+                  className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
+                  disabled={isLoading}
+                >
+                  Começar Teste Grátis (7 dias)
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={handleSubscribe}
+                  className="bg-primary hover:bg-primary/90"
+                  disabled={isLoading}
+                >
+                  <Crown className="w-5 h-5 mr-2" />
+                  Inscreva-se agora
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Free Trial Status */}
+          {user && isFreeTrial && (
+            <div className="space-y-4 text-center mb-8">
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Crown className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                    Teste Grátis Ativo
+                  </h3>
+                </div>
+                <p className="text-blue-700 dark:text-blue-300 mb-4">
+                  Você tem{" "}
+                  <strong>
+                    {trialInfo?.daysRemaining || 0} dias restantes
+                  </strong>{" "}
+                  para explorar todas as funcionalidades!
+                </p>
+                <Button
+                  size="lg"
+                  onClick={handleSubscribe}
+                  className="bg-primary hover:bg-primary/90"
+                  disabled={isLoading}
+                >
+                  <Crown className="w-5 h-5 mr-2" />
+                  Inscreva-se Agora
+                </Button>
+              </div>
             </div>
           )}
 

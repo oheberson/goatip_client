@@ -32,7 +32,7 @@ import { Badge } from "@/components/ui/badge";
 export function MobileMenu() {
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
-  const { user, isSubscribed, signOut } = useAuth();
+  const { user, isSubscribed, isFreeTrial, trialInfo, signOut } = useAuth();
 
   const menuItems = [
     { icon: Home, label: "Home", href: "/" },
@@ -85,6 +85,16 @@ export function MobileMenu() {
                         className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                       >
                         Premium
+                      </Badge>
+                    </>
+                  ) : isFreeTrial ? (
+                    <>
+                      <Crown className="h-4 w-4 text-blue-500" />
+                      <Badge
+                        variant="default"
+                        className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      >
+                        Teste Grátis ({trialInfo?.daysRemaining || 0} dias)
                       </Badge>
                     </>
                   ) : (

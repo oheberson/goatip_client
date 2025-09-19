@@ -52,7 +52,7 @@ export default function CreateTeamPage({ params }) {
   const router = useRouter();
   const resolvedParams = use(params);
   const tournamentId = resolvedParams.tournament_id;
-  const { isSubscribed } = useAuth();
+  const { isSubscribed, isFreeTrial } = useAuth();
   const [teamName, setTeamName] = useState("");
   const [formation, setFormation] = useState("4-3-3");
   const [loading, setLoading] = useState(false);
@@ -282,7 +282,8 @@ export default function CreateTeamPage({ params }) {
       const data = await api.analytics.getBestPlayersByTeams(
         teamsArray,
         tournamentId,
-        isSubscribed
+        isSubscribed,
+        isFreeTrial
       );
       setBestPlayersData(data.data || data);
 
@@ -333,7 +334,8 @@ export default function CreateTeamPage({ params }) {
         const playersData = await api.players.getByTournament(
           tournamentId,
           firstMatch?.id || 1, // Use round ID if available, fallback to 1
-          isSubscribed
+          isSubscribed,
+          isFreeTrial
         );
         setPlayersData(playersData);
       } catch (error) {
@@ -362,7 +364,7 @@ export default function CreateTeamPage({ params }) {
         created_at: new Date().toISOString(),
       };
 
-      await api.fantasyTeams.create(teamData, isSubscribed);
+      await api.fantasyTeams.create(teamData, isSubscribed, isFreeTrial);
 
       // Redirect to teams page after successful creation
       router.push("/teams");
@@ -989,7 +991,7 @@ export default function CreateTeamPage({ params }) {
         {/* Main Content */}
         <main className="px-4 py-6">
           {/* Demo Warning for non-subscribers */}
-          {!isSubscribed && <DemoWarning />}
+          {!isSubscribed && !isFreeTrial && <DemoWarning />}
           <div className="max-w-md mx-auto">
             {/* Tournament Info Card */}
             {tournamentLoading ? (

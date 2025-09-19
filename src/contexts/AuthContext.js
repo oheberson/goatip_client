@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isFreeTrial, setIsFreeTrial] = useState(false);
+  const [trialInfo, setTrialInfo] = useState(null);
 
   useEffect(() => {
     if (!supabase) {
@@ -30,7 +32,10 @@ export const AuthProvider = ({ children }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await checkSubscription(session.user.email);
+        await Promise.all([
+          checkSubscription(session.user.email),
+          checkFreeTrial(session.user.email)
+        ]);
       }
       
       setLoading(false);
@@ -44,9 +49,14 @@ export const AuthProvider = ({ children }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await checkSubscription(session.user.email);
+          await Promise.all([
+            checkSubscription(session.user.email),
+            checkFreeTrial(session.user.email)
+          ]);
         } else {
           setIsSubscribed(false);
+          setIsFreeTrial(false);
+          setTrialInfo(null);
         }
         
         setLoading(false);
@@ -76,6 +86,36 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const checkFreeTrial = async (email) => {
+    try {
+      const response = await fetch('/api/check-free-trial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setIsFreeTrial(result.isFreeTrial);
+        if (result.isFreeTrial) {
+          setTrialInfo({
+            expiresAt: result.expiresAt,
+            daysRemaining: result.daysRemaining
+          });
+        } else {
+          setTrialInfo(null);
+        }
+      } else {
+        setIsFreeTrial(false);
+        setTrialInfo(null);
+      }
+    } catch (error) {
+      console.error('Error checking free trial:', error);
+      setIsFreeTrial(false);
+      setTrialInfo(null);
+    }
+  };
+
   const signInWithMagicLink = async (email) => {
     if (!supabase) {
       return { error: { message: 'Authentication not configured' } };
@@ -90,10 +130,38 @@ export const AuthProvider = ({ children }) => {
     return { error };
   };
 
+  const startFreeTrial = async (email) => {
+    try {
+      const response = await fetch('/api/start-free-trial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Refresh free trial status
+          await checkFreeTrial(email);
+          return { success: true, data: result };
+        } else {
+          return { success: false, error: result.error };
+        }
+      } else {
+        return { success: false, error: 'Failed to start free trial' };
+      }
+    } catch (error) {
+      console.error('Error starting free trial:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   const signOut = async () => {
     if (!supabase) {
       setUser(null);
       setIsSubscribed(false);
+      setIsFreeTrial(false);
+      setTrialInfo(null);
       return { error: null };
     }
     
@@ -101,6 +169,8 @@ export const AuthProvider = ({ children }) => {
     if (!error) {
       setUser(null);
       setIsSubscribed(false);
+      setIsFreeTrial(false);
+      setTrialInfo(null);
     }
     return { error };
   };
@@ -109,9 +179,13 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isSubscribed,
+    isFreeTrial,
+    trialInfo,
     signInWithMagicLink,
     signOut,
     checkSubscription,
+    checkFreeTrial,
+    startFreeTrial,
   };
 
   return (

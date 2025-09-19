@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Navigation } from "@/components/navigation";
+import { TrialExpirationNotification } from "@/components/trial-expiration-notification";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -76,8 +77,10 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="px-4 py-6">
+        {/* Main Content */}
+        <main className="px-4 py-6">
+          {/* Trial Expiration Notification */}
+          <TrialExpirationNotification />
         {/* Welcome Section */}
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold mb-2">

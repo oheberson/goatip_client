@@ -275,6 +275,6 @@ export const mockApi = {
 };
 
 // Helper function to determine if we should use mock data
-export const shouldUseMockData = (isSubscribed) => {
-  return !isSubscribed;
+export const shouldUseMockData = (isSubscribed, isFreeTrial = false) => {
+  return !isSubscribed && !isFreeTrial;
 };

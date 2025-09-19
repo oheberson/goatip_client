@@ -34,7 +34,7 @@ import { TOURNAMENTS } from "@/lib/constants";
 
 export default function MatchesPage() {
   const router = useRouter();
-  const { isSubscribed } = useAuth();
+  const { isSubscribed, isFreeTrial } = useAuth();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -80,7 +80,7 @@ export default function MatchesPage() {
 
       // If no cached data, fetch from API
       console.log("Fetching matches from API");
-      const data = await api.matches.getAll(isSubscribed);
+      const data = await api.matches.getAll(isSubscribed, isFreeTrial);
 
       // Filter to only include supported tournaments
       const filteredData = filterSupportedTournaments(data);
@@ -214,7 +214,7 @@ export default function MatchesPage() {
         {/* Main Content */}
         <main className="px-4 py-6">
           {/* Demo Warning for non-subscribers */}
-          {!isSubscribed && <DemoWarning />}
+          {!isSubscribed && !isFreeTrial && <DemoWarning />}
           {/* Header Section */}
           <div className="mb-6">
             <h2 className="text-2xl font-bold mb-1">

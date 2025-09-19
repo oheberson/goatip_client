@@ -143,7 +143,7 @@ function ViewToggle({ currentView, onViewChange }) {
 }
 
 export default function TipsPage() {
-  const { isSubscribed } = useAuth();
+  const { isSubscribed, isFreeTrial } = useAuth();
   const [tipsData, setTipsData] = useState({
     teams: [],
     players: [],
@@ -195,7 +195,7 @@ export default function TipsPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.tips.getTips(isSubscribed);
+      const data = await api.tips.getTips(isSubscribed, isFreeTrial);
       setTipsData(data);
       // Set default tournament to the first available one
       if (data.teams.length > 0 || data.players.length > 0) {
@@ -266,7 +266,7 @@ export default function TipsPage() {
         {/* Main Content */}
         <main className="px-4 py-6">
           {/* Demo Warning for non-subscribers */}
-          {!isSubscribed && <DemoWarning />}
+          {!isSubscribed && !isFreeTrial && <DemoWarning />}
           <div className="flex items-center gap-2 px-2 mb-2">
             <h1 className="font-black">Dicas de Valor</h1>
             <Questions

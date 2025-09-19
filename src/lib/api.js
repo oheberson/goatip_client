@@ -72,12 +72,12 @@ const apiClient = new ApiClient();
 export const api = {
   // Players
   players: {
-    getAll: (isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getAll: (isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.players?.getAll?.() || apiClient.get("/players")
         : apiClient.get("/players"),
-    getByTournament: (matchId, roundId, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getByTournament: (matchId, roundId, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.players?.getAll?.() ||
           apiClient.post("/players", { match_id: matchId, round_id: roundId })
         : apiClient.post("/players", { match_id: matchId, round_id: roundId }),
@@ -85,16 +85,16 @@ export const api = {
 
   // Teams
   teams: {
-    getAll: (isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getAll: (isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.teams?.getAll?.() || apiClient.get("/teams")
         : apiClient.get("/teams"),
-    getById: (id, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getById: (id, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.teams?.getById?.(id) || apiClient.get(`/teams/${id}`)
         : apiClient.get(`/teams/${id}`),
-    getFixtures: (teamId, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getFixtures: (teamId, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.teams?.getFixtures?.(teamId) ||
           apiClient.get(`/teams/${teamId}/fixtures`)
         : apiClient.get(`/teams/${teamId}/fixtures`),
@@ -102,32 +102,32 @@ export const api = {
 
   // Fantasy Teams
   fantasyTeams: {
-    getAll: (isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getAll: (isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.fantasyTeams?.getAll?.() || apiClient.get("/fantasy-teams")
         : apiClient.get("/fantasy-teams"),
-    getById: (id, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getById: (id, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.fantasyTeams?.getById?.(id) ||
           apiClient.get(`/fantasy-teams/${id}`)
         : apiClient.get(`/fantasy-teams/${id}`),
-    create: (teamData, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    create: (teamData, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.fantasyTeams?.create?.(teamData) ||
           apiClient.post("/fantasy-teams", teamData)
         : apiClient.post("/fantasy-teams", teamData),
-    update: (id, teamData, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    update: (id, teamData, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.fantasyTeams?.update?.(id, teamData) ||
           apiClient.put(`/fantasy-teams/${id}`, teamData)
         : apiClient.put(`/fantasy-teams/${id}`, teamData),
-    delete: (id, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    delete: (id, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.fantasyTeams?.delete?.(id) ||
           apiClient.delete(`/fantasy-teams/${id}`)
         : apiClient.delete(`/fantasy-teams/${id}`),
-    optimize: (id, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    optimize: (id, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.fantasyTeams?.optimize?.(id) ||
           apiClient.post(`/fantasy-teams/${id}/optimize`)
         : apiClient.post(`/fantasy-teams/${id}/optimize`),
@@ -135,17 +135,17 @@ export const api = {
 
   // Formations
   formations: {
-    getAll: (isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getAll: (isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.formations?.getAll?.() || apiClient.get("/formations")
         : apiClient.get("/formations"),
-    getById: (id, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getById: (id, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.formations?.getById?.(id) ||
           apiClient.get(`/formations/${id}`)
         : apiClient.get(`/formations/${id}`),
-    getRecommended: (players, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getRecommended: (players, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.formations?.getRecommended?.(players) ||
           apiClient.post("/formations/recommend", { players })
         : apiClient.post("/formations/recommend", { players }),
@@ -153,53 +153,53 @@ export const api = {
 
   // Matches
   matches: {
-    getAll: (isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getAll: (isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.matches.getAll()
         : apiClient.get("/matches"),
-    getById: (id, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getById: (id, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.matches.getById(id)
         : apiClient.get(`/matches/${id}`),
-    getUpcoming: (isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getUpcoming: (isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.matches.getUpcoming()
         : apiClient.get("/matches/upcoming"),
-    getByDate: (date, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getByDate: (date, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.matches.getByDate(date)
         : apiClient.get(`/matches?date=${date}`),
   },
 
   // Analytics
   analytics: {
-    getPlayerStats: (playerId, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getPlayerStats: (playerId, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.analytics?.getPlayerStats?.(playerId) ||
           apiClient.get(`/analytics/players/${playerId}`)
         : apiClient.get(`/analytics/players/${playerId}`),
-    getTeamStats: (teamId, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getTeamStats: (teamId, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.analytics?.getTeamStats?.(teamId) ||
           apiClient.get(`/analytics/teams/${teamId}`)
         : apiClient.get(`/analytics/teams/${teamId}`),
-    getFormationStats: (formationId, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getFormationStats: (formationId, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.analytics?.getFormationStats?.(formationId) ||
           apiClient.get(`/analytics/formations/${formationId}`)
         : apiClient.get(`/analytics/formations/${formationId}`),
-    getPredictions: (data, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getPredictions: (data, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.analytics?.getPredictions?.(data) ||
           apiClient.post("/analytics/predictions", data)
         : apiClient.post("/analytics/predictions", data),
-    getBestPlayers: (tournamentId, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getBestPlayers: (tournamentId, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.analytics?.getBestPlayers?.(tournamentId) ||
           apiClient.get(`/best-players?tournament_id=${tournamentId}`)
         : apiClient.get(`/best-players?tournament_id=${tournamentId}`),
-    getBestPlayersByTeams: (teams, tournamentId, isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getBestPlayersByTeams: (teams, tournamentId, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.analytics?.getBestPlayersByTeams?.(teams, tournamentId) ||
           apiClient.get(
             `/best-players?teams=${teams.join(
@@ -215,8 +215,8 @@ export const api = {
 
   // Tips
   tips: {
-    getTips: (isSubscribed = true) =>
-      shouldUseMockData(isSubscribed)
+    getTips: (isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.tips.getTips()
         : apiClient.get("/tips/get-tips"),
   },
