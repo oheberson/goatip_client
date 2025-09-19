@@ -1,76 +1,78 @@
 {
-    "brasileirao_2025": {
-		"championshipName": "Brasileirão",
+	"bundesliga_2526": {
+		"championshipName": "Bundesliga",
 		"matches": [
 			{
-				"id": "brasileirao_2025_101-230134",
-				"dateTimestamp": 1758403800,
+				"id": "bundesliga_2526_4-232877",
+				"dateTimestamp": 1758385800,
 				"awayScore": null,
 				"homeScore": null,
-				"firstTeamId": "brasileirao_2025-1297",
-				"secondTeamId": "brasileirao_2025-1250",
-				"firstTeamName": "CEA",
-				"firstTeamLongName": "Ceará",
-				"secondTeamName": "BAH",
-				"secondTeamLongName": "Bahia"
+				"firstTeamId": "bundesliga_2526-3134",
+				"secondTeamId": "bundesliga_2526-1451",
+				"firstTeamName": "RBL",
+				"firstTeamLongName": "RB Leipzig",
+				"secondTeamName": "KOE",
+				"secondTeamLongName": "Colônia"
 			},
 			{
-				"id": "brasileirao_2025_101-230114",
-				"dateTimestamp": 1758403800,
+				"id": "bundesliga_2526_4-232883",
+				"dateTimestamp": 1758375000,
 				"awayScore": null,
 				"homeScore": null,
-				"firstTeamId": "brasileirao_2025-1003",
-				"secondTeamId": "brasileirao_2025-1009",
-				"firstTeamName": "BOT",
-				"firstTeamLongName": "Botafogo",
-				"secondTeamName": "CAM",
-				"secondTeamLongName": "Atlético-MG"
+				"firstTeamId": "bundesliga_2526-1199",
+				"secondTeamId": "bundesliga_2526-1459",
+				"firstTeamName": "SVW",
+				"firstTeamLongName": "Werder Bremen",
+				"secondTeamName": "SCF",
+				"secondTeamLongName": "Freiburg"
 			},
 			{
-				"id": "brasileirao_2025_101-230425",
-				"dateTimestamp": 1758394800,
+				"id": "bundesliga_2526_4-232998",
+				"dateTimestamp": 1758375000,
 				"awayScore": null,
 				"homeScore": null,
-				"firstTeamId": "brasileirao_2025-1174",
-				"secondTeamId": "brasileirao_2025-1006",
-				"firstTeamName": "VIT",
-				"firstTeamLongName": "Vitória",
-				"secondTeamName": "FLU",
-				"secondTeamLongName": "Fluminense"
+				"firstTeamId": "bundesliga_2526-1457",
+				"secondTeamId": "bundesliga_2526-1190",
+				"firstTeamName": "TSG",
+				"firstTeamLongName": "Hoffenheim",
+				"secondTeamName": "BAY",
+				"secondTeamLongName": "Bayern"
 			},
 			{
-				"id": "brasileirao_2025_101-230064",
-				"dateTimestamp": 1758412800,
+				"id": "bundesliga_2526_4-233064",
+				"dateTimestamp": 1758375000,
 				"awayScore": null,
 				"homeScore": null,
-				"firstTeamId": "brasileirao_2025-1012",
-				"secondTeamId": "brasileirao_2025-1024",
-				"firstTeamName": "PAL",
-				"firstTeamLongName": "Palmeiras",
-				"secondTeamName": "FOR",
-				"secondTeamLongName": "Fortaleza"
+				"firstTeamId": "bundesliga_2526-1454",
+				"secondTeamId": "bundesliga_2526-3383",
+				"firstTeamName": "HSV",
+				"firstTeamLongName": "Hamburgo",
+				"secondTeamName": "FCH",
+				"secondTeamLongName": "Heidenheim"
+			},
+			{
+				"id": "bundesliga_2526_4-232952",
+				"dateTimestamp": 1758375000,
+				"awayScore": null,
+				"homeScore": null,
+				"firstTeamId": "bundesliga_2526-1674",
+				"secondTeamId": "bundesliga_2526-1458",
+				"firstTeamName": "AGG",
+				"firstTeamLongName": "Augsburg",
+				"secondTeamName": "M05",
+				"secondTeamLongName": "Mainz 05"
 			}
 		],
 		"rooms": [
 			{
-				"name": "BR Rei  👑💰",
-				"prizes": 40005,
+				"name": "🅱️undeslig💰🤑",
+				"prizes": 3000,
 				"capacity": -1,
-				"totalEntrances": 7,
-				"maxUserLineups": 300,
-				"guaranteedPrize": 40005,
+				"totalEntrances": 1,
+				"maxUserLineups": 100,
+				"guaranteedPrize": 3000,
 				"roomSeasonality": "DAILY",
-				"roomId": "4469c529-345d-44d7-88c8-9e9aff42fda5"
-			},
-			{
-				"name": "Liga da Assistência ",
-				"prizes": 2501,
-				"capacity": -1,
-				"totalEntrances": 2,
-				"maxUserLineups": 1,
-				"guaranteedPrize": 2501,
-				"roomSeasonality": "DAILY",
-				"roomId": "5904161b-0d44-413d-bf93-fbb5a7d24eb2"
+				"roomId": "575d5441-420e-4f11-84fe-455f3d799af5"
 			},
 			{
 				"name": "Dobro ou Nada R$ 25",
@@ -80,7 +82,7 @@
 				"maxUserLineups": 1,
 				"guaranteedPrize": 1100,
 				"roomSeasonality": "DAILY",
-				"roomId": "8abfb987-8806-488f-aa8c-f307f3d30564"
+				"roomId": "e5f18f77-3beb-4c54-bd72-4c5d814b6f8e"
 			},
 			{
 				"name": "Dobro ou Nada R$ 50",
@@ -90,27 +92,17 @@
 				"maxUserLineups": 1,
 				"guaranteedPrize": 900,
 				"roomSeasonality": "DAILY",
-				"roomId": "43763aae-8c98-4377-8f0c-e1415c0ed185"
-			},
-			{
-				"name": "1 contra 1 R$ 280",
-				"prizes": 500,
-				"capacity": 2,
-				"totalEntrances": 0,
-				"maxUserLineups": 1,
-				"guaranteedPrize": 500,
-				"roomSeasonality": "DAILY",
-				"roomId": "0689b39e-40a7-4d70-ac7c-a567d2822c99"
+				"roomId": "0c1dc20a-6b80-4769-b7bc-3fd39c50ff8f"
 			},
 			{
 				"name": "Dobro ou Nada R$ 10",
 				"prizes": 440,
 				"capacity": 50,
-				"totalEntrances": 1,
+				"totalEntrances": 2,
 				"maxUserLineups": 1,
 				"guaranteedPrize": 440,
 				"roomSeasonality": "DAILY",
-				"roomId": "5f75c34f-f480-422c-b69a-d65bca7e847f"
+				"roomId": "34b607de-ab8c-4b0a-b9fc-a8c883f1254d"
 			},
 			{
 				"name": "Mitos da Rodada",
@@ -120,7 +112,7 @@
 				"maxUserLineups": 1,
 				"guaranteedPrize": 300,
 				"roomSeasonality": "DAILY",
-				"roomId": "e9f08c37-c4c7-43ae-b2b9-8169dcbb8850"
+				"roomId": "2aa9a60f-9812-4a41-b2a6-6fa172b73ed0"
 			},
 			{
 				"name": "Dobro ou Nada R$ 5",
@@ -130,37 +122,27 @@
 				"maxUserLineups": 1,
 				"guaranteedPrize": 220,
 				"roomSeasonality": "DAILY",
-				"roomId": "32818502-0cf8-498e-8f75-0c7103855a7a"
+				"roomId": "a783e980-5eee-4731-ae10-739c1cef43b0"
 			},
 			{
 				"name": "Dobro ou Nada R$ 5",
 				"prizes": 220,
 				"capacity": 50,
-				"totalEntrances": 1,
+				"totalEntrances": 3,
 				"maxUserLineups": 1,
 				"guaranteedPrize": 220,
 				"roomSeasonality": "DAILY",
-				"roomId": "d7d8fbf5-d778-4561-a0ee-0a8e866a331d"
-			},
-			{
-				"name": "1 contra 1 R$ 115",
-				"prizes": 200,
-				"capacity": 2,
-				"totalEntrances": 0,
-				"maxUserLineups": 1,
-				"guaranteedPrize": 200,
-				"roomSeasonality": "DAILY",
-				"roomId": "1af1ff3d-4a4f-49c7-be62-992154406fdb"
+				"roomId": "dcda6ff5-aa86-425d-8f27-b0f336c1cb72"
 			},
 			{
 				"name": "Liga Econômica R$ 2",
 				"prizes": 160,
 				"capacity": 100,
-				"totalEntrances": 3,
+				"totalEntrances": 5,
 				"maxUserLineups": 1,
 				"guaranteedPrize": 160,
 				"roomSeasonality": "DAILY",
-				"roomId": "b7d43c18-b7ea-4ad3-8427-04c4e47d373f"
+				"roomId": "6648bb78-a979-4c74-8174-5b7f3c0e209e"
 			},
 			{
 				"name": "Craques da Rodada",
@@ -170,47 +152,327 @@
 				"maxUserLineups": 1,
 				"guaranteedPrize": 150,
 				"roomSeasonality": "DAILY",
-				"roomId": "f7801b4c-850c-4088-b63a-df2b9fc43862"
-			},
-			{
-				"name": "1 contra 1 R$ 50",
-				"prizes": 85,
-				"capacity": 2,
-				"totalEntrances": 0,
-				"maxUserLineups": 1,
-				"guaranteedPrize": 85,
-				"roomSeasonality": "DAILY",
-				"roomId": "74d0f28c-0188-47b2-8dc5-4484daf6a25a"
+				"roomId": "4673e936-4911-4d77-ac63-d0b5e86a93da"
 			},
 			{
 				"name": "Liga Econômica R$ 1",
 				"prizes": 80,
 				"capacity": 100,
-				"totalEntrances": 3,
+				"totalEntrances": 19,
 				"maxUserLineups": 1,
 				"guaranteedPrize": 80,
 				"roomSeasonality": "DAILY",
-				"roomId": "17921f16-594a-4eae-9c02-0522d4c6f95d"
-			},
-			{
-				"name": "1 contra 1 R$ 25",
-				"prizes": 42,
-				"capacity": 2,
-				"totalEntrances": 0,
-				"maxUserLineups": 1,
-				"guaranteedPrize": 42,
-				"roomSeasonality": "DAILY",
-				"roomId": "bc619191-6160-4aae-a2f1-667f331e3194"
+				"roomId": "ce0d7593-a93d-4768-bcdc-93f21c1e033a"
 			},
 			{
 				"name": "Liga Treino",
 				"prizes": 0,
 				"capacity": 200,
-				"totalEntrances": 13,
+				"totalEntrances": 26,
 				"maxUserLineups": 1,
 				"guaranteedPrize": 0,
 				"roomSeasonality": "DAILY",
-				"roomId": "66809182-68e4-4f67-b6a5-309e9f909ab0"
+				"roomId": "c2bf9740-9676-49a1-8ae8-6ea683b68288"
+			}
+		]
+	},
+	"saudita_2526": {
+		"championshipName": "Liga Saudita",
+		"matches": [
+			{
+				"id": "saudita_2526_3-234889",
+				"dateTimestamp": 1758304800,
+				"awayScore": null,
+				"homeScore": null,
+				"firstTeamId": "saudita_2526-3182",
+				"secondTeamId": "saudita_2526-3421",
+				"firstTeamName": "AHL",
+				"firstTeamLongName": "Al Ahli SFC",
+				"secondTeamName": "HIL",
+				"secondTeamLongName": "Al Hilal"
+			},
+			{
+				"id": "saudita_2526_3-234881",
+				"dateTimestamp": 1758294900,
+				"awayScore": null,
+				"homeScore": null,
+				"firstTeamId": "saudita_2526-4871",
+				"secondTeamId": "saudita_2526-4052",
+				"firstTeamName": "ALQ",
+				"firstTeamLongName": "Al Qadsiah",
+				"secondTeamName": "KHA",
+				"secondTeamLongName": "Al Khaleej"
+			}
+		],
+		"rooms": [
+			{
+				"name": "Saudita Premiado 👑",
+				"prizes": 5002,
+				"capacity": -1,
+				"totalEntrances": 32,
+				"maxUserLineups": 100,
+				"guaranteedPrize": 5002,
+				"roomSeasonality": "DAILY",
+				"roomId": "78cf9568-14da-456f-8e2a-812d56dccead"
+			},
+			{
+				"name": "Dobro ou Nada R$ 25",
+				"prizes": 1100,
+				"capacity": 50,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 1100,
+				"roomSeasonality": "DAILY",
+				"roomId": "f963f5c5-3400-46d6-ad92-da5fccbc88f7"
+			},
+			{
+				"name": "Dobro ou Nada R$ 50",
+				"prizes": 900,
+				"capacity": 20,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 900,
+				"roomSeasonality": "DAILY",
+				"roomId": "f05abb54-435a-45f1-aa96-daab36832fb1"
+			},
+			{
+				"name": "Dobro ou Nada R$ 10",
+				"prizes": 440,
+				"capacity": 50,
+				"totalEntrances": 4,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 440,
+				"roomSeasonality": "DAILY",
+				"roomId": "6d142463-59b8-460d-a2a2-2fcb84ea5938"
+			},
+			{
+				"name": "Mitos da Rodada",
+				"prizes": 300,
+				"capacity": 35,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 300,
+				"roomSeasonality": "DAILY",
+				"roomId": "5e157f29-58f9-4ea9-9903-8b8ef13e3dd6"
+			},
+			{
+				"name": "Dobro ou Nada R$ 5",
+				"prizes": 220,
+				"capacity": 50,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 220,
+				"roomSeasonality": "DAILY",
+				"roomId": "45829f10-14c1-4de6-a98c-7972c766078a"
+			},
+			{
+				"name": "Dobro ou Nada R$ 5",
+				"prizes": 220,
+				"capacity": 50,
+				"totalEntrances": 6,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 220,
+				"roomSeasonality": "DAILY",
+				"roomId": "7c1db8d8-46ee-4759-9e4b-537d8fad6f12"
+			},
+			{
+				"name": "Liga Econômica R$ 2",
+				"prizes": 160,
+				"capacity": 100,
+				"totalEntrances": 35,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 160,
+				"roomSeasonality": "DAILY",
+				"roomId": "38a6eebb-a40d-4c14-bc69-a8320cdcbd81"
+			},
+			{
+				"name": "Craques da Rodada",
+				"prizes": 150,
+				"capacity": 35,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 150,
+				"roomSeasonality": "DAILY",
+				"roomId": "c3a4df53-4dd9-4857-a83a-918cbd88fb3d"
+			},
+			{
+				"name": "Liga Econômica R$ 1",
+				"prizes": 80,
+				"capacity": 100,
+				"totalEntrances": 75,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 80,
+				"roomSeasonality": "DAILY",
+				"roomId": "bcd70765-d5ed-4890-be04-0140217d637d"
+			},
+			{
+				"name": "Liga Treino",
+				"prizes": 0,
+				"capacity": 200,
+				"totalEntrances": 53,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 0,
+				"roomSeasonality": "DAILY",
+				"roomId": "d7876129-35f1-4ba3-9133-df75b140e072"
+			}
+		]
+	},
+	"unicos_brasileirao_2025": {
+		"championshipName": "Únicos Brasileirão",
+		"matches": [
+			{
+				"id": "unicos_brasileirao_2025_78-230064",
+				"dateTimestamp": 1758412800,
+				"awayScore": null,
+				"homeScore": null,
+				"firstTeamId": "unicos_brasileirao_2025-1012",
+				"secondTeamId": "unicos_brasileirao_2025-1024",
+				"firstTeamName": "PAL",
+				"firstTeamLongName": "Palmeiras",
+				"secondTeamName": "FOR",
+				"secondTeamLongName": "Fortaleza"
+			}
+		],
+		"rooms": [
+			{
+				"name": "🐷 Palmeiras x Fortaleza 🦁",
+				"prizes": 15000,
+				"capacity": -1,
+				"totalEntrances": 3,
+				"maxUserLineups": 300,
+				"guaranteedPrize": 15000,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "680349a4-13d4-4a45-bab0-108fafe04ded"
+			},
+			{
+				"name": "Dobro ou Nada R$ 110",
+				"prizes": 1980,
+				"capacity": 20,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 1980,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "6c4f434a-398d-43f5-a2ce-97dfd74fa609"
+			},
+			{
+				"name": "Dobro ou Nada R$ 25",
+				"prizes": 1100,
+				"capacity": 50,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 1100,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "a8dedf0b-3c16-4437-b82d-d1de5f4e60cc"
+			},
+			{
+				"name": "Liga da Assistência",
+				"prizes": 1001,
+				"capacity": -1,
+				"totalEntrances": 1,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 1001,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "23ed5ebc-4866-4295-ae46-dce2a4c47b5b"
+			},
+			{
+				"name": "Dobro ou Nada R$ 50",
+				"prizes": 900,
+				"capacity": 20,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 900,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "2d1eb90d-7ff5-4e96-9aed-87c7482272f9"
+			},
+			{
+				"name": "Liga Limitada",
+				"prizes": 450,
+				"capacity": 100,
+				"totalEntrances": 1,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 450,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "1ca37717-1051-489c-80ab-cc1d84c581a5"
+			},
+			{
+				"name": "Dobro ou Nada R$ 10",
+				"prizes": 440,
+				"capacity": 50,
+				"totalEntrances": 1,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 440,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "1b5876ae-c25f-43c0-a722-3405d71aaeff"
+			},
+			{
+				"name": "Mitos da Rodada",
+				"prizes": 300,
+				"capacity": 35,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 300,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "b70d15aa-4c62-4907-a468-d919bf9e296e"
+			},
+			{
+				"name": "Dobro ou Nada R$ 5",
+				"prizes": 220,
+				"capacity": 50,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 220,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "02f10bbe-8153-4797-ad94-71fe6e0a4574"
+			},
+			{
+				"name": "Dobro ou Nada R$ 5",
+				"prizes": 220,
+				"capacity": 50,
+				"totalEntrances": 1,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 220,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "6af63bf8-20e3-4fb7-8387-98f503d38f4b"
+			},
+			{
+				"name": "Liga Econômica R$ 2",
+				"prizes": 160,
+				"capacity": 100,
+				"totalEntrances": 1,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 160,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "426074f8-4136-45cd-85fd-4bad9be8e863"
+			},
+			{
+				"name": "Craques da Rodada",
+				"prizes": 150,
+				"capacity": 35,
+				"totalEntrances": 0,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 150,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "5a191853-c76e-484e-92ad-61939d9cf37b"
+			},
+			{
+				"name": "Liga Econômica R$ 1",
+				"prizes": 80,
+				"capacity": 100,
+				"totalEntrances": 4,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 80,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "1b0d737e-73e2-498e-bca9-7836f5d69a16"
+			},
+			{
+				"name": "Liga Treino",
+				"prizes": 0,
+				"capacity": 200,
+				"totalEntrances": 17,
+				"maxUserLineups": 1,
+				"guaranteedPrize": 0,
+				"roomSeasonality": "SINGLE_MATCH",
+				"roomId": "d8f8a745-2620-45e3-9506-117666114378"
 			}
 		]
 	}
