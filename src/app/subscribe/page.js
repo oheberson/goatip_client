@@ -20,8 +20,10 @@ import {
   BarChart3,
   Flag,
   TrendingUp,
+  Home,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SubscribePage() {
   const {
@@ -37,6 +39,7 @@ export default function SubscribePage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -286,8 +289,11 @@ export default function SubscribePage() {
                   className="bg-primary hover:bg-primary/90"
                   disabled={isLoading}
                 >
-                  <Crown className="w-5 h-5 mr-2" />
-                  Inscreva-se Agora
+                  <Home
+                    onClick={() => router.push("/")}
+                    className="w-5 h-5 mr-2"
+                  />
+                  Ir para o Início
                 </Button>
               </div>
             </div>
