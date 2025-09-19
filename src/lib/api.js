@@ -76,11 +76,11 @@ export const api = {
       shouldUseMockData(isSubscribed)
         ? mockApi.players?.getAll?.() || apiClient.get("/players")
         : apiClient.get("/players"),
-    getByTournament: (tournamentId, isSubscribed = true) =>
+    getByTournament: (matchId, roundId, isSubscribed = true) =>
       shouldUseMockData(isSubscribed)
         ? mockApi.players?.getAll?.() ||
-          apiClient.get(`/players?tournament_id=${tournamentId}`)
-        : apiClient.get(`/players?tournament_id=${tournamentId}`),
+          apiClient.post("/players", { match_id: matchId, round_id: roundId })
+        : apiClient.post("/players", { match_id: matchId, round_id: roundId }),
   },
 
   // Teams

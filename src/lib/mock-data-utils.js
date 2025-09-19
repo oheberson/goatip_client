@@ -109,6 +109,12 @@ export const mockApi = {
         }
       };
     },
+    getByTournament: async (matchId, roundId) => {
+      await simulateApiDelay();
+      // For mock data, we'll return all players since we don't have match-specific filtering
+      // In a real implementation, this would filter by matchId and roundId
+      return playersMockData;
+    },
   },
 
   // Mock best players API (for fantasy team creation)

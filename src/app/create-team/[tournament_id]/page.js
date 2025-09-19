@@ -328,8 +328,11 @@ export default function CreateTeamPage({ params }) {
         // Fetch best players data if tournament is available
         await fetchBestPlayersData(tournamentId, tournament.matches || []);
 
+        // Get the first match for player data
+        const firstMatch = tournament.matches?.[0];
         const playersData = await api.players.getByTournament(
-          tournamentId,
+          firstMatch?.id || tournamentId, // Use match ID if available, fallback to tournament ID
+          firstMatch?.roundId || 1, // Use round ID if available, fallback to 1
           isSubscribed
         );
         setPlayersData(playersData);
