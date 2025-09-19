@@ -80,6 +80,7 @@ export default function MatchesPage() {
 
       // If no cached data, fetch from API
       console.log("Fetching matches from API");
+      console.log("issub>>", isSubscribed);
       const data = await api.matches.getAll(isSubscribed);
 
       // Filter to only include supported tournaments
@@ -194,155 +195,161 @@ export default function MatchesPage() {
   return (
     <ProtectedRoute allowDemo={true}>
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">
-                  G
-                </span>
+        {/* Header */}
+        <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">
+                    G
+                  </span>
+                </div>
+                <h1 className="text-xl font-bold">Torneios</h1>
               </div>
-              <h1 className="text-xl font-bold">Torneios</h1>
+              <MobileMenu />
             </div>
-            <MobileMenu />
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="px-4 py-6">
-        {/* Demo Warning for non-subscribers */}
-        {!isSubscribed && <DemoWarning />}
-        {/* Header Section */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-1">Próximos torneios fantasy</h2>
-          {/* <p className="text-muted-foreground">
+        {/* Main Content */}
+        <main className="px-4 py-6">
+          {/* Demo Warning for non-subscribers */}
+          {!isSubscribed && <DemoWarning />}
+          {/* Header Section */}
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-1">
+              Próximos torneios fantasy
+            </h2>
+            {/* <p className="text-muted-foreground">
             Track live scores and upcoming fixtures
           </p> */}
-        </div>
-
-        {/* Matches List */}
-        {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-4">
-                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
-        ) : error ? (
-          <Card>
-            <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground mb-4">{error}</p>
-              <Button onClick={fetchMatches} variant="outline">
-                Tente novamente
-              </Button>
-            </CardContent>
-          </Card>
-        ) : Object.keys(matches).length === 0 ? (
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Circle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Nenhuma partida encontrada</h3>
-              <p className="text-muted-foreground">
-                Volte e confira partidas disponíveis
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {Object.entries(matches).map(([tournamentId, tournamentInfos]) => (
-              <div
-                key={tournamentId}
-                className="rounded-xl border bg-card text-card-foreground shadow cursor-pointer hover:shadow-md transition-shadow p-4 flex justify-center items-center"
-                onClick={() =>
-                  handleTournamentClick(tournamentId, tournamentInfos)
-                }
-              >
-                <div className="w-full h-full">
-                  <div className="flex flex-row justify-between items-center w-full h-full">
-                    <span>{tournamentInfos.championshipName}</span>
-                    <span>{/* <MoveRight className="w-5 h-5" /> */}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
 
-      {/* Bottom Navigation */}
-      <Navigation />
-
-      {/* Bottom padding to account for fixed navigation */}
-      <div className="h-20"></div>
-
-      {/* Drawer for Matches */}
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{selectedTournament?.championshipName}</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-4">
-            <div className="mb-4">
-              <Button
-                className="w-full"
-                onClick={() => {
-                  setDrawerOpen(false);
-                  router.push(`/create-team/${selectedTournament.id}`);
-                }}
-              >
-                Conferir detalhes do torneio
-              </Button>
-            </div>
-            <div className="max-h-[60vh] overflow-y-auto space-y-4">
-              {selectedTournament?.matches?.map((match, match_id) => (
-                <Card
-                  key={match_id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                >
+          {/* Matches List */}
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="animate-pulse">
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm text-muted-foreground">
-                          {formatDate(match.dateTimestamp)}
-                        </span>
-                      </div>
-                      <div
-                        className={`px-2 py-1 rounded-full text-xs font-medium`}
-                      >
-                        {/* {match.status.toUpperCase()} */}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="text-center flex-1">
-                        <div className="font-semibold text-lg">
-                          {match.firstTeamLongName}
-                        </div>
-                        {match.firstTeamName}
-                      </div>
-                      <div className="text-muted-foreground mx-4">vs</div>
-                      <div className="text-center flex-1">
-                        <div className="font-semibold text-lg">
-                          {match.secondTeamLongName}
-                        </div>
-                        {match.secondTeamName}
-                      </div>
-                    </div>
+                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
+          ) : error ? (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground mb-4">{error}</p>
+                <Button onClick={fetchMatches} variant="outline">
+                  Tente novamente
+                </Button>
+              </CardContent>
+            </Card>
+          ) : Object.keys(matches).length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Circle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">
+                  Nenhuma partida encontrada
+                </h3>
+                <p className="text-muted-foreground">
+                  Volte e confira partidas disponíveis
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(matches).map(
+                ([tournamentId, tournamentInfos]) => (
+                  <div
+                    key={tournamentId}
+                    className="rounded-xl border bg-card text-card-foreground shadow cursor-pointer hover:shadow-md transition-shadow p-4 flex justify-center items-center"
+                    onClick={() =>
+                      handleTournamentClick(tournamentId, tournamentInfos)
+                    }
+                  >
+                    <div className="w-full h-full">
+                      <div className="flex flex-row justify-between items-center w-full h-full">
+                        <span>{tournamentInfos.championshipName}</span>
+                        <span>{/* <MoveRight className="w-5 h-5" /> */}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </main>
+
+        {/* Bottom Navigation */}
+        <Navigation />
+
+        {/* Bottom padding to account for fixed navigation */}
+        <div className="h-20"></div>
+
+        {/* Drawer for Matches */}
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>{selectedTournament?.championshipName}</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4">
+              <div className="mb-4">
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    router.push(`/create-team/${selectedTournament.id}`);
+                  }}
+                >
+                  Conferir detalhes do torneio
+                </Button>
+              </div>
+              <div className="max-h-[60vh] overflow-y-auto space-y-4">
+                {selectedTournament?.matches?.map((match, match_id) => (
+                  <Card
+                    key={match_id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <Clock className="w-4 h-4" />
+                          <span className="text-sm text-muted-foreground">
+                            {formatDate(match.dateTimestamp)}
+                          </span>
+                        </div>
+                        <div
+                          className={`px-2 py-1 rounded-full text-xs font-medium`}
+                        >
+                          {/* {match.status.toUpperCase()} */}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-center flex-1">
+                          <div className="font-semibold text-lg">
+                            {match.firstTeamLongName}
+                          </div>
+                          {match.firstTeamName}
+                        </div>
+                        <div className="text-muted-foreground mx-4">vs</div>
+                        <div className="text-center flex-1">
+                          <div className="font-semibold text-lg">
+                            {match.secondTeamLongName}
+                          </div>
+                          {match.secondTeamName}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
       </div>
     </ProtectedRoute>
   );
