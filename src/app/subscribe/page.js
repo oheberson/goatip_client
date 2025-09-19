@@ -236,7 +236,7 @@ export default function SubscribePage() {
                 Você está logado! Se inscreva agora para ter acesso a todas as
                 funcionalidades.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <div className="flex flex-col gap-3 justify-center items-center">
                 <Button
                   size="lg"
                   onClick={handleStartFreeTrial}
