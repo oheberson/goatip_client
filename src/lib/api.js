@@ -76,6 +76,11 @@ export const api = {
       shouldUseMockData(isSubscribed)
         ? mockApi.players?.getAll?.() || apiClient.get("/players")
         : apiClient.get("/players"),
+    getByTournament: (tournamentId, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.players?.getAll?.() ||
+          apiClient.get(`/players?tournament_id=${tournamentId}`)
+        : apiClient.get(`/players?tournament_id=${tournamentId}`),
   },
 
   // Teams
@@ -84,6 +89,66 @@ export const api = {
       shouldUseMockData(isSubscribed)
         ? mockApi.teams?.getAll?.() || apiClient.get("/teams")
         : apiClient.get("/teams"),
+    getById: (id, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.teams?.getById?.(id) || apiClient.get(`/teams/${id}`)
+        : apiClient.get(`/teams/${id}`),
+    getFixtures: (teamId, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.teams?.getFixtures?.(teamId) ||
+          apiClient.get(`/teams/${teamId}/fixtures`)
+        : apiClient.get(`/teams/${teamId}/fixtures`),
+  },
+
+  // Fantasy Teams
+  fantasyTeams: {
+    getAll: (isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.fantasyTeams?.getAll?.() || apiClient.get("/fantasy-teams")
+        : apiClient.get("/fantasy-teams"),
+    getById: (id, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.fantasyTeams?.getById?.(id) ||
+          apiClient.get(`/fantasy-teams/${id}`)
+        : apiClient.get(`/fantasy-teams/${id}`),
+    create: (teamData, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.fantasyTeams?.create?.(teamData) ||
+          apiClient.post("/fantasy-teams", teamData)
+        : apiClient.post("/fantasy-teams", teamData),
+    update: (id, teamData, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.fantasyTeams?.update?.(id, teamData) ||
+          apiClient.put(`/fantasy-teams/${id}`, teamData)
+        : apiClient.put(`/fantasy-teams/${id}`, teamData),
+    delete: (id, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.fantasyTeams?.delete?.(id) ||
+          apiClient.delete(`/fantasy-teams/${id}`)
+        : apiClient.delete(`/fantasy-teams/${id}`),
+    optimize: (id, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.fantasyTeams?.optimize?.(id) ||
+          apiClient.post(`/fantasy-teams/${id}/optimize`)
+        : apiClient.post(`/fantasy-teams/${id}/optimize`),
+  },
+
+  // Formations
+  formations: {
+    getAll: (isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.formations?.getAll?.() || apiClient.get("/formations")
+        : apiClient.get("/formations"),
+    getById: (id, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.formations?.getById?.(id) ||
+          apiClient.get(`/formations/${id}`)
+        : apiClient.get(`/formations/${id}`),
+    getRecommended: (players, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.formations?.getRecommended?.(players) ||
+          apiClient.post("/formations/recommend", { players })
+        : apiClient.post("/formations/recommend", { players }),
   },
 
   // Matches
@@ -92,10 +157,42 @@ export const api = {
       shouldUseMockData(isSubscribed)
         ? mockApi.matches.getAll()
         : apiClient.get("/matches"),
+    getById: (id, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.matches.getById(id)
+        : apiClient.get(`/matches/${id}`),
+    getUpcoming: (isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.matches.getUpcoming()
+        : apiClient.get("/matches/upcoming"),
+    getByDate: (date, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.matches.getByDate(date)
+        : apiClient.get(`/matches?date=${date}`),
   },
 
   // Analytics
   analytics: {
+    getPlayerStats: (playerId, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.analytics?.getPlayerStats?.(playerId) ||
+          apiClient.get(`/analytics/players/${playerId}`)
+        : apiClient.get(`/analytics/players/${playerId}`),
+    getTeamStats: (teamId, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.analytics?.getTeamStats?.(teamId) ||
+          apiClient.get(`/analytics/teams/${teamId}`)
+        : apiClient.get(`/analytics/teams/${teamId}`),
+    getFormationStats: (formationId, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.analytics?.getFormationStats?.(formationId) ||
+          apiClient.get(`/analytics/formations/${formationId}`)
+        : apiClient.get(`/analytics/formations/${formationId}`),
+    getPredictions: (data, isSubscribed = true) =>
+      shouldUseMockData(isSubscribed)
+        ? mockApi.analytics?.getPredictions?.(data) ||
+          apiClient.post("/analytics/predictions", data)
+        : apiClient.post("/analytics/predictions", data),
     getBestPlayers: (tournamentId, isSubscribed = true) =>
       shouldUseMockData(isSubscribed)
         ? mockApi.analytics?.getBestPlayers?.(tournamentId) ||
