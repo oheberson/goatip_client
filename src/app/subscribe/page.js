@@ -237,7 +237,7 @@ export default function SubscribePage() {
                 funcionalidades.
               </p>
               <div className="flex flex-col gap-3 justify-center items-center">
-                <Button
+                {/* <Button
                   size="lg"
                   onClick={handleStartFreeTrial}
                   variant="outline"
@@ -245,7 +245,7 @@ export default function SubscribePage() {
                   disabled={isLoading}
                 >
                   Começar Teste Grátis (7 dias)
-                </Button>
+                </Button> */}
                 <Button
                   size="lg"
                   onClick={handleSubscribe}
