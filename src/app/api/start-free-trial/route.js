@@ -1,13 +1,31 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const getSupabaseClient = () => {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return null;
+  }
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+};
 
 export async function POST(request) {
   try {
+    const supabase = getSupabaseClient();
+
+    if (!supabase) {
+      console.log("Supabase not configured — cannot start free trial.");
+      return NextResponse.json({
+        success: false,
+        error: "Supabase not configured",
+      });
+    }
+
     const { email } = await request.json();
 
     if (!email) {
