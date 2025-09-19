@@ -55,7 +55,9 @@ export default function SubscribePage() {
   };
 
   const handleStartFreeTrial = async () => {
+    console.log("triggered start free trial process");
     if (!user) {
+      console.log("user not found");
       setMessage("Faça login para começar seu Teste Grátis");
       return;
     }
@@ -64,11 +66,13 @@ export default function SubscribePage() {
     setMessage("");
 
     try {
+      console.log("trying running");
       const result = await startFreeTrial(user.email);
+      console.log("result success");
 
       if (result.success) {
         setMessage(
-          `🎉 Teste Grátis começou! Você tem ${result.data.daysRemaining} dias para explorar todas as funcionalidades.`
+          `Teste Grátis começou! Você tem ${result.data.daysRemaining} dias para explorar todas as funcionalidades.`
         );
       } else {
         setMessage(
@@ -85,7 +89,7 @@ export default function SubscribePage() {
 
   const handleSubscribe = async () => {
     if (!user) {
-      setMessage("Please log in first to subscribe");
+      setMessage("Faça login primeiro para se inscrever.");
       return;
     }
 
@@ -237,7 +241,7 @@ export default function SubscribePage() {
                 funcionalidades.
               </p>
               <div className="flex flex-col gap-3 justify-center items-center">
-                {/* <Button
+                <Button
                   size="lg"
                   onClick={handleStartFreeTrial}
                   variant="outline"
@@ -245,7 +249,7 @@ export default function SubscribePage() {
                   disabled={isLoading}
                 >
                   Começar Teste Grátis (7 dias)
-                </Button> */}
+                </Button>
                 <Button
                   size="lg"
                   onClick={handleSubscribe}
