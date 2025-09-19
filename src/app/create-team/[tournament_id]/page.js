@@ -311,7 +311,7 @@ export default function CreateTeamPage({ params }) {
 
         if (!tournament) {
           setTournamentError(
-            "Tournament not found. Please go back to matches and try again."
+            "Dados de torneio não encontrados. Volte e recarregue os torneios disponíveis."
           );
           return;
         }
@@ -331,8 +331,8 @@ export default function CreateTeamPage({ params }) {
         // Get the first match for player data
         const firstMatch = tournament.matches?.[0];
         const playersData = await api.players.getByTournament(
-          firstMatch?.id || tournamentId, // Use match ID if available, fallback to tournament ID
-          firstMatch?.roundId || 1, // Use round ID if available, fallback to 1
+          tournamentId,
+          firstMatch?.id || 1, // Use round ID if available, fallback to 1
           isSubscribed
         );
         setPlayersData(playersData);

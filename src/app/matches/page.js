@@ -80,7 +80,6 @@ export default function MatchesPage() {
 
       // If no cached data, fetch from API
       console.log("Fetching matches from API");
-      console.log("issub>>", isSubscribed);
       const data = await api.matches.getAll(isSubscribed);
 
       // Filter to only include supported tournaments
