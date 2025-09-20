@@ -103,6 +103,7 @@ export function PlayerSelectionDrawer({
       detailedMatchesData,
       uniqueTeams
     );
+    console.log("teamscoring>>>", teamScoringAnalysis);
 
     // Set the recommendations result with the new format
     setRecommendationsResult(teamScoringAnalysis);
