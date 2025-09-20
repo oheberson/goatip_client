@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { clearAllGoatipStorage } from '@/lib/localStorage-utils';
 
 function AuthCallbackContent() {
   const router = useRouter();
@@ -19,6 +20,11 @@ function AuthCallbackContent() {
           return;
         }
 
+        // Clear all localStorage data before processing authentication
+        // This prevents conflicts between different user sessions
+        console.log('🧹 Clearing localStorage before authentication...');
+        clearAllGoatipStorage();
+
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -29,9 +35,11 @@ function AuthCallbackContent() {
         }
 
         if (data.session) {
+          console.log('✅ Authentication successful, redirecting to home');
           // Successfully authenticated, redirect to home
           router.replace('/');
         } else {
+          console.log('❌ No session found, redirecting to login');
           // No session found, redirect to login
           router.replace('/auth/login');
         }

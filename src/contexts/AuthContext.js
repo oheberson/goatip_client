@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { clearAllGoatipStorage } from '@/lib/localStorage-utils';
 
 const AuthContext = createContext({});
 
@@ -66,6 +67,12 @@ export const AuthProvider = ({ children }) => {
       async (event, session) => {
         // Skip auth state changes in development mode
         if (isDevelopmentMode) return;
+        
+        // Clear localStorage when user signs in to prevent session conflicts
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('🧹 User signed in, clearing localStorage for clean session');
+          clearAllGoatipStorage();
+        }
         
         setUser(session?.user ?? null);
         
@@ -184,6 +191,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signOut = async () => {
+    // Clear localStorage when signing out
+    console.log('🧹 Signing out, clearing localStorage');
+    clearAllGoatipStorage();
+    
     // In development mode, just clear the state
     if (isDevelopmentMode) {
       console.log('🔧 Development mode: Sign out bypassed');

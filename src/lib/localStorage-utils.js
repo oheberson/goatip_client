@@ -541,3 +541,113 @@ export const hasValidDetailedMatchesData = (tournamentId) => {
   const data = getDetailedMatchesFromStorage(tournamentId);
   return data !== null;
 };
+
+/**
+ * Clear ALL localStorage data related to the Goatip application
+ * This function removes all stored data to prevent conflicts between different user sessions
+ * Should be called when a user logs in to ensure a clean state
+ */
+export const clearAllGoatipStorage = () => {
+  try {
+    // Clear all localStorage keys that start with 'goatip_'
+    const keysToRemove = [];
+    
+    // Get all localStorage keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('goatip_')) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    // Remove all goatip-related keys
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    console.log(`🧹 Cleared ${keysToRemove.length} localStorage items for clean session`);
+    
+    // Also clear any other potential session-related data
+    // Remove common session storage keys that might interfere
+    const sessionKeys = [
+      'supabase.auth.token',
+      'sb-',
+      'auth-token',
+      'session',
+      'user',
+      'subscription',
+      'trial'
+    ];
+    
+    sessionKeys.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        // Also check for keys that contain these patterns
+        for (let i = 0; i < localStorage.length; i++) {
+          const storageKey = localStorage.key(i);
+          if (storageKey && storageKey.includes(key)) {
+            localStorage.removeItem(storageKey);
+          }
+        }
+      } catch (error) {
+        // Ignore errors for individual key removal
+        console.warn(`Could not remove key ${key}:`, error);
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error clearing all Goatip storage:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear localStorage data for a specific user session
+ * This is a more targeted approach that only clears user-specific data
+ * while preserving some application settings
+ */
+export const clearUserSessionData = () => {
+  try {
+    // Clear user-specific data but keep some app preferences
+    const userSpecificKeys = [
+      'goatip_matches_data',
+      'goatip_matches_timestamp',
+      'goatip_best_players_data',
+      'goatip_best_players_timestamp',
+      'goatip_detailed_matches_data',
+      'goatip_detailed_matches_timestamp',
+      'goatip_formations_data',
+      'goatip_random_params'
+    ];
+    
+    userSpecificKeys.forEach(key => {
+      localStorage.removeItem(key);
+      // Also remove keys with tournament/date suffixes
+      for (let i = 0; i < localStorage.length; i++) {
+        const storageKey = localStorage.key(i);
+        if (storageKey && storageKey.startsWith(key)) {
+          localStorage.removeItem(storageKey);
+        }
+      }
+    });
+    
+    // Clear Supabase auth tokens
+    const authKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+        authKeys.push(key);
+      }
+    }
+    
+    authKeys.forEach(key => localStorage.removeItem(key));
+    
+    console.log(`🧹 Cleared user session data (${userSpecificKeys.length + authKeys.length} items)`);
+    
+    return true;
+  } catch (error) {
+    console.error('Error clearing user session data:', error);
+    return false;
+  }
+};
