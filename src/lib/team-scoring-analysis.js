@@ -1,6 +1,6 @@
 /**
  * Team Scoring Analysis Utility
- * 
+ *
  * This utility analyzes detailed soccer match data to rank teams by their likelihood to score
  * and predict the best scoring moments. It considers various statistical factors including
  * goals percentage, timing patterns, and opponent weaknesses.
@@ -14,14 +14,14 @@ import { mapTeamName } from "@/lib/constants";
  */
 const parseStatValue = (value) => {
   if (!value || value === "null" || value === "") return 0;
-  
+
   if (typeof value === "string") {
     if (value.includes("%")) {
       return parseFloat(value.replace("%", "").trim()) / 100;
     }
     return parseFloat(value.replace(",", ".").trim());
   }
-  
+
   return typeof value === "number" ? value : 0;
 };
 
@@ -101,17 +101,17 @@ const extractGoalTimingInsights = (matchData, prefix) => {
  */
 const categorizeScoringMoment = (period) => {
   if (!period) return "No specific moment";
-  
+
   // First half periods
   if (["0 - 15", "16 - 30", "31 - 45"].includes(period)) {
     return "1T";
   }
-  
+
   // Second half periods
   if (["46 - 60", "61 - 75", "76 - 90"].includes(period)) {
     return "2T";
   }
-  
+
   return "No specific moment";
 };
 
@@ -124,15 +124,18 @@ const calculateTeamScoringScore = (teamData, statsToAnalyze) => {
 
   // Define weights for different statistical categories
   const weights = {
-    goals_percentage: 0.25,      // Overall goal percentages
-    goals_scored: 0.20,          // Goals scored specifically
+    goals_percentage: 0.25, // Overall goal percentages
+    goals_scored: 0.2, // Goals scored specifically
     goals_against_opponent: 0.15, // Opponent's defensive weakness
-    timing_alignment: 0.20,      // Timing pattern alignment
-    consistency: 0.20,           // Consistency across different stats
+    timing_alignment: 0.2, // Timing pattern alignment
+    consistency: 0.2, // Consistency across different stats
   };
 
   // 1. Goals percentage analysis (overall and detalhado)
-  const goalsPercentageScore = calculateGoalsPercentageScore(teamData, statsToAnalyze);
+  const goalsPercentageScore = calculateGoalsPercentageScore(
+    teamData,
+    statsToAnalyze
+  );
   totalScore += goalsPercentageScore * weights.goals_percentage;
   weightSum += weights.goals_percentage;
 
@@ -142,7 +145,10 @@ const calculateTeamScoringScore = (teamData, statsToAnalyze) => {
   weightSum += weights.goals_scored;
 
   // 3. Opponent defensive weakness analysis
-  const opponentWeaknessScore = calculateOpponentWeaknessScore(teamData, statsToAnalyze);
+  const opponentWeaknessScore = calculateOpponentWeaknessScore(
+    teamData,
+    statsToAnalyze
+  );
   totalScore += opponentWeaknessScore * weights.goals_against_opponent;
   weightSum += weights.goals_against_opponent;
 
@@ -170,16 +176,16 @@ const calculateGoalsPercentageScore = (teamData, statsToAnalyze) => {
   // Analyze over_X_goals_percentage stats
   const goalsPercentageStats = [
     "over_05_goals_percentage",
-    "over_15_goals_percentage", 
-    "over_25_goals_percentage"
+    "over_15_goals_percentage",
+    "over_25_goals_percentage",
   ];
 
-  goalsPercentageStats.forEach(stat => {
+  goalsPercentageStats.forEach((stat) => {
     const overallValue = parseStatValue(teamData.overall[stat]);
     const detalhadoValue = parseStatValue(teamData.detalhado[stat]);
-    
+
     // Weight overall more heavily than detalhado
-    const weightedValue = (overallValue * 0.6) + (detalhadoValue * 0.4);
+    const weightedValue = overallValue * 0.6 + detalhadoValue * 0.4;
     score += weightedValue;
     count++;
   });
@@ -197,14 +203,14 @@ const calculateGoalsScoredScore = (teamData, statsToAnalyze) => {
   const goalsScoredStats = [
     "over_05_goals_scored_percentage",
     "over_15_goals_scored_percentage",
-    "over_25_goals_scored_percentage"
+    "over_25_goals_scored_percentage",
   ];
 
-  goalsScoredStats.forEach(stat => {
+  goalsScoredStats.forEach((stat) => {
     const overallValue = parseStatValue(teamData.overall[stat]);
     const detalhadoValue = parseStatValue(teamData.detalhado[stat]);
-    
-    const weightedValue = (overallValue * 0.6) + (detalhadoValue * 0.4);
+
+    const weightedValue = overallValue * 0.6 + detalhadoValue * 0.4;
     score += weightedValue;
     count++;
   });
@@ -224,14 +230,14 @@ const calculateOpponentWeaknessScore = (teamData, statsToAnalyze) => {
   const opponentWeaknessStats = [
     "over_05_goals_against_percentage",
     "over_15_goals_against_percentage",
-    "over_25_goals_against_percentage"
+    "over_25_goals_against_percentage",
   ];
 
-  opponentWeaknessStats.forEach(stat => {
+  opponentWeaknessStats.forEach((stat) => {
     const overallValue = parseStatValue(teamData.opponent.overall[stat]);
     const detalhadoValue = parseStatValue(teamData.opponent.detalhado[stat]);
-    
-    const weightedValue = (overallValue * 0.6) + (detalhadoValue * 0.4);
+
+    const weightedValue = overallValue * 0.6 + detalhadoValue * 0.4;
     score += weightedValue;
     count++;
   });
@@ -270,16 +276,18 @@ const calculateTimingAlignmentScore = (teamData) => {
 const calculateConsistencyScore = (teamData, statsToAnalyze) => {
   // Calculate variance across different statistical categories
   const scores = [];
-  
+
   // Add goals percentage scores
   scores.push(calculateGoalsPercentageScore(teamData, statsToAnalyze));
   scores.push(calculateGoalsScoredScore(teamData, statsToAnalyze));
   scores.push(calculateOpponentWeaknessScore(teamData, statsToAnalyze));
-  
+
   // Calculate consistency as inverse of variance
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-  const variance = scores.reduce((acc, score) => acc + Math.pow(score - mean, 2), 0) / scores.length;
-  
+  const variance =
+    scores.reduce((acc, score) => acc + Math.pow(score - mean, 2), 0) /
+    scores.length;
+
   // Higher consistency (lower variance) should result in higher score
   return Math.max(0, 1 - Math.sqrt(variance));
 };
@@ -290,16 +298,16 @@ const calculateConsistencyScore = (teamData, statsToAnalyze) => {
 const estimateLikelyGoals = (scoringScore, teamData) => {
   // Base estimation on scoring score and actual goal data
   const baseEstimation = scoringScore * 3; // Scale to 0-3 goals range
-  
+
   // Adjust based on actual goal counts from timing data
   const totalScored = teamData.timing?.total_scored || 0;
   const totalAgainst = teamData.timing?.total_against || 0;
-  
+
   // Factor in goal difference and total goals
   const goalFactor = Math.max(0.1, (totalScored - totalAgainst + 1) / 10);
-  
+
   const estimated = baseEstimation * goalFactor;
-  
+
   // Round to reasonable values
   if (estimated < 0.5) return Math.round(estimated * 10) / 10;
   if (estimated < 1) return Math.round(estimated * 2) / 2;
@@ -309,8 +317,17 @@ const estimateLikelyGoals = (scoringScore, teamData) => {
 /**
  * Main function to analyze team scoring likelihood
  */
-export const analyzeTeamScoringLikelihood = (detailedMatchesData, uniqueTeams) => {
-  if (!detailedMatchesData || detailedMatchesData.length === 0 || !uniqueTeams || uniqueTeams.length === 0) {
+export const analyzeTeamScoringLikelihood = (
+  detailedMatchesData,
+  uniqueTeams
+) => {
+  if (
+    !detailedMatchesData ||
+    detailedMatchesData.length === 0 ||
+    !uniqueTeams ||
+    uniqueTeams.length === 0
+  ) {
+    console.log("failed to analyzeteams", detailedMatchesData, uniqueTeams);
     return [];
   }
 
@@ -384,8 +401,14 @@ export const analyzeTeamScoringLikelihood = (detailedMatchesData, uniqueTeams) =
     });
 
     // Extract timing data
-    mandanteData.timing = extractGoalTimingInsights(match, "overall_mandante_infos");
-    visitanteData.timing = extractGoalTimingInsights(match, "overall_visitante_infos");
+    mandanteData.timing = extractGoalTimingInsights(
+      match,
+      "overall_mandante_infos"
+    );
+    visitanteData.timing = extractGoalTimingInsights(
+      match,
+      "overall_visitante_infos"
+    );
 
     // Set opponent references for this match
     mandanteData.opponent = {
@@ -409,12 +432,14 @@ export const analyzeTeamScoringLikelihood = (detailedMatchesData, uniqueTeams) =
 
   // Calculate scoring scores for each team
   const teamScores = [];
-  
+
   teamDataMap.forEach((teamData, teamName) => {
     if (teamData.matches > 0) {
       const scoringScore = calculateTeamScoringScore(teamData, statsToLookFor);
       const likelyGoals = estimateLikelyGoals(scoringScore, teamData);
-      const momentForScoring = categorizeScoringMoment(teamData.timing?.top_scored_period);
+      const momentForScoring = categorizeScoringMoment(
+        teamData.timing?.top_scored_period
+      );
 
       teamScores.push({
         team: teamName,
@@ -422,7 +447,8 @@ export const analyzeTeamScoringLikelihood = (detailedMatchesData, uniqueTeams) =
         likely_goals: likelyGoals,
         scoring_score: scoringScore,
         timing_insights: teamData.timing,
-        opponent_weakness: teamData.opponent?.timing?.top_against_percentage || 0,
+        opponent_weakness:
+          teamData.opponent?.timing?.top_against_percentage || 0,
       });
     }
   });
@@ -441,7 +467,11 @@ export const analyzeTeamScoringLikelihood = (detailedMatchesData, uniqueTeams) =
 /**
  * Get detailed analysis for a specific team
  */
-export const getTeamDetailedAnalysis = (detailedMatchesData, teamName, uniqueTeams) => {
+export const getTeamDetailedAnalysis = (
+  detailedMatchesData,
+  teamName,
+  uniqueTeams
+) => {
   if (!detailedMatchesData || detailedMatchesData.length === 0) {
     return null;
   }
@@ -452,9 +482,10 @@ export const getTeamDetailedAnalysis = (detailedMatchesData, teamName, uniqueTea
   }
 
   // Find all matches for this team
-  const teamMatches = detailedMatchesData.filter(match => 
-    mapTeamName(match.mandante_name) === mappedTeamName || 
-    mapTeamName(match.visitante_name) === mappedTeamName
+  const teamMatches = detailedMatchesData.filter(
+    (match) =>
+      mapTeamName(match.mandante_name) === mappedTeamName ||
+      mapTeamName(match.visitante_name) === mappedTeamName
   );
 
   if (teamMatches.length === 0) {
