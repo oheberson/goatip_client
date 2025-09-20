@@ -84,7 +84,11 @@ export function PlayerSelectionDrawer({
     useState(null);
 
   const getUniqueValues = (key) => {
-    if (!playersData?.players) return [];
+    if (!playersData?.players) {
+      console.log("no playersData", playersData);
+      return [];
+    }
+    console.log("existing playersdata", playersData);
     const values = [
       ...new Set(
         playersData.players.map((player) => player[key]).filter(Boolean)
@@ -198,7 +202,7 @@ export function PlayerSelectionDrawer({
       .filter(Boolean);
 
     setGoalTimingRecommendations(recommendationsGoalTiming);
-  }, [detailedMatchesData]);
+  }, [detailedMatchesData, playersData]);
 
   // Formation configuration
   const FORMATION_CONFIGS = {
