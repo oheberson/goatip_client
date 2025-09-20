@@ -452,3 +452,92 @@ export const clearRandomParamsFromStorage = (tournamentKey) => {
     console.error('Error clearing random params from localStorage:', error);
   }
 };
+
+// Detailed Matches Storage Keys
+const DETAILED_MATCHES_STORAGE_KEY = 'goatip_detailed_matches_data';
+const DETAILED_MATCHES_TIMESTAMP_KEY = 'goatip_detailed_matches_timestamp';
+const DETAILED_MATCHES_CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+
+/**
+ * Get detailed matches data from localStorage
+ * @param {string} tournamentId - The tournament ID to retrieve data for
+ * @returns {Object|null} The detailed matches data or null if not found/expired
+ */
+export const getDetailedMatchesFromStorage = (tournamentId) => {
+  try {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const storageKey = `${DETAILED_MATCHES_STORAGE_KEY}_${today}_${tournamentId}`;
+    const timestampKey = `${DETAILED_MATCHES_TIMESTAMP_KEY}_${today}_${tournamentId}`;
+    
+    const timestamp = localStorage.getItem(timestampKey);
+    const data = localStorage.getItem(storageKey);
+    
+    if (!timestamp || !data) {
+      return null;
+    }
+    
+    // Check if data is expired
+    const now = Date.now();
+    const storedTime = parseInt(timestamp);
+    
+    if (now - storedTime > DETAILED_MATCHES_CACHE_DURATION) {
+      // Data is expired, remove it
+      clearDetailedMatchesFromStorage(tournamentId);
+      return null;
+    }
+    
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error getting detailed matches from localStorage:', error);
+    return null;
+  }
+};
+
+/**
+ * Store detailed matches data in localStorage
+ * @param {string} tournamentId - The tournament ID
+ * @param {Object} detailedMatchesData - The detailed matches data to store
+ * @returns {boolean} Success status
+ */
+export const setDetailedMatchesToStorage = (tournamentId, detailedMatchesData) => {
+  try {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const storageKey = `${DETAILED_MATCHES_STORAGE_KEY}_${today}_${tournamentId}`;
+    const timestampKey = `${DETAILED_MATCHES_TIMESTAMP_KEY}_${today}_${tournamentId}`;
+    
+    const timestamp = Date.now().toString();
+    localStorage.setItem(storageKey, JSON.stringify(detailedMatchesData));
+    localStorage.setItem(timestampKey, timestamp);
+    return true;
+  } catch (error) {
+    console.error('Error storing detailed matches to localStorage:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear detailed matches data from localStorage
+ * @param {string} tournamentId - The tournament ID
+ */
+export const clearDetailedMatchesFromStorage = (tournamentId) => {
+  try {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const storageKey = `${DETAILED_MATCHES_STORAGE_KEY}_${today}_${tournamentId}`;
+    const timestampKey = `${DETAILED_MATCHES_TIMESTAMP_KEY}_${today}_${tournamentId}`;
+    
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(timestampKey);
+  } catch (error) {
+    console.error('Error clearing detailed matches from localStorage:', error);
+  }
+};
+
+/**
+ * Check if detailed matches data exists and is not expired
+ * @param {string} tournamentId - The tournament ID
+ * @returns {boolean} True if valid data exists
+ */
+export const hasValidDetailedMatchesData = (tournamentId) => {
+  const data = getDetailedMatchesFromStorage(tournamentId);
+  return data !== null;
+};

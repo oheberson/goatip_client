@@ -211,6 +211,11 @@ export const api = {
               ","
             )}&tournament_id=${tournamentId}`
           ),
+    getDetailedMatches: (tournamentId, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
+        ? mockApi.analytics?.getDetailedMatches?.(tournamentId) ||
+          apiClient.get(`/detailed-matches?tournament_id=${tournamentId}`)
+        : apiClient.get(`/detailed-matches?tournament_id=${tournamentId}`),
   },
 
   // Tips

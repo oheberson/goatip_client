@@ -36,6 +36,9 @@ import {
   getAllSavedTeams,
   getRandomParamsFromStorage,
   setRandomParamsToStorage,
+  getDetailedMatchesFromStorage,
+  setDetailedMatchesToStorage,
+  hasValidDetailedMatchesData,
 } from "@/lib/localStorage-utils";
 import {
   TOURNAMENTS,
@@ -69,6 +72,8 @@ export default function CreateTeamPage({ params }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [bestPlayersData, setBestPlayersData] = useState(null);
   const [bestPlayersLoading, setBestPlayersLoading] = useState(false);
+  const [detailedMatchesData, setDetailedMatchesData] = useState(null);
+  const [detailedMatchesLoading, setDetailedMatchesLoading] = useState(false);
 
   // Formation management state
   const [savedTeamNames, setSavedTeamNames] = useState([]);
@@ -296,6 +301,48 @@ export default function CreateTeamPage({ params }) {
     }
   };
 
+  // Function to fetch detailed matches data for available tournaments
+  const fetchDetailedMatchesData = async (tournamentId) => {
+    // Check if this tournament is in our available tournaments
+    if (!TOURNAMENTS[tournamentId]) {
+      return;
+    }
+
+    // Check if we have valid cached data
+    if (hasValidDetailedMatchesData(tournamentId)) {
+      const cachedData = getDetailedMatchesFromStorage(tournamentId);
+      setDetailedMatchesData(cachedData);
+      return;
+    }
+
+    try {
+      setDetailedMatchesLoading(true);
+
+      // Get the mapped tournament ID for the API
+      const mappedTournamentId = TOURNAMENTS[tournamentId].apiMapping;
+      console.log(
+        "Fetching detailed matches for tournament:",
+        mappedTournamentId
+      );
+
+      const data = await api.analytics.getDetailedMatches(
+        mappedTournamentId,
+        isSubscribed,
+        isFreeTrial
+      );
+
+      const detailedMatchesData = data.data || data;
+      setDetailedMatchesData(detailedMatchesData);
+
+      // Cache the data
+      setDetailedMatchesToStorage(tournamentId, detailedMatchesData);
+    } catch (error) {
+      console.error("Falha ao buscar dados de partidas detalhadas:", error);
+    } finally {
+      setDetailedMatchesLoading(false);
+    }
+  };
+
   useEffect(() => {
     const loadTournamentData = async () => {
       try {
@@ -328,6 +375,9 @@ export default function CreateTeamPage({ params }) {
 
         // Fetch best players data if tournament is available
         await fetchBestPlayersData(tournamentId, tournament.matches || []);
+
+        // Fetch detailed matches data if tournament is available
+        await fetchDetailedMatchesData(tournamentId);
 
         // Get the first match for player data
         const firstMatch = tournament.matches?.[0];
@@ -1358,6 +1408,7 @@ export default function CreateTeamPage({ params }) {
           formation={formation}
           selectedPosition={selectedPosition}
           benchPlayers={benchPlayers}
+          detailedMatchesData={detailedMatchesData}
         />
 
         {/* Team Name Dialog */}

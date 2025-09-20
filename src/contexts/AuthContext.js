@@ -20,7 +20,25 @@ export const AuthProvider = ({ children }) => {
   const [isFreeTrial, setIsFreeTrial] = useState(false);
   const [trialInfo, setTrialInfo] = useState(null);
 
+  // Development bypass - when NEXT_PUBLIC_ENVIRONMENT is 'development'
+  const isDevelopmentMode = process.env.NEXT_PUBLIC_ENVIRONMENT === 'development';
+
   useEffect(() => {
+    // Development mode bypass
+    if (isDevelopmentMode) {
+      console.log('🔧 Development mode: Bypassing authentication checks');
+      setUser({
+        id: 'dev-user-123',
+        email: 'developer@goatip.local',
+        user_metadata: { name: 'Developer' }
+      });
+      setIsSubscribed(true);
+      setIsFreeTrial(false);
+      setTrialInfo(null);
+      setLoading(false);
+      return;
+    }
+
     if (!supabase) {
       setLoading(false);
       return;
@@ -43,9 +61,12 @@ export const AuthProvider = ({ children }) => {
 
     getInitialSession();
 
-    // Listen for auth changes
+    // Listen for auth changes (only in production)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Skip auth state changes in development mode
+        if (isDevelopmentMode) return;
+        
         setUser(session?.user ?? null);
         
         if (session?.user) {
@@ -64,7 +85,7 @@ export const AuthProvider = ({ children }) => {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isDevelopmentMode]);
 
   const checkSubscription = async (email) => {
     try {
@@ -117,6 +138,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signInWithMagicLink = async (email) => {
+    // In development mode, always succeed
+    if (isDevelopmentMode) {
+      console.log('🔧 Development mode: Magic link sign-in bypassed');
+      return { error: null };
+    }
+    
     if (!supabase) {
       return { error: { message: 'Authentication not configured' } };
     }
@@ -157,6 +184,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signOut = async () => {
+    // In development mode, just clear the state
+    if (isDevelopmentMode) {
+      console.log('🔧 Development mode: Sign out bypassed');
+      setUser(null);
+      setIsSubscribed(false);
+      setIsFreeTrial(false);
+      setTrialInfo(null);
+      return { error: null };
+    }
+    
     if (!supabase) {
       setUser(null);
       setIsSubscribed(false);

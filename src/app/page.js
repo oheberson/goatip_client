@@ -29,15 +29,27 @@ export default function Home() {
   const { user, loading, isSubscribed } = useAuth();
   const router = useRouter();
 
+  // Development mode bypass
+  const isDevelopmentMode =
+    process.env.NEXT_PUBLIC_ENVIRONMENT === "development";
+
+  console.log("iss dev>>>", isDevelopmentMode);
+
   useEffect(() => {
     if (!loading) {
+      // Skip redirect in development mode
+      if (isDevelopmentMode) {
+        console.log("🔧 Development mode: Skipping home page redirect");
+        return;
+      }
+
       if (!user) {
         router.replace("/subscribe");
       }
       // Removed the redirect for authenticated but non-subscribed users
       // They can now access the home page and explore with demo data
     }
-  }, [user, loading, isSubscribed, router]);
+  }, [user, loading, isSubscribed, router, isDevelopmentMode]);
 
   if (loading) {
     return (
@@ -77,10 +89,10 @@ export default function Home() {
         </div>
       </header>
 
-        {/* Main Content */}
-        <main className="px-4 py-6">
-          {/* Trial Expiration Notification */}
-          <TrialExpirationNotification />
+      {/* Main Content */}
+      <main className="px-4 py-6">
+        {/* Trial Expiration Notification */}
+        <TrialExpirationNotification />
         {/* Welcome Section */}
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold mb-2">

@@ -4,31 +4,37 @@ export const TOURNAMENTS = {
     id: "brasileirao_2025",
     name: "Brasileirão",
     season: "2025",
+    apiMapping: "brasileiro_A",
   },
   laliga_2526: {
     id: "laliga_2526",
     name: "LaLiga",
     season: "2526",
+    apiMapping: "laliga",
   },
   premier_league_2526: {
     id: "premier_league_2526",
     name: "Premier League",
     season: "2526",
+    apiMapping: "premier_league",
   },
   bundesliga_2526: {
     id: "bundesliga_2526",
     name: "Bundesliga",
     season: "2526",
+    apiMapping: "bundesliga",
   },
   italiano_2526: {
     id: "italiano_2526",
     name: "Italiano",
     season: "2526",
+    apiMapping: "italiano",
   },
   libertadores_2025: {
     id: "libertadores_2025",
     name: "Libertadores",
     season: "2025",
+    apiMapping: "libertadores",
   },
 };
 

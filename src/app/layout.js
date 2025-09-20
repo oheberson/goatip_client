@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { DynamicThemeColor } from "@/components/dynamic-theme-color";
 import { ManifestUpdater } from "@/components/manifest-updater";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { DevelopmentIndicator } from "@/components/development-indicator";
 
 export const metadata = {
   title: "GOATIP - Ofertas de valor",
@@ -44,6 +45,7 @@ export default function RootLayout({ children }) {
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="antialiased">
+        <DevelopmentIndicator />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

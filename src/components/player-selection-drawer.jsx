@@ -14,6 +14,7 @@ import {
   ChartNoAxesColumn,
   CirclePlus,
   Minus,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +24,13 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardDescription,
+  CardTitle,
+} from "@/components/ui/card";
 import { PlayerFilterDialog } from "@/components/player-filter-dialog";
 import { PlayerSortDialog } from "@/components/player-sort-dialog";
 import { PlayerStatsDrawer } from "@/components/player-stats-drawer";
@@ -35,7 +42,8 @@ import {
   setPlayerSortToStorage,
   clearPlayerSortFromStorage,
 } from "@/lib/localStorage-utils";
-import { mapPlayerName, TEAM_NAME_MAPPING } from "@/lib/constants";
+import { mapPlayerName, TEAM_NAME_MAPPING, mapTeamName } from "@/lib/constants";
+import { analyzeTeamScoringLikelihood } from "@/lib/team-scoring-analysis";
 
 const POSITION_TYPES = {
   GK: "Goleiro",
@@ -57,6 +65,7 @@ export function PlayerSelectionDrawer({
   formation = "4-3-3",
   selectedPosition = null,
   benchPlayers = {},
+  detailedMatchesData,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPlayers, setFilteredPlayers] = useState([]);
@@ -69,6 +78,126 @@ export function PlayerSelectionDrawer({
   const [sortDialogOpen, setSortDialogOpen] = useState(false);
   const [statsDrawerOpen, setStatsDrawerOpen] = useState(false);
   const [selectedPlayerForStats, setSelectedPlayerForStats] = useState(null);
+  const [activeTab, setActiveTab] = useState("normal"); // "normal" or "recommendations"
+  const [recommendationsResult, setRecommendationsResult] = useState(null);
+  const [goalTimingRecommendations, setGoalTimingRecommendations] =
+    useState(null);
+
+  const getUniqueValues = (key) => {
+    if (!playersData?.players) return [];
+    const values = [
+      ...new Set(
+        playersData.players.map((player) => player[key]).filter(Boolean)
+      ),
+    ];
+    return values.sort();
+  };
+
+  useEffect(() => {
+    if (!detailedMatchesData || detailedMatchesData.length === 0) return;
+
+    const uniqueTeams = getUniqueValues("teamName").map(mapTeamName);
+
+    // Use our new analysis function to get team scoring likelihood
+    const teamScoringAnalysis = analyzeTeamScoringLikelihood(
+      detailedMatchesData,
+      uniqueTeams
+    );
+
+    // Set the recommendations result with the new format
+    setRecommendationsResult(teamScoringAnalysis);
+
+    // Keep the old goal timing recommendations for backward compatibility
+    // but simplify the structure
+    const recommendationsGoalTiming = detailedMatchesData
+      .map((match) => {
+        const mandante = mapTeamName(match.mandante_name);
+        const visitante = mapTeamName(match.visitante_name);
+
+        if (
+          !uniqueTeams.includes(mandante) ||
+          !uniqueTeams.includes(visitante)
+        ) {
+          return null;
+        }
+
+        // Extract timing insights using our utility function
+        const extractTimingInsights = (matchData, prefix) => {
+          const scored = {};
+          const against = {};
+          const timingRegex = new RegExp(
+            `^${prefix}\\.goals_timing\\.(\\d+ - \\d+)\\.(scored|against)$`
+          );
+
+          Object.entries(matchData).forEach(([key, value]) => {
+            const match = key.match(timingRegex);
+            if (!match) return;
+
+            const interval = match[1];
+            const type = match[2];
+            const numValue = parseInt(value, 10);
+
+            if (type === "scored") {
+              scored[interval] = (scored[interval] || 0) + numValue;
+            } else if (type === "against") {
+              against[interval] = (against[interval] || 0) + numValue;
+            }
+          });
+
+          const totalScored = Object.values(scored).reduce((a, b) => a + b, 0);
+          const totalAgainst = Object.values(against).reduce(
+            (a, b) => a + b,
+            0
+          );
+
+          let topScoredPeriod = null;
+          let topScoredValue = 0;
+          for (const [interval, val] of Object.entries(scored)) {
+            if (val > topScoredValue) {
+              topScoredValue = val;
+              topScoredPeriod = interval;
+            }
+          }
+
+          let topAgainstPeriod = null;
+          let topAgainstValue = 0;
+          for (const [interval, val] of Object.entries(against)) {
+            if (val > topAgainstValue) {
+              topAgainstValue = val;
+              topAgainstPeriod = interval;
+            }
+          }
+
+          return {
+            top_scored_period: topScoredPeriod,
+            top_scored_percentage:
+              totalScored > 0 ? topScoredValue / totalScored : 0,
+            top_against_period: topAgainstPeriod,
+            top_against_percentage:
+              totalAgainst > 0 ? topAgainstValue / totalAgainst : 0,
+          };
+        };
+
+        return {
+          mandante,
+          visitante,
+          overall: {
+            mandante: extractTimingInsights(match, "overall_mandante_infos"),
+            visitante: extractTimingInsights(match, "overall_visitante_infos"),
+          },
+          detalhado: {
+            mandante: extractTimingInsights(match, "detalhado_mandante_infos"),
+            visitante: extractTimingInsights(
+              match,
+              "detalhado_visitante_infos"
+            ),
+          },
+        };
+      })
+      .filter(Boolean);
+
+    setGoalTimingRecommendations(recommendationsGoalTiming);
+  }, [detailedMatchesData]);
 
   // Formation configuration
   const FORMATION_CONFIGS = {
@@ -507,151 +636,237 @@ export function PlayerSelectionDrawer({
         </DrawerHeader>
 
         <div className="px-4 pb-4">
-          {/* Search Input, Sort Button, and Filter Button */}
+          {/* Tab Buttons */}
           <div className="flex space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search players..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-              />
-            </div>
             <Button
-              variant="outline"
+              variant={activeTab === "normal" ? "default" : "outline"}
               size="sm"
-              onClick={() => setSortDialogOpen(true)}
-              className={`px-3 ${
-                hasActiveSort() ? "border-primary bg-primary/5" : ""
-              }`}
+              onClick={() => setActiveTab("normal")}
+              className="flex-1"
             >
-              <ArrowDownUp className="w-4 h-4" />
-              {hasActiveSort() && (
-                <div className="w-2 h-2 bg-primary rounded-full ml-1" />
-              )}
+              Jogadores
             </Button>
             <Button
-              variant="outline"
+              variant={activeTab === "recommendations" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilterDialogOpen(true)}
-              className={`px-3 ${
-                hasActiveFilters() ? "border-primary bg-primary/5" : ""
-              }`}
+              onClick={() => setActiveTab("recommendations")}
+              className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-primary shadow-lg"
             >
-              <SlidersHorizontal className="w-4 h-4" />
-              {hasActiveFilters() && (
-                <div className="w-2 h-2 bg-primary rounded-full ml-1" />
-              )}
+              <Star className="w-5 h-5 mr-2" />
+              Recomendações
             </Button>
           </div>
 
-          {/* Players List */}
-          <div className="max-h-[60vh] overflow-y-auto space-y-2">
-            {filteredPlayers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                {searchTerm
-                  ? "No players found matching your search"
-                  : "No players available for this position"}
-              </div>
-            ) : (
-              filteredPlayers.map((player) => (
-                <Card
-                  key={player.id}
-                  className={`transition-colors ${
-                    isPlayerSelected(player)
-                      ? "bg-muted border-primary"
-                      : "hover:bg-muted/50"
+          {activeTab == "normal" && (
+            <>
+              {/* Search Input, Sort Button, and Filter Button */}
+              <div className="flex space-x-2 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search players..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSortDialogOpen(true)}
+                  className={`px-3 ${
+                    hasActiveSort() ? "border-primary bg-primary/5" : ""
                   }`}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      {/* Left Column - Player Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm mb-1">
-                          <span className="flex items-center gap-2">
-                            {player.name || "Unknown Player"}
-                            <span className="text-muted-foreground">
-                              {displayPlayerStatus(player.status)}
+                  <ArrowDownUp className="w-4 h-4" />
+                  {hasActiveSort() && (
+                    <div className="w-2 h-2 bg-primary rounded-full ml-1" />
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilterDialogOpen(true)}
+                  className={`px-3 ${
+                    hasActiveFilters() ? "border-primary bg-primary/5" : ""
+                  }`}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  {hasActiveFilters() && (
+                    <div className="w-2 h-2 bg-primary rounded-full ml-1" />
+                  )}
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* Players List */}
+          <div className="max-h-[60vh] overflow-y-auto space-y-2">
+            {activeTab === "normal" ? (
+              // Normal List
+              filteredPlayers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchTerm
+                    ? "No players found matching your search"
+                    : "No players available for this position"}
+                </div>
+              ) : (
+                filteredPlayers.map((player) => (
+                  <Card
+                    key={player.id}
+                    className={`transition-colors ${
+                      isPlayerSelected(player)
+                        ? "bg-muted border-primary"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        {/* Left Column - Player Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm mb-1">
+                            <span className="flex items-center gap-2">
+                              {player.name || "Unknown Player"}
+                              <span className="text-muted-foreground">
+                                {displayPlayerStatus(player.status)}
+                              </span>
                             </span>
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground mb-2">
-                          {player.teamName || "Unknown Team"} •{" "}
-                          {player.position || positionType}
-                        </div>
-                        {(() => {
-                          const displayData = getPlayerDisplayValue(player);
-                          return (
-                            <div className="flex items-center gap-2">
-                              <div className="text-lg font-semibold text-muted-foreground">
-                                {displayData.formatted}
+                          </div>
+                          <div className="text-xs text-muted-foreground mb-2">
+                            {player.teamName || "Unknown Team"} •{" "}
+                            {player.position || positionType}
+                          </div>
+                          {(() => {
+                            const displayData = getPlayerDisplayValue(player);
+                            return (
+                              <div className="flex items-center gap-2">
+                                <div className="text-lg font-semibold text-muted-foreground">
+                                  {displayData.formatted}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {displayData.label}
+                                </div>
                               </div>
-                              <div className="text-xs text-muted-foreground">
-                                {displayData.label}
+                            );
+                          })()}
+                        </div>
+
+                        {/* Right Column - Action Buttons */}
+                        <div className="flex flex-col gap-2 items-center">
+                          {hasPlayerStats(player) && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleOpenStats(player)}
+                              className="p-2 h-12 w-12 size-12"
+                              title="View detailed statistics"
+                            >
+                              <ChartNoAxesColumn className="w-12 h-12 text-primary" />
+                            </Button>
+                          )}
+                          {isPlayerSelected(player) ? (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleRemovePlayer(player)}
+                              className="p-2 h-12 w-12 size-12"
+                              title={`Remove player from ${
+                                getPlayerSelectionContext(player) === "main"
+                                  ? "starting eleven"
+                                  : "bench"
+                              }`}
+                            >
+                              <Minus className="w-12 h-12 text-red-600" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleSelectPlayer(player)}
+                              disabled={!canAddMore}
+                              className="p-2 h-12 w-12 size-12"
+                              title={
+                                canAddMore
+                                  ? `Add player to ${
+                                      isBenchPosition
+                                        ? "bench"
+                                        : "starting eleven"
+                                    }`
+                                  : `All ${maxPlayersForPosition} slots filled`
+                              }
+                            >
+                              <CirclePlus
+                                className={`w-12 h-12 ${
+                                  canAddMore
+                                    ? "text-green-600"
+                                    : "text-gray-400"
+                                }`}
+                              />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )
+            ) : (
+              // Recommendations List
+              <div className="w-full">
+                {/* Team Scoring Likelihood Analysis */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold mb-4 text-center">
+                    Times Prováveis de Marcar
+                  </h3>
+                  {recommendationsResult && recommendationsResult.length > 0 ? (
+                    <div className="space-y-3">
+                      {recommendationsResult.slice(0, 10).map((team, index) => (
+                        <Card
+                          key={team.team}
+                          className={`${
+                            index === 0
+                              ? "border-green-500 bg-green-50 dark:bg-green-950"
+                              : index === 1
+                              ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-950"
+                              : index === 2
+                              ? "border-orange-500 bg-orange-50 dark:bg-orange-950"
+                              : "border-gray-200"
+                          }`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                                  {index + 1}
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold">{team.team}</h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    Melhor momento: {team.moment_for_scoring}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-primary">
+                                  {team.likely_goals}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  gols esperados
+                                </div>
                               </div>
                             </div>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Right Column - Action Buttons */}
-                      <div className="flex flex-col gap-2 items-center">
-                        {hasPlayerStats(player) && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleOpenStats(player)}
-                            className="p-2 h-12 w-12 size-12"
-                            title="View detailed statistics"
-                          >
-                            <ChartNoAxesColumn className="w-12 h-12 text-primary" />
-                          </Button>
-                        )}
-                        {isPlayerSelected(player) ? (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleRemovePlayer(player)}
-                            className="p-2 h-12 w-12 size-12"
-                            title={`Remove player from ${
-                              getPlayerSelectionContext(player) === "main"
-                                ? "starting eleven"
-                                : "bench"
-                            }`}
-                          >
-                            <Minus className="w-12 h-12 text-red-600" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleSelectPlayer(player)}
-                            disabled={!canAddMore}
-                            className="p-2 h-12 w-12 size-12"
-                            title={
-                              canAddMore
-                                ? `Add player to ${
-                                    isBenchPosition
-                                      ? "bench"
-                                      : "starting eleven"
-                                  }`
-                                : `All ${maxPlayersForPosition} slots filled`
-                            }
-                          >
-                            <CirclePlus
-                              className={`w-12 h-12 ${
-                                canAddMore ? "text-green-600" : "text-gray-400"
-                              }`}
-                            />
-                          </Button>
-                        )}
-                      </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  </CardContent>
-                </Card>
-              ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Nenhuma análise de times disponível
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 

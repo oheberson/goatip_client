@@ -7,9 +7,18 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function ProtectedRoute({ children, requireSubscription = false, allowDemo = false }) {
   const { user, loading, isSubscribed } = useAuth();
   const router = useRouter();
+  
+  // Development mode bypass
+  const isDevelopmentMode = process.env.NEXT_PUBLIC_ENVIRONMENT === 'development';
 
   useEffect(() => {
     if (!loading) {
+      // Skip all redirects in development mode
+      if (isDevelopmentMode) {
+        console.log('🔧 Development mode: ProtectedRoute bypassed');
+        return;
+      }
+      
       if (!user) {
         router.replace('/subscribe');
         return;
@@ -24,7 +33,7 @@ export default function ProtectedRoute({ children, requireSubscription = false, 
       // If requireSubscription is true and allowDemo is true, allow access but show demo content
       // This is handled by the component itself
     }
-  }, [user, loading, isSubscribed, requireSubscription, allowDemo, router]);
+  }, [user, loading, isSubscribed, requireSubscription, allowDemo, router, isDevelopmentMode]);
 
   if (loading) {
     return (
@@ -35,6 +44,11 @@ export default function ProtectedRoute({ children, requireSubscription = false, 
         </div>
       </div>
     );
+  }
+
+  // In development mode, always allow access
+  if (isDevelopmentMode) {
+    return children;
   }
 
   if (!user) {
