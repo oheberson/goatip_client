@@ -546,6 +546,8 @@ export const hasValidDetailedMatchesData = (tournamentId) => {
  * Clear ALL localStorage data related to the Goatip application
  * This function removes all stored data to prevent conflicts between different user sessions
  * Should be called when a user logs in to ensure a clean state
+ * 
+ * IMPORTANT: This function preserves Supabase auth tokens to maintain authentication state
  */
 export const clearAllGoatipStorage = () => {
   try {
@@ -567,25 +569,26 @@ export const clearAllGoatipStorage = () => {
     
     console.log(`🧹 Cleared ${keysToRemove.length} localStorage items for clean session`);
     
-    // Also clear any other potential session-related data
-    // Remove common session storage keys that might interfere
-    const sessionKeys = [
-      'supabase.auth.token',
-      'sb-',
-      'auth-token',
-      'session',
-      'user',
-      'subscription',
-      'trial'
+    // Clear other session-related data but PRESERVE Supabase auth tokens
+    // Only remove keys that could cause conflicts, not authentication data
+    const conflictKeys = [
+      'auth-token', // Generic auth tokens (not Supabase)
+      'session',    // Generic session data (not Supabase)
+      'user',       // Generic user data (not Supabase)
+      'subscription', // Old subscription data
+      'trial'       // Old trial data
     ];
     
-    sessionKeys.forEach(key => {
+    conflictKeys.forEach(key => {
       try {
         localStorage.removeItem(key);
-        // Also check for keys that contain these patterns
+        // Also check for keys that contain these patterns but exclude Supabase keys
         for (let i = 0; i < localStorage.length; i++) {
           const storageKey = localStorage.key(i);
-          if (storageKey && storageKey.includes(key)) {
+          if (storageKey && 
+              storageKey.includes(key) && 
+              !storageKey.startsWith('sb-') && // Preserve Supabase keys
+              !storageKey.includes('supabase')) { // Preserve Supabase keys
             localStorage.removeItem(storageKey);
           }
         }
@@ -648,6 +651,37 @@ export const clearUserSessionData = () => {
     return true;
   } catch (error) {
     console.error('Error clearing user session data:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear only Goatip application data while preserving authentication
+ * This is the safest approach that only clears app data, not auth tokens
+ */
+export const clearGoatipAppData = () => {
+  try {
+    // Only clear keys that start with 'goatip_' - these are app-specific data
+    const keysToRemove = [];
+    
+    // Get all localStorage keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('goatip_')) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    // Remove all goatip-related keys
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    console.log(`🧹 Cleared ${keysToRemove.length} Goatip app data items (preserved auth tokens)`);
+    
+    return true;
+  } catch (error) {
+    console.error('Error clearing Goatip app data:', error);
     return false;
   }
 };
