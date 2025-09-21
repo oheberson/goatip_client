@@ -216,6 +216,11 @@ export const api = {
         ? mockApi.analytics?.getDetailedMatches?.(tournamentId) ||
           apiClient.get(`/detailed-matches?tournament_id=${tournamentId}`)
         : apiClient.get(`/detailed-matches?tournament_id=${tournamentId}`),
+    getCleanSheetsStats: (teams, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
+        ? mockApi.analytics?.getCleanSheetsStats?.(teams) ||
+          apiClient.get(`/clean-sheets-stats?teams=${teams.join(",")}`)
+        : apiClient.get(`/clean-sheets-stats?teams=${teams.join(",")}`),
   },
 
   // Tips

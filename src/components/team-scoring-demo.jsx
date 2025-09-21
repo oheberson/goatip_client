@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { analyzeTeamScoringLikelihood, getTeamDetailedAnalysis } from "@/lib/team-scoring-analysis";
+import {
+  analyzeTeamScoringLikelihood,
+  getTeamDetailedAnalysis,
+} from "@/lib/team-scoring-analysis";
 import { mapTeamName } from "@/lib/constants";
 
 /**
@@ -19,7 +22,7 @@ export function TeamScoringDemo({ detailedMatchesData, playersData }) {
   // Get unique teams from players data
   const getUniqueTeams = () => {
     if (!playersData?.players) return [];
-    const teams = [...new Set(playersData.players.map(p => p.teamName))];
+    const teams = [...new Set(playersData.players.map((p) => p.teamName))];
     return teams.map(mapTeamName);
   };
 
@@ -33,10 +36,13 @@ export function TeamScoringDemo({ detailedMatchesData, playersData }) {
     try {
       const uniqueTeams = getUniqueTeams();
       console.log("Unique teams:", uniqueTeams);
-      
-      const result = analyzeTeamScoringLikelihood(detailedMatchesData, uniqueTeams);
+
+      const result = analyzeTeamScoringLikelihood(
+        detailedMatchesData,
+        uniqueTeams
+      );
       console.log("Analysis result:", result);
-      
+
       setAnalysis(result);
     } catch (error) {
       console.error("Error running analysis:", error);
@@ -48,9 +54,13 @@ export function TeamScoringDemo({ detailedMatchesData, playersData }) {
 
   const getTeamDetails = (teamName) => {
     if (!detailedMatchesData || !teamName) return;
-    
+
     const uniqueTeams = getUniqueTeams();
-    const details = getTeamDetailedAnalysis(detailedMatchesData, teamName, uniqueTeams);
+    const details = getTeamDetailedAnalysis(
+      detailedMatchesData,
+      teamName,
+      uniqueTeams
+    );
     setTeamDetails(details);
     setSelectedTeam(teamName);
   };
@@ -70,17 +80,18 @@ export function TeamScoringDemo({ detailedMatchesData, playersData }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Button 
-              onClick={runAnalysis} 
+            <Button
+              onClick={runAnalysis}
               disabled={loading || !detailedMatchesData}
               className="w-full"
             >
               {loading ? "Analyzing..." : "Run Team Scoring Analysis"}
             </Button>
-            
+
             {!detailedMatchesData && (
               <p className="text-sm text-muted-foreground">
-                No detailed matches data available. Make sure the data is loaded.
+                No detailed matches data available. Make sure the data is
+                loaded.
               </p>
             )}
           </div>
@@ -132,7 +143,7 @@ export function TeamScoringDemo({ detailedMatchesData, playersData }) {
                 </div>
               ))}
             </div>
-            
+
             <div className="mt-4 text-sm text-muted-foreground">
               <p>Click on any team to see detailed analysis</p>
             </div>
@@ -158,13 +169,17 @@ export function TeamScoringDemo({ detailedMatchesData, playersData }) {
                   <div>
                     <h4 className="font-semibold">Analysis Status</h4>
                     <p className="text-sm text-muted-foreground">
-                      {teamDetails.overall_performance ? "Complete" : "Processing..."}
+                      {teamDetails.overall_performance
+                        ? "Complete"
+                        : "Processing..."}
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="text-sm text-muted-foreground">
-                  <p>This is a simplified demo. The full analysis would include:</p>
+                  <p>
+                    This is a simplified demo. The full analysis would include:
+                  </p>
                   <ul className="list-disc list-inside mt-2 space-y-1">
                     <li>Detailed performance metrics</li>
                     <li>Timing pattern analysis</li>
@@ -175,11 +190,13 @@ export function TeamScoringDemo({ detailedMatchesData, playersData }) {
                 </div>
               </div>
             ) : (
-              <p className="text-muted-foreground">Loading detailed analysis...</p>
+              <p className="text-muted-foreground">
+                Loading detailed analysis...
+              </p>
             )}
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               onClick={() => setSelectedTeam(null)}
               className="mt-4"
             >
@@ -209,15 +226,20 @@ export function TeamScoringDemo({ detailedMatchesData, playersData }) {
                 </p>
               </div>
             </div>
-            
+
             <div className="mt-4">
               <h4 className="font-semibold mb-2">Moment Distribution</h4>
               <div className="space-y-2">
                 {["1T", "2T", "No specific moment"].map((moment) => {
-                  const count = analysis.filter(t => t.moment_for_scoring === moment).length;
+                  const count = analysis.filter(
+                    (t) => t.moment_for_scoring === moment
+                  ).length;
                   const percentage = (count / analysis.length) * 100;
                   return (
-                    <div key={moment} className="flex items-center justify-between">
+                    <div
+                      key={moment}
+                      className="flex items-center justify-between"
+                    >
                       <span>{moment}</span>
                       <span className="font-semibold">
                         {count} ({percentage.toFixed(1)}%)

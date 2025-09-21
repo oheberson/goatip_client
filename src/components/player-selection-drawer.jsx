@@ -66,6 +66,8 @@ export function PlayerSelectionDrawer({
   selectedPosition = null,
   benchPlayers = {},
   detailedMatchesData,
+  sgDetails = null,
+  tournamentData = null,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPlayers, setFilteredPlayers] = useState([]);
@@ -82,13 +84,12 @@ export function PlayerSelectionDrawer({
   const [recommendationsResult, setRecommendationsResult] = useState(null);
   const [goalTimingRecommendations, setGoalTimingRecommendations] =
     useState(null);
+  const [sgRecommendations, setSgRecommendations] = useState(null);
 
   const getUniqueValues = (key) => {
     if (!playersData?.players) {
-      console.log("no playersData", playersData);
       return [];
     }
-    console.log("existing playersdata", playersData);
     const values = [
       ...new Set(
         playersData.players.map((player) => player[key]).filter(Boolean)
@@ -107,7 +108,6 @@ export function PlayerSelectionDrawer({
       detailedMatchesData,
       uniqueTeams
     );
-    console.log("teamscoring>>>", teamScoringAnalysis);
 
     // Set the recommendations result with the new format
     setRecommendationsResult(teamScoringAnalysis);
@@ -203,6 +203,87 @@ export function PlayerSelectionDrawer({
 
     setGoalTimingRecommendations(recommendationsGoalTiming);
   }, [detailedMatchesData, playersData]);
+
+  // Analyze SG recommendations based on clean sheets data
+  useEffect(() => {
+    if (!sgDetails || !Array.isArray(sgDetails) || !playersData?.players)
+      return;
+
+    // Get unique teams from players data and determine home/away status
+    const getTeamContext = () => {
+      const teamContext = {};
+
+      // Get all matches from tournamentData to determine home/away status
+      if (tournamentData?.matches) {
+        tournamentData.matches.forEach((match) => {
+          if (match.firstTeamName) {
+            teamContext[mapTeamName(match.firstTeamLongName)] = "home";
+          }
+          if (match.secondTeamName) {
+            teamContext[mapTeamName(match.secondTeamLongName)] = "away";
+          }
+        });
+      }
+
+      return teamContext;
+    };
+
+    const teamContext = getTeamContext();
+
+    // Analyze clean sheets data
+    const analyzeCleanSheets = (sgData, teamContext) => {
+      return sgData
+        .map((team) => {
+          const teamName = team.team;
+          const isHome = teamContext[teamName] === "home";
+          const isAway = teamContext[teamName] === "away";
+
+          let weightedCleanSheetPercentage = 0;
+          let context = "unknown";
+
+          if (isHome) {
+            // For home teams, weight home performance more heavily
+            const homePercentage = team["home_clean_sheet_%"] || 0;
+            const totalPercentage = team["total_clean_sheet_%"] || 0;
+            weightedCleanSheetPercentage =
+              (homePercentage * 1.2 + totalPercentage) / 2;
+
+            context = "home";
+          } else if (isAway) {
+            // For away teams, weight away performance more heavily
+            const awayPercentage = team["away_clean_sheet_%"] || 0;
+            const totalPercentage = team["total_clean_sheet_%"] || 0;
+            weightedCleanSheetPercentage =
+              (awayPercentage * 1.2 + totalPercentage) / 2;
+            context = "away";
+          } else {
+            // If context is unknown, use total percentage
+            weightedCleanSheetPercentage = team["total_clean_sheet_%"] || 0;
+            context = "total";
+          }
+
+          return {
+            team: teamName,
+            context: context,
+            clean_sheet_percentage: weightedCleanSheetPercentage,
+            home_clean_sheets: team.home_clean_sheets,
+            home_games: team.home_games,
+            home_clean_sheet_percentage: team["home_clean_sheet_%"],
+            away_clean_sheets: team.away_clean_sheets,
+            away_games: team.away_games,
+            away_clean_sheet_percentage: team["away_clean_sheet_%"],
+            total_clean_sheets: team.total_clean_sheets,
+            total_games: team.total_games,
+            total_clean_sheet_percentage: team["total_clean_sheet_%"],
+          };
+        })
+        .sort((a, b) => b.clean_sheet_percentage - a.clean_sheet_percentage);
+    };
+
+    const sgAnalysis = analyzeCleanSheets(sgDetails, teamContext);
+
+    setSgRecommendations(sgAnalysis);
+  }, [sgDetails, playersData, tournamentData]);
 
   // Formation configuration
   const FORMATION_CONFIGS = {
@@ -868,6 +949,107 @@ export function PlayerSelectionDrawer({
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
                       Nenhuma análise de times disponível
+                    </div>
+                  )}
+                </div>
+
+                {/* SG Recommendations */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold mb-4 text-center">
+                    Times Menos Prováveis de Levar Gols (SG)
+                  </h3>
+                  {sgRecommendations && sgRecommendations.length > 0 ? (
+                    <div className="space-y-3">
+                      {sgRecommendations.slice(0, 10).map((team, index) => (
+                        <Card
+                          key={team.team}
+                          className={`${
+                            index === 0
+                              ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                              : index === 1
+                              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950"
+                              : index === 2
+                              ? "border-purple-500 bg-purple-50 dark:bg-purple-950"
+                              : "border-gray-200"
+                          }`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                                  {index + 1}
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold">{team.team}</h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {team.context === "home"
+                                      ? "Jogando em casa"
+                                      : team.context === "away"
+                                      ? "Jogando fora"
+                                      : "Contexto geral"}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-primary">
+                                  {(team.clean_sheet_percentage || 0).toFixed(
+                                    1
+                                  )}
+                                  %
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  chance de SG
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                              <div className="text-center">
+                                <div className="font-medium">Casa</div>
+                                <div>
+                                  {(
+                                    team.home_clean_sheet_percentage || 0
+                                  ).toFixed(1)}
+                                  %
+                                </div>
+                                <div>
+                                  ({team.home_clean_sheets || 0}/
+                                  {team.home_games || 0})
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-medium">Fora</div>
+                                <div>
+                                  {(
+                                    team.away_clean_sheet_percentage || 0
+                                  ).toFixed(1)}
+                                  %
+                                </div>
+                                <div>
+                                  ({team.away_clean_sheets || 0}/
+                                  {team.away_games || 0})
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-medium">Total</div>
+                                <div>
+                                  {(
+                                    team.total_clean_sheet_percentage || 0
+                                  ).toFixed(1)}
+                                  %
+                                </div>
+                                <div>
+                                  ({team.total_clean_sheets || 0}/
+                                  {team.total_games || 0})
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Nenhuma análise de SG disponível
                     </div>
                   )}
                 </div>

@@ -74,6 +74,8 @@ export default function CreateTeamPage({ params }) {
   const [bestPlayersLoading, setBestPlayersLoading] = useState(false);
   const [detailedMatchesData, setDetailedMatchesData] = useState(null);
   const [detailedMatchesLoading, setDetailedMatchesLoading] = useState(false);
+  const [sgDetails, setSgDetails] = useState(null);
+  const [sgDetailsLoading, setSgDetailsLoading] = useState(false);
 
   // Formation management state
   const [savedTeamNames, setSavedTeamNames] = useState([]);
@@ -343,6 +345,46 @@ export default function CreateTeamPage({ params }) {
     }
   };
 
+  // Function to fetch clean sheets data for available tournaments
+  const fetchSgDetailsData = async (tournamentId, playersData) => {
+    // Check if this tournament is in our available tournaments
+    if (!TOURNAMENTS[tournamentId] || !playersData?.players) {
+      return;
+    }
+
+    try {
+      setSgDetailsLoading(true);
+
+      // Extract unique team names from players data
+      const teamNames = new Set();
+      playersData.players.forEach((player) => {
+        if (player.teamName) {
+          teamNames.add(mapTeamName(player.teamName));
+        }
+      });
+
+      if (teamNames.size === 0) {
+        console.log("No team names found in players data");
+        return;
+      }
+
+      // Fetch clean sheets data
+      const teamsArray = Array.from(teamNames);
+      console.log("Fetching clean sheets data for teams:", teamsArray);
+
+      const data = await api.analytics.getCleanSheetsStats(
+        teamsArray,
+        isSubscribed,
+        isFreeTrial
+      );
+      setSgDetails(data.data || data);
+    } catch (error) {
+      console.error("Falha ao buscar dados de clean sheets:", error);
+    } finally {
+      setSgDetailsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const loadTournamentData = async () => {
       try {
@@ -388,6 +430,9 @@ export default function CreateTeamPage({ params }) {
           isFreeTrial
         );
         setPlayersData(playersData);
+
+        // Fetch clean sheets data if tournament is available
+        await fetchSgDetailsData(tournamentId, playersData);
       } catch (error) {
         console.error("Error loading tournament data:", error);
         setTournamentError("Falha ao buscar dados do torneio");
@@ -1409,6 +1454,8 @@ export default function CreateTeamPage({ params }) {
           selectedPosition={selectedPosition}
           benchPlayers={benchPlayers}
           detailedMatchesData={detailedMatchesData}
+          sgDetails={sgDetails}
+          tournamentData={tournamentData}
         />
 
         {/* Team Name Dialog */}

@@ -43,6 +43,9 @@ export const TOURNAMENTS = {
 export const TEAM_NAME_MAPPING = {
   Botafogo: "Botafogo (RJ)",
   "Atlético-MG": "Atlético Mineiro",
+  Vasco: "Vasco da Gama",
+  Sport: "Sport Recife",
+  Bragantino: "Red Bull Bragantino",
   Estudiantes: "Estudiantes–LP",
   Colônia: "Köln",
   Bayern: "Bayern Munich",
