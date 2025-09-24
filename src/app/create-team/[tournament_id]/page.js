@@ -76,6 +76,8 @@ export default function CreateTeamPage({ params }) {
   const [detailedMatchesLoading, setDetailedMatchesLoading] = useState(false);
   const [sgDetails, setSgDetails] = useState(null);
   const [sgDetailsLoading, setSgDetailsLoading] = useState(false);
+  const [latestScoringHistory, setLatestScoringHistory] = useState(null);
+  const [latestScoringHistoryLoading, setLatestScoringHistoryLoading] = useState(false);
 
   // Formation management state
   const [savedTeamNames, setSavedTeamNames] = useState([]);
@@ -385,6 +387,47 @@ export default function CreateTeamPage({ params }) {
     }
   };
 
+  // Function to fetch latest scoring history data for available tournaments
+  const fetchLatestScoringHistoryData = async (tournamentId, playersData) => {
+    // Check if this tournament is in our available tournaments
+    if (!TOURNAMENTS[tournamentId] || !playersData?.players) {
+      return;
+    }
+
+    try {
+      setLatestScoringHistoryLoading(true);
+
+      // Extract unique team names from players data
+      const teamNames = new Set();
+      playersData.players.forEach((player) => {
+        if (player.teamName) {
+          teamNames.add(mapTeamName(player.teamName));
+        }
+      });
+
+      if (teamNames.size === 0) {
+        console.log("No team names found in players data");
+        return;
+      }
+
+      // Fetch latest scoring history data
+      const teamsArray = Array.from(teamNames);
+      console.log("Fetching latest scoring history for teams:", teamsArray);
+
+      const data = await api.analytics.getLatestScoringHistory(
+        tournamentId,
+        teamsArray,
+        isSubscribed,
+        isFreeTrial
+      );
+      setLatestScoringHistory(data.data || data);
+    } catch (error) {
+      console.error("Falha ao buscar dados de histórico de gols:", error);
+    } finally {
+      setLatestScoringHistoryLoading(false);
+    }
+  };
+
   useEffect(() => {
     const loadTournamentData = async () => {
       try {
@@ -433,6 +476,9 @@ export default function CreateTeamPage({ params }) {
 
         // Fetch clean sheets data if tournament is available
         await fetchSgDetailsData(tournamentId, playersData);
+
+        // Fetch latest scoring history data if tournament is available
+        await fetchLatestScoringHistoryData(tournamentId, playersData);
       } catch (error) {
         console.error("Error loading tournament data:", error);
         setTournamentError("Falha ao buscar dados do torneio");
@@ -1456,6 +1502,7 @@ export default function CreateTeamPage({ params }) {
           detailedMatchesData={detailedMatchesData}
           sgDetails={sgDetails}
           tournamentData={tournamentData}
+          latestScoringHistory={latestScoringHistory}
         />
 
         {/* Team Name Dialog */}

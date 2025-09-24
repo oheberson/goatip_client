@@ -30,31 +30,34 @@ export const calculatePlayerScore = (player, strategy) => {
   switch (strategy) {
     case "defensivo":
       // Prioritize defensive stats: DE (desarmes), IR (interceptações), SG, DS (defesas)
-      score = 
+      score =
         (averages.DE || 0) * 2 + // Desarmes
         (averages.IR || 0) * 2 + // Interceptações
         (averages.SG || 0) * 3 + // SG (sem gols)
-        (averages.DS || 0) * 2;  // Defesas
+        (averages.DS || 0) * 2; // Defesas
       break;
-    
+
     case "ofensivo":
       // Prioritize offensive stats: shots and goals
       const totalShots = calculateTotalShots(player);
       const shotsAverage = totalShots / 9; // Assuming 9 games average
-      score = 
+      score =
         shotsAverage * 2 + // Finalizações
         (averages.G || 0) * 4 + // Gols
         (averages.FC || 0) * 1.5 + // Finalizações certas
         (averages.FS || 0) * 1; // Finalizações para fora
       break;
-    
+
     case "moderado":
     default:
       // Balanced approach - use average of all stats
-      const allStats = Object.values(averages).filter(val => typeof val === 'number');
-      score = allStats.length > 0 
-        ? allStats.reduce((sum, val) => sum + val, 0) / allStats.length
-        : 0;
+      const allStats = Object.values(averages).filter(
+        (val) => typeof val === "number"
+      );
+      score =
+        allStats.length > 0
+          ? allStats.reduce((sum, val) => sum + val, 0) / allStats.length
+          : 0;
       break;
   }
 
@@ -74,7 +77,7 @@ export const getFormationConfig = (formation) => {
   };
 
   const config = FORMATION_CONFIGS[formation] || FORMATION_CONFIGS["4-3-3"];
-  
+
   const limits = {
     GOL: 1,
     ZAG: 0,
@@ -94,44 +97,58 @@ export const getFormationConfig = (formation) => {
 };
 
 // Filter players by position and team constraints
-export const filterPlayersForPosition = (players, positionType, selectedTeams, strategy) => {
-  return players.filter(player => {
+export const filterPlayersForPosition = (
+  players,
+  positionType,
+  selectedTeams,
+  strategy
+) => {
+  return players.filter((player) => {
     // Filter by position
     if (player.position !== positionType) return false;
-    
+
     // Filter by selected teams
     if (selectedTeams.length > 0 && !selectedTeams.includes(player.teamName)) {
       return false;
     }
-    
+
     return true;
   });
 };
 
 // Select best players for a position based on strategy
-export const selectBestPlayersForPosition = (players, positionType, count, strategy) => {
+export const selectBestPlayersForPosition = (
+  players,
+  positionType,
+  count,
+  strategy
+) => {
   if (players.length === 0) return [];
 
   // Calculate scores for all players
-  const playersWithScores = players.map(player => ({
+  const playersWithScores = players.map((player) => ({
     ...player,
-    score: calculatePlayerScore(player, strategy)
+    score: calculatePlayerScore(player, strategy),
   }));
 
   // Sort by score (descending) and take the top players
-  return playersWithScores
-    .sort((a, b) => b.score - a.score)
-    .slice(0, count);
+  return playersWithScores.sort((a, b) => b.score - a.score).slice(0, count);
 };
 
 // Select random players from top N players for a position based on strategy
-export const selectRandomPlayersForPosition = (players, positionType, count, strategy, topN = 5) => {
+export const selectRandomPlayersForPosition = (
+  players,
+  positionType,
+  count,
+  strategy,
+  topN = 5
+) => {
   if (players.length === 0) return [];
 
   // Calculate scores for all players
-  const playersWithScores = players.map(player => ({
+  const playersWithScores = players.map((player) => ({
     ...player,
-    score: calculatePlayerScore(player, strategy)
+    score: calculatePlayerScore(player, strategy),
   }));
 
   // Sort by score (descending) and take the top N players
@@ -145,21 +162,28 @@ export const selectRandomPlayersForPosition = (players, positionType, count, str
 };
 
 // Select players for defense with SG strategy (same team)
-export const selectDefenseWithSG = (players, positionLimits, selectedTeams, strategy) => {
-  const defensePositions = ['GOL', 'ZAG', 'LAT'].filter(pos => positionLimits[pos] > 0);
-  
+export const selectDefenseWithSG = (
+  players,
+  positionLimits,
+  selectedTeams,
+  strategy
+) => {
+  const defensePositions = ["GOL", "ZAG", "LAT"].filter(
+    (pos) => positionLimits[pos] > 0
+  );
+
   if (defensePositions.length === 0) return {};
 
   // Try to find a team that has players for all defense positions
   for (const team of selectedTeams) {
-    const teamPlayers = players.filter(player => 
-      player.teamName === team && 
-      defensePositions.includes(player.position)
+    const teamPlayers = players.filter(
+      (player) =>
+        player.teamName === team && defensePositions.includes(player.position)
     );
 
     // Check if this team has at least one player for each defense position
-    const hasAllPositions = defensePositions.every(pos => 
-      teamPlayers.some(player => player.position === pos)
+    const hasAllPositions = defensePositions.every((pos) =>
+      teamPlayers.some((player) => player.position === pos)
     );
 
     if (hasAllPositions) {
@@ -168,9 +192,14 @@ export const selectDefenseWithSG = (players, positionLimits, selectedTeams, stra
       let slotIndex = 1;
 
       for (const pos of defensePositions) {
-        const posPlayers = teamPlayers.filter(p => p.position === pos);
-        const bestPlayers = selectBestPlayersForPosition(posPlayers, pos, positionLimits[pos], strategy);
-        
+        const posPlayers = teamPlayers.filter((p) => p.position === pos);
+        const bestPlayers = selectBestPlayersForPosition(
+          posPlayers,
+          pos,
+          positionLimits[pos],
+          strategy
+        );
+
         bestPlayers.forEach((player, index) => {
           const slotKey = `${pos}-${index + 1}`;
           selectedPlayers[slotKey] = player;
@@ -187,12 +216,12 @@ export const selectDefenseWithSG = (players, positionLimits, selectedTeams, stra
 
 // Generate random team based on parameters
 export const generateRandomTeam = (playersData, randomParams) => {
-  const { 
-    formation, 
-    useBenchStrategy, 
-    defenseWithSG, 
-    selectedTeams, 
-    strategy 
+  const {
+    formation,
+    useBenchStrategy,
+    defenseWithSG,
+    selectedTeams,
+    strategy,
   } = randomParams;
 
   if (!playersData?.players) {
@@ -210,14 +239,24 @@ export const generateRandomTeam = (playersData, randomParams) => {
 
   // Handle defense with SG strategy first
   if (defenseWithSG) {
-    const defensePlayers = selectDefenseWithSG(players, positionLimits, selectedTeams, strategy);
+    const defensePlayers = selectDefenseWithSG(
+      players,
+      positionLimits,
+      selectedTeams,
+      strategy
+    );
     Object.assign(selectedPlayers, defensePlayers);
   }
 
   // Select players for each position (STARTING ELEVEN FIRST)
   for (const [positionType, requiredCount] of Object.entries(positionLimits)) {
     // Skip if already handled by defense with SG
-    if (defenseWithSG && (positionType === 'GOL' || positionType === 'ZAG' || positionType === 'LAT')) {
+    if (
+      defenseWithSG &&
+      (positionType === "GOL" ||
+        positionType === "ZAG" ||
+        positionType === "LAT")
+    ) {
       continue;
     }
 
@@ -225,19 +264,22 @@ export const generateRandomTeam = (playersData, randomParams) => {
 
     // Filter players for this position
     const availablePlayers = filterPlayersForPosition(
-      players, 
-      positionType, 
-      selectedTeams, 
+      players,
+      positionType,
+      selectedTeams,
       strategy
-    ).filter(player => 
-      !Object.values(selectedPlayers).some(selected => selected.id === player.id)
+    ).filter(
+      (player) =>
+        !Object.values(selectedPlayers).some(
+          (selected) => selected.id === player.id
+        )
     );
 
     // Use randomized selection from top players
     const bestPlayers = selectRandomPlayersForPosition(
-      availablePlayers, 
-      positionType, 
-      requiredCount, 
+      availablePlayers,
+      positionType,
+      requiredCount,
       strategy,
       Math.min(totalTopPlayers, availablePlayers.length)
     );
@@ -258,37 +300,30 @@ export const generateRandomTeam = (playersData, randomParams) => {
     // 1. Find players with "nulo" or "dúvida" status for starting eleven (1 per position)
     // 2. Find players with "Provável" status for bench (1 per position)
     // 3. Replace the current team with this strategy
-    
-    const benchPositions = ['GOL', 'ZAG', 'LAT', 'MEI', 'ATA'];
-    
+
+    const benchPositions = ["GOL", "ZAG", "LAT", "MEI", "ATA"];
+
     for (const pos of benchPositions) {
       if (positionLimits[pos] > 0) {
         // Find all available players for this position
         const availablePlayers = filterPlayersForPosition(
-          players, 
-          pos, 
-          selectedTeams, 
+          players,
+          pos,
+          selectedTeams,
           strategy
         );
 
         // Separate players by status
-        const nuloDuvidaPlayers = availablePlayers.filter(player => 
-          player.status === "Nulo" || player.status === "Dúvida"
-        );
-        
-        const provavelPlayers = availablePlayers.filter(player => 
-          player.status === "Provável"
+        const nuloDuvidaPlayers = availablePlayers.filter(
+          (player) => player.status === "Nulo" || player.status === "Dúvida"
         );
 
-        // Debug logging to understand status values
-        if (pos === 'GOL' && availablePlayers.length > 0) {
-          console.log(`Available players for ${pos}:`, availablePlayers.map(p => ({ name: p.name, status: p.status })));
-          console.log(`Nulo/Dúvida players:`, nuloDuvidaPlayers.map(p => ({ name: p.name, status: p.status })));
-          console.log(`Provável players:`, provavelPlayers.map(p => ({ name: p.name, status: p.status })));
-        }
+        const provavelPlayers = availablePlayers.filter(
+          (player) => player.status === "Provável"
+        );
 
         // Remove current starting players for this position
-        Object.keys(selectedPlayers).forEach(key => {
+        Object.keys(selectedPlayers).forEach((key) => {
           if (selectedPlayers[key].position === pos) {
             delete selectedPlayers[key];
           }
@@ -297,9 +332,9 @@ export const generateRandomTeam = (playersData, randomParams) => {
         // If we have nulo/dúvida players, use them for starting eleven
         if (nuloDuvidaPlayers.length > 0) {
           const bestNuloDuvidaPlayer = selectRandomPlayersForPosition(
-            nuloDuvidaPlayers, 
-            pos, 
-            1, 
+            nuloDuvidaPlayers,
+            pos,
+            1,
             strategy,
             Math.min(3, nuloDuvidaPlayers.length) // Random from top 3 nulo players
           )[0];
@@ -315,20 +350,23 @@ export const generateRandomTeam = (playersData, randomParams) => {
 
         // Fill remaining slots for this position with regular players
         const currentCount = Object.values(selectedPlayers).filter(
-          player => player.position === pos
+          (player) => player.position === pos
         ).length;
         const remainingSlots = positionLimits[pos] - currentCount;
 
         if (remainingSlots > 0) {
-          const regularPlayers = availablePlayers.filter(player => 
-            !Object.values(selectedPlayers).some(selected => selected.id === player.id)
+          const regularPlayers = availablePlayers.filter(
+            (player) =>
+              !Object.values(selectedPlayers).some(
+                (selected) => selected.id === player.id
+              )
           );
 
           if (regularPlayers.length > 0) {
             const bestRegularPlayers = selectRandomPlayersForPosition(
-              regularPlayers, 
-              pos, 
-              remainingSlots, 
+              regularPlayers,
+              pos,
+              remainingSlots,
               strategy,
               Math.min(totalTopPlayers, regularPlayers.length)
             );
@@ -346,9 +384,9 @@ export const generateRandomTeam = (playersData, randomParams) => {
         // Add provável players to bench (BENCH SELECTION AFTER STARTING ELEVEN)
         if (provavelPlayers.length > 0) {
           const bestProvavelPlayer = selectRandomPlayersForPosition(
-            provavelPlayers, 
-            pos, 
-            1, 
+            provavelPlayers,
+            pos,
+            1,
             strategy,
             Math.min(3, provavelPlayers.length) // Random from top 3 provável players
           )[0];
@@ -362,15 +400,18 @@ export const generateRandomTeam = (playersData, randomParams) => {
           }
         } else {
           // If no provável players, add regular bench player
-          const availableBenchPlayers = availablePlayers.filter(player => 
-            !Object.values(selectedPlayers).some(selected => selected.id === player.id)
+          const availableBenchPlayers = availablePlayers.filter(
+            (player) =>
+              !Object.values(selectedPlayers).some(
+                (selected) => selected.id === player.id
+              )
           );
 
           if (availableBenchPlayers.length > 0) {
             const bestBenchPlayer = selectRandomPlayersForPosition(
-              availableBenchPlayers, 
-              pos, 
-              1, 
+              availableBenchPlayers,
+              pos,
+              1,
               strategy,
               Math.min(totalTopPlayers, availableBenchPlayers.length)
             )[0];
@@ -391,6 +432,6 @@ export const generateRandomTeam = (playersData, randomParams) => {
   return {
     selectedPlayers,
     benchPlayers,
-    formation
+    formation,
   };
 };

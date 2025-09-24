@@ -118,17 +118,22 @@ const categorizeScoringMoment = (period) => {
 /**
  * Calculate team scoring score based on various statistical factors
  */
-const calculateTeamScoringScore = (teamData, statsToAnalyze) => {
+const calculateTeamScoringScore = (
+  teamData,
+  statsToAnalyze,
+  latestScoringHistory = null
+) => {
   let totalScore = 0;
   let weightSum = 0;
 
   // Define weights for different statistical categories
   const weights = {
-    goals_percentage: 0.25, // Overall goal percentages
-    goals_scored: 0.2, // Goals scored specifically
-    goals_against_opponent: 0.15, // Opponent's defensive weakness
-    timing_alignment: 0.2, // Timing pattern alignment
-    consistency: 0.2, // Consistency across different stats
+    goals_percentage: 0.15, // Overall goal percentages (reduced from 0.25)
+    goals_scored: 0.25, // Goals scored specifically (reduced from 0.2)
+    goals_against_opponent: 0.1, // Opponent's defensive weakness
+    timing_alignment: 0.15, // Timing pattern alignment (reduced from 0.2)
+    consistency: 0.1, // Consistency across different stats (reduced from 0.2)
+    recent_scoring_history: 0.25, // Recent scoring history (NEW)
   };
 
   // 1. Goals percentage analysis (overall and detalhado)
@@ -161,6 +166,14 @@ const calculateTeamScoringScore = (teamData, statsToAnalyze) => {
   const consistencyScore = calculateConsistencyScore(teamData, statsToAnalyze);
   totalScore += consistencyScore * weights.consistency;
   weightSum += weights.consistency;
+
+  // 6. Recent scoring history analysis (NEW)
+  const recentScoringHistoryScore = calculateRecentScoringHistoryScore(
+    teamData,
+    latestScoringHistory
+  );
+  totalScore += recentScoringHistoryScore * weights.recent_scoring_history;
+  weightSum += weights.recent_scoring_history;
 
   // Normalize the score
   return weightSum > 0 ? totalScore / weightSum : 0;
@@ -293,6 +306,38 @@ const calculateConsistencyScore = (teamData, statsToAnalyze) => {
 };
 
 /**
+ * Calculate recent scoring history score based on latest scoring data
+ */
+const calculateRecentScoringHistoryScore = (teamData, latestScoringHistory) => {
+  if (!latestScoringHistory?.team_goals_summary || !teamData.team) {
+    return 0;
+  }
+
+  // Find the team's data in the latest scoring history
+  const teamHistory = latestScoringHistory.team_goals_summary.find(
+    (team) => team.team === teamData.team
+  );
+
+  if (!teamHistory) {
+    return 0;
+  }
+
+  const { total_goals, average_goals_per_game } = teamHistory;
+
+  // Normalize the scores to 0-1 range
+  // Total goals: scale based on typical range (0-20 goals in 8 games)
+  const totalGoalsScore = Math.min(1, total_goals / 20);
+
+  // Average goals per game: scale based on typical range (0-2.5 goals per game)
+  const averageGoalsScore = Math.min(1, average_goals_per_game / 2.5);
+
+  // Weight the scores (total goals 60%, average 40% to balance volume vs consistency)
+  const recentScoringScore = totalGoalsScore * 0.6 + averageGoalsScore * 0.4;
+
+  return recentScoringScore;
+};
+
+/**
  * Estimate likely goals based on scoring score and historical data
  */
 const estimateLikelyGoals = (scoringScore, teamData) => {
@@ -319,7 +364,8 @@ const estimateLikelyGoals = (scoringScore, teamData) => {
  */
 export const analyzeTeamScoringLikelihood = (
   detailedMatchesData,
-  uniqueTeams
+  uniqueTeams,
+  latestScoringHistory = null
 ) => {
   if (
     !detailedMatchesData ||
@@ -327,7 +373,6 @@ export const analyzeTeamScoringLikelihood = (
     !uniqueTeams ||
     uniqueTeams.length === 0
   ) {
-    console.log("failed to analyzeteams", detailedMatchesData, uniqueTeams);
     return [];
   }
 
@@ -435,7 +480,11 @@ export const analyzeTeamScoringLikelihood = (
 
   teamDataMap.forEach((teamData, teamName) => {
     if (teamData.matches > 0) {
-      const scoringScore = calculateTeamScoringScore(teamData, statsToLookFor);
+      const scoringScore = calculateTeamScoringScore(
+        teamData,
+        statsToLookFor,
+        latestScoringHistory
+      );
       const likelyGoals = estimateLikelyGoals(scoringScore, teamData);
       const momentForScoring = categorizeScoringMoment(
         teamData.timing?.top_scored_period

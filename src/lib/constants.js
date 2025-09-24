@@ -36,12 +36,19 @@ export const TOURNAMENTS = {
     season: "2025",
     apiMapping: "libertadores",
   },
+  suco_2025: {
+    id: "brasileirao_2025",
+    name: "Suco de Brasil",
+    season: "2025",
+    apiMapping: "brasileiro_A",
+  },
 };
 
 // Team name mapping for API compatibility
 // their -> mine
 export const TEAM_NAME_MAPPING = {
   Botafogo: "Botafogo (RJ)",
+  "Botafogo-RJ": "Botafogo (RJ)",
   "Atlético-MG": "Atlético Mineiro",
   Vasco: "Vasco da Gama",
   Sport: "Sport Recife",

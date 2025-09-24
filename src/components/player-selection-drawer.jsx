@@ -25,6 +25,12 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -68,6 +74,7 @@ export function PlayerSelectionDrawer({
   detailedMatchesData,
   sgDetails = null,
   tournamentData = null,
+  latestScoringHistory = null,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPlayers, setFilteredPlayers] = useState([]);
@@ -85,6 +92,20 @@ export function PlayerSelectionDrawer({
   const [goalTimingRecommendations, setGoalTimingRecommendations] =
     useState(null);
   const [sgRecommendations, setSgRecommendations] = useState(null);
+
+  // Format latestScoringHistory data for easy team lookup
+  const formatLatestScoringHistory = (data) => {
+    if (!data?.team_goals_summary) return {};
+
+    const formatted = {};
+    data.team_goals_summary.forEach((team) => {
+      formatted[team.team] = team.filtered_players || [];
+    });
+    return formatted;
+  };
+
+  const latestScoringHistoryFormatted =
+    formatLatestScoringHistory(latestScoringHistory);
 
   const getUniqueValues = (key) => {
     if (!playersData?.players) {
@@ -106,7 +127,8 @@ export function PlayerSelectionDrawer({
     // Use our new analysis function to get team scoring likelihood
     const teamScoringAnalysis = analyzeTeamScoringLikelihood(
       detailedMatchesData,
-      uniqueTeams
+      uniqueTeams,
+      latestScoringHistory
     );
 
     // Set the recommendations result with the new format
@@ -202,7 +224,7 @@ export function PlayerSelectionDrawer({
       .filter(Boolean);
 
     setGoalTimingRecommendations(recommendationsGoalTiming);
-  }, [detailedMatchesData, playersData]);
+  }, [detailedMatchesData, playersData, latestScoringHistory]);
 
   // Analyze SG recommendations based on clean sheets data
   useEffect(() => {
@@ -906,46 +928,114 @@ export function PlayerSelectionDrawer({
                     Times Prováveis de Marcar
                   </h3>
                   {recommendationsResult && recommendationsResult.length > 0 ? (
-                    <div className="space-y-3">
-                      {recommendationsResult.slice(0, 10).map((team, index) => (
-                        <Card
-                          key={team.team}
-                          className={`${
-                            index === 0
-                              ? "border-green-500 bg-green-50 dark:bg-green-950"
-                              : index === 1
-                              ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-950"
-                              : index === 2
-                              ? "border-orange-500 bg-orange-50 dark:bg-orange-950"
-                              : "border-gray-200"
-                          }`}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
-                                  {index + 1}
+                    <Accordion type="single" collapsible className="w-full">
+                      {recommendationsResult.slice(0, 10).map((team, index) => {
+                        const teamPlayers =
+                          latestScoringHistoryFormatted[team.team] || [];
+                        return (
+                          <AccordionItem
+                            key={team.team}
+                            value={`team-${index}`}
+                            className={`${
+                              index === 0
+                                ? "px-4 rounded border-green-500 bg-green-50 dark:bg-green-950"
+                                : index === 1
+                                ? "px-4 rounded border-yellow-500 bg-yellow-50 dark:bg-yellow-950"
+                                : index === 2
+                                ? "px-4 rounded border-orange-500 bg-orange-50 dark:bg-orange-950"
+                                : "px-4 rounded border-gray-200"
+                            }`}
+                          >
+                            <AccordionTrigger className="hover:no-underline">
+                              <div className="flex items-center justify-between w-full pr-4">
+                                <div className="flex items-center space-x-3">
+                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                                    {index + 1}
+                                  </div>
+                                  <div className="text-left">
+                                    <h4 className="font-semibold">
+                                      {team.team}
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      Melhor momento: {team.moment_for_scoring}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h4 className="font-semibold">{team.team}</h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    Melhor momento: {team.moment_for_scoring}
-                                  </p>
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-primary">
+                                    {team.likely_goals}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    gols esperados
+                                  </div>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-primary">
-                                  {team.likely_goals}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  gols esperados
-                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="pt-4">
+                                {teamPlayers.length > 0 ? (
+                                  <div className="space-y-3">
+                                    <h5 className="font-medium text-sm text-muted-foreground mb-3">
+                                      Principais Jogadores Atacantes (Últimas 8
+                                      semanas)
+                                    </h5>
+                                    {teamPlayers.map((player, playerIndex) => (
+                                      <Card
+                                        key={playerIndex}
+                                        className="bg-background/50"
+                                      >
+                                        <CardContent className="p-3">
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                              <h6 className="font-medium text-sm">
+                                                {player.player}
+                                              </h6>
+                                              <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-muted-foreground">
+                                                <div>
+                                                  <span className="font-medium">
+                                                    {player.total_goals_scored}
+                                                  </span>{" "}
+                                                  gols
+                                                </div>
+                                                <div>
+                                                  <span className="font-medium">
+                                                    {player.total_assists_given}
+                                                  </span>{" "}
+                                                  assistências
+                                                </div>
+                                                <div>
+                                                  <span className="font-medium">
+                                                    {player.key_passes}
+                                                  </span>{" "}
+                                                  passes-chave
+                                                </div>
+                                                <div>
+                                                  <span className="font-medium">
+                                                    {player.average_xg.toFixed(
+                                                      2
+                                                    )}
+                                                  </span>{" "}
+                                                  xG médio
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </CardContent>
+                                      </Card>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-4 text-sm text-muted-foreground">
+                                    Nenhum dado de jogadores disponível para
+                                    este time
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      })}
+                    </Accordion>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
                       Nenhuma análise de times disponível
