@@ -60,8 +60,11 @@ function TipsCard({ tip, onClick, type = "teams" }) {
               </div>
               <TrendingUp className="w-5 h-5 text-muted-foreground" />
             </div>
+            {type == "teams" && (
+              <p className="text-xs text-muted-foreground mb-1">{`x ${tip.opponent}`}</p>
+            )}
 
-            <div className="flex justify-between items-center gap-2">
+            <div className="flex flex justify-between items-center gap-2">
               <p className="text-sm text-muted-foreground mb-2">
                 {type === "teams"
                   ? formatTournamentName(tip.tournament)
