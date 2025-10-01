@@ -235,6 +235,25 @@ export const api = {
         ? mockApi.tips.getTips()
         : apiClient.get("/tips/get-tips"),
   },
+
+  // Search
+  search: {
+    getAvailableTeams: (tournaments, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
+        ? mockApi.search?.getAvailableTeams?.(tournaments) ||
+          apiClient.get(`/search/available-teams?tournaments=${tournaments.join(",")}`)
+        : apiClient.get(`/search/available-teams?tournaments=${tournaments.join(",")}`),
+    getAvailablePlayers: (tournaments, teams, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
+        ? mockApi.search?.getAvailablePlayers?.(tournaments, teams) ||
+          apiClient.get(`/search/available-players?tournaments=${tournaments.join(",")}&teams=${teams.join(",")}`)
+        : apiClient.get(`/search/available-players?tournaments=${tournaments.join(",")}&teams=${teams.join(",")}`),
+    freeSearch: (params, isSubscribed = true, isFreeTrial = false) =>
+      shouldUseMockData(isSubscribed, isFreeTrial)
+        ? mockApi.search?.freeSearch?.(params) ||
+          apiClient.get(`/search/free-search?${new URLSearchParams(params).toString()}`)
+        : apiClient.get(`/search/free-search?${new URLSearchParams(params).toString()}`),
+  },
 };
 
 export default apiClient;

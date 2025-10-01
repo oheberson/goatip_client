@@ -72,7 +72,7 @@ function TipsCard({ tip, onClick, type = "teams" }) {
               </p>
               <div className="flex flex-col items-end">
                 <p className="text-sm text-muted-foreground mb-2">
-                  Média: {tip.average.toFixed(2)}
+                  Média: {tip.average?.toFixed(2)}
                 </p>
                 {tipsCount > 0 ? (
                   <span className="font-bold text-primary">

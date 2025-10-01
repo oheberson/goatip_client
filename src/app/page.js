@@ -22,6 +22,7 @@ import {
   Flag,
   TrendingUp,
   LogIn,
+  Search,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -133,9 +134,23 @@ export default function Home() {
             </Card>
           </Link>
 
-          <Link href="/tips" className="col-span-2">
+          <Link href="/search">
             <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
-              <CardContent className="p-4 h-full flex flex-col">
+              <CardContent className="p-4 h-full flex flex-col justify-between">
+                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3">
+                  <Search className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="font-semibold mb-1">Busca</h3>
+                <p className="text-sm text-muted-foreground flex-1">
+                  Busca Avançada
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/tips">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+              <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mb-3">
                   <TrendingUp className="w-6 h-6 text-orange-600" />
                 </div>

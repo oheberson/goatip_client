@@ -272,6 +272,110 @@ export const mockApi = {
       return bestPlayersMockData;
     },
   },
+
+  // Mock search API
+  search: {
+    getAvailableTeams: async (tournaments) => {
+      await simulateApiDelay();
+      // Return mock teams based on selected tournaments
+      const mockTeams = [
+        "Flamengo",
+        "Palmeiras", 
+        "São Paulo",
+        "Corinthians",
+        "Santos",
+        "Vasco da Gama",
+        "Botafogo (RJ)",
+        "Fluminense",
+        "Atlético Mineiro",
+        "Cruzeiro",
+        "Grêmio",
+        "Internacional",
+        "Bahia",
+        "Fortaleza",
+        "Ceará",
+        "Sport Recife",
+        "Red Bull Bragantino",
+        "Vitória",
+        "Juventude",
+        "Mirassol"
+      ];
+      return { teams: mockTeams };
+    },
+    getAvailablePlayers: async (tournaments, teams) => {
+      await simulateApiDelay();
+      // Return mock players based on selected teams
+      const mockPlayers = [
+        "Gabigol",
+        "Bruno Henrique",
+        "Arrascaeta",
+        "Weverton",
+        "Raphael Veiga",
+        "Dudu",
+        "Luciano",
+        "Calleri",
+        "Fagner",
+        "Cássio",
+        "Marinho",
+        "Soteldo",
+        "Figueiredo",
+        "Pec",
+        "Nino",
+        "André",
+        "Hulk",
+        "Keno",
+        "Bruno Fuchs",
+        "Matheus Mendes"
+      ];
+      return { players: mockPlayers };
+    },
+    freeSearch: async (params) => {
+      await simulateApiDelay();
+      // Return mock search results
+      const mockResults = [
+        {
+          yellow_cards: 2,
+          goals: 8,
+          team: "Flamengo",
+          games_played: 22,
+          player: "Gabigol",
+          tournament: "brasileiro_A"
+        },
+        {
+          yellow_cards: 1,
+          goals: 5,
+          team: "Palmeiras",
+          games_played: 20,
+          player: "Raphael Veiga",
+          tournament: "brasileiro_A"
+        },
+        {
+          yellow_cards: 3,
+          goals: 3,
+          team: "São Paulo",
+          games_played: 18,
+          player: "Luciano",
+          tournament: "brasileiro_A"
+        }
+      ];
+      
+      return {
+        data: mockResults,
+        total_count: mockResults.length,
+        returned_count: mockResults.length,
+        filters_applied: {
+          tournaments: params.tournaments ? params.tournaments.split(',') : [],
+          teams: params.teams ? params.teams.split(',') : [],
+          players: params.players ? params.players.split(',') : [],
+          columns: params.columns ? params.columns.split(',') : []
+        },
+        pagination: {
+          limit: 100,
+          offset: 0
+        }
+      };
+    },
+  },
 };
 
 // Helper function to determine if we should use mock data

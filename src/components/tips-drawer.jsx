@@ -251,7 +251,7 @@ export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
                     </p>
                     <div className="flex">
                       <p className="font-black">
-                        {tip.opponent_avg_against.toFixed(1)}
+                        {tip.opponent_avg_against?.toFixed(1)}
                       </p>
                       &nbsp;
                       <p>{formatStatName(tip.variable)}</p>

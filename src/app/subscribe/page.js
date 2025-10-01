@@ -58,9 +58,7 @@ export default function SubscribePage() {
   };
 
   const handleStartFreeTrial = async () => {
-    console.log("triggered start free trial process");
     if (!user) {
-      console.log("user not found");
       setMessage("Faça login para começar seu Teste Grátis");
       return;
     }
@@ -69,9 +67,7 @@ export default function SubscribePage() {
     setMessage("");
 
     try {
-      console.log("trying running");
       const result = await startFreeTrial(user.email);
-      console.log("result success");
 
       if (result.success) {
         setMessage(
