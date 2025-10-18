@@ -10,7 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { STATS_MAP, TOURNAMENTS_MAP_NAMES } from "@/lib/constants";
+import {
+  STATS_MAP,
+  TOURNAMENTS_MAP_NAMES,
+  PLAYER_STATS_THRESHOLDS,
+} from "@/lib/constants";
 import { TrendingUp, TrendingDown, X } from "lucide-react";
 import { Questions } from "@/components/questions";
 
@@ -130,112 +134,114 @@ export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
 
         <div className="px-4 pb-4 flex-1 overflow-y-auto">
           {/* Tab Navigation */}
-          <div className="flex bg-muted rounded-lg p-1 mb-4">
-            <Button
-              variant={activeTab === "over" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("over")}
-              className="flex-1 flex items-center gap-2"
-            >
-              <TrendingUp className="w-4 h-4" />
-              Over ({overTipsArray.length})
-            </Button>
-            <Button
-              variant={activeTab === "under" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("under")}
-              className="flex-1 flex items-center gap-2"
-            >
-              <TrendingDown className="w-4 h-4" />
-              Under ({underTipsArray.length})
-            </Button>
-          </div>
+          {type == "teams" && (
+            <>
+              <div className="flex bg-muted rounded-lg p-1 mb-4">
+                <Button
+                  variant={activeTab === "over" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveTab("over")}
+                  className="flex-1 flex items-center gap-2"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Over ({overTipsArray.length})
+                </Button>
+                <Button
+                  variant={activeTab === "under" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveTab("under")}
+                  className="flex-1 flex items-center gap-2"
+                >
+                  <TrendingDown className="w-4 h-4" />
+                  Under ({underTipsArray.length})
+                </Button>
+              </div>
 
-          {/* Tab Content */}
-          <div className="space-y-4">
-            {activeTab === "over" ? (
-              <div>
-                <h3 className="font-semibold mb-3 text-green-700 dark:text-green-300">
-                  Dicas Over
-                </h3>
-                {overTipsArray.length > 0 ? (
-                  <div className="space-y-3">
-                    {overTipsArray.map((tipItem, index) => (
-                      <Card key={index}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">
-                                Linha: {tipItem.line}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Over {tipItem.line}{" "}
-                                {formatStatName(tip.variable).toLowerCase()}
-                              </p>
-                            </div>
-                            <LikelihoodTag
-                              value={tipItem.likelihood}
-                              label="Probabilidade"
-                            />
-                          </div>
+              <div className="space-y-4">
+                {activeTab === "over" ? (
+                  <div>
+                    <h3 className="font-semibold mb-3 text-green-700 dark:text-green-300">
+                      Dicas Over
+                    </h3>
+                    {overTipsArray.length > 0 ? (
+                      <div className="space-y-3">
+                        {overTipsArray.map((tipItem, index) => (
+                          <Card key={index}>
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium">
+                                    Linha: {tipItem.line}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Over {tipItem.line}{" "}
+                                    {formatStatName(tip.variable).toLowerCase()}
+                                  </p>
+                                </div>
+                                <LikelihoodTag
+                                  value={tipItem.likelihood}
+                                  label="Probabilidade"
+                                />
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <Card>
+                        <CardContent className="p-6 text-center">
+                          <TrendingUp className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-muted-foreground">
+                            Nenhuma dica over disponível
+                          </p>
                         </CardContent>
                       </Card>
-                    ))}
+                    )}
                   </div>
                 ) : (
-                  <Card>
-                    <CardContent className="p-6 text-center">
-                      <TrendingUp className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-muted-foreground">
-                        Nenhuma dica over disponível
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            ) : (
-              <div>
-                <h3 className="font-semibold mb-3 text-red-700 dark:text-red-300">
-                  Dicas Under
-                </h3>
-                {underTipsArray.length > 0 ? (
-                  <div className="space-y-3">
-                    {underTipsArray.map((tipItem, index) => (
-                      <Card key={index}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">
-                                Linha: {tipItem.line}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Under {tipItem.line}{" "}
-                                {formatStatName(tip.variable).toLowerCase()}
-                              </p>
-                            </div>
-                            <LikelihoodTag
-                              value={tipItem.likelihood}
-                              label="Probabilidade"
-                            />
-                          </div>
+                  <div>
+                    <h3 className="font-semibold mb-3 text-red-700 dark:text-red-300">
+                      Dicas Under
+                    </h3>
+                    {underTipsArray.length > 0 ? (
+                      <div className="space-y-3">
+                        {underTipsArray.map((tipItem, index) => (
+                          <Card key={index}>
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium">
+                                    Linha: {tipItem.line}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Under {tipItem.line}{" "}
+                                    {formatStatName(tip.variable).toLowerCase()}
+                                  </p>
+                                </div>
+                                <LikelihoodTag
+                                  value={tipItem.likelihood}
+                                  label="Probabilidade"
+                                />
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <Card>
+                        <CardContent className="p-6 text-center">
+                          <TrendingDown className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-muted-foreground">
+                            Nenhuma dica under disponível
+                          </p>
                         </CardContent>
                       </Card>
-                    ))}
+                    )}
                   </div>
-                ) : (
-                  <Card>
-                    <CardContent className="p-6 text-center">
-                      <TrendingDown className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-muted-foreground">
-                        Nenhuma dica under disponível
-                      </p>
-                    </CardContent>
-                  </Card>
                 )}
               </div>
-            )}
-          </div>
-
+            </>
+          )}
           {/* Opponent's Info */}
           {type == "teams" && (
             <Card className="mt-4">
@@ -285,6 +291,33 @@ export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
                   <p className="text-muted-foreground">Mínimo</p>
                   <p className="font-medium">{tip.min}</p>
                 </div>
+                {type == "players" && (
+                  <>
+                    <div>
+                      <p className="text-muted-foreground">Jogos nesse mando</p>
+                      <p className="font-medium">
+                        {tip.player_total_games} (
+                        {(tip.player_presence * 100).toFixed(2)}%)
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">
+                        {`Jogos de ${tip.team} nesse mando`}
+                      </p>
+                      <p className="font-medium">
+                        {tip.team_total_games_this_mando}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">
+                        Linha mínima analisada
+                      </p>
+                      <p className="font-medium">
+                        {`>= ${PLAYER_STATS_THRESHOLDS[tip.variable]}`}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

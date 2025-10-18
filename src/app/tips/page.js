@@ -10,7 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { STATS_MAP, TOURNAMENTS_MAP_NAMES } from "@/lib/constants";
+import {
+  STATS_MAP,
+  TOURNAMENTS_MAP_NAMES,
+  PLAYER_STATS_THRESHOLDS,
+} from "@/lib/constants";
 import { TipsDrawer } from "@/components/tips-drawer";
 import { Questions } from "@/components/questions";
 import { TipsFilter } from "@/components/tips-filter";
@@ -60,8 +64,22 @@ function TipsCard({ tip, onClick, type = "teams" }) {
               </div>
               <TrendingUp className="w-5 h-5 text-muted-foreground" />
             </div>
-            {type == "teams" && (
+            {type == "teams" ? (
               <p className="text-xs text-muted-foreground mb-1">{`x ${tip.opponent}`}</p>
+            ) : tip.is_home ? (
+              <Badge
+                variant="primary"
+                className="text-xs bg-blue-500 text-white dark:bg-blue-600"
+              >
+                Em casa
+              </Badge>
+            ) : (
+              <Badge
+                variant="secondary"
+                className="text-xs bg-red-500 text-white dark:bg-red-600"
+              >
+                Fora
+              </Badge>
             )}
 
             <div className="flex flex justify-between items-center gap-2">
@@ -74,13 +92,23 @@ function TipsCard({ tip, onClick, type = "teams" }) {
                 <p className="text-sm text-muted-foreground mb-2">
                   Média: {tip.average?.toFixed(2)}
                 </p>
-                {tipsCount > 0 ? (
-                  <span className="font-bold text-primary">
-                    {tipsCount} dicas
-                  </span>
+                {type == "teams" ? (
+                  <>
+                    {tipsCount > 0 ? (
+                      <span className="font-bold text-primary">
+                        {tipsCount} dicas
+                      </span>
+                    ) : (
+                      <span className="font-bold text-primary">
+                        Nenhuma sugestão
+                      </span>
+                    )}
+                  </>
                 ) : (
                   <span className="font-bold text-primary">
-                    Nenhuma sugestão
+                    {`${(tip.frequency_in_stat * 100).toFixed(2)}% frq. >= ${
+                      PLAYER_STATS_THRESHOLDS[tip.variable]
+                    }`}
                   </span>
                 )}
               </div>

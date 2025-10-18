@@ -488,3 +488,15 @@ export const generateTournamentKey = (tournamentId, matches = []) => {
 
   return `${tournamentId}_${teamNames}`;
 };
+
+export const PLAYER_STATS_THRESHOLDS = {
+  goals: 1,
+  assists: 1,
+  fouls_commited: 1,
+  fouls_drawn: 1,
+  tackles: 1,
+  shots_total: 1,
+  shots_on_target: 2,
+  yellow_cards: 1,
+  red_cards: 1,
+};
