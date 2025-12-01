@@ -19,7 +19,7 @@ import { TipsDrawer } from "@/components/tips-drawer";
 import { Questions } from "@/components/questions";
 import { TipsFilter } from "@/components/tips-filter";
 import { TrendingUp, Users, Trophy, Target } from "lucide-react";
-import { formatPlayerName } from "../../lib/utils";
+import { formatPlayerName, getUniqueMatchups, getMatchupName } from "../../lib/utils";
 
 function TipsCard({ tip, onClick, type = "teams" }) {
   const formatStatName = (statName) => {
@@ -64,22 +64,47 @@ function TipsCard({ tip, onClick, type = "teams" }) {
               </div>
               <TrendingUp className="w-5 h-5 text-muted-foreground" />
             </div>
-            {type == "teams" ? (
+            {type == "teams" && (
               <p className="text-xs text-muted-foreground mb-1">{`x ${tip.opponent}`}</p>
-            ) : tip.is_home ? (
-              <Badge
-                variant="primary"
-                className="text-xs bg-blue-500 text-white dark:bg-blue-600"
-              >
-                Em casa
-              </Badge>
-            ) : (
-              <Badge
-                variant="secondary"
-                className="text-xs bg-red-500 text-white dark:bg-red-600"
-              >
-                Fora
-              </Badge>
+            )}
+            {type == "players" && (
+              <div>
+                {tip.is_home ? (
+                  <Badge
+                    variant="primary"
+                    className="text-xs bg-blue-500 text-white dark:bg-blue-600"
+                  >
+                    Em casa
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-red-500 text-white dark:bg-red-600"
+                  >
+                    Fora
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {type == "players" && (
+              <>
+                {tip.is_starter ? (
+                  <Badge
+                    variant="primary"
+                    className="text-xs bg-blue-500 text-white dark:bg-blue-600"
+                  >
+                    Titular
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-red-500 text-white dark:bg-red-600"
+                  >
+                    Reserva
+                  </Badge>
+                )}
+              </>
             )}
 
             <div className="flex flex justify-between items-center gap-2">
@@ -89,11 +114,11 @@ function TipsCard({ tip, onClick, type = "teams" }) {
                   : tip.team}
               </p>
               <div className="flex flex-col items-end">
-                <p className="text-sm text-muted-foreground mb-2">
-                  Média: {tip.average?.toFixed(2)}
-                </p>
                 {type == "teams" ? (
                   <>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Média: {tip.average?.toFixed(2)}
+                    </p>
                     {tipsCount > 0 ? (
                       <span className="font-bold text-primary">
                         {tipsCount} dicas
@@ -105,10 +130,8 @@ function TipsCard({ tip, onClick, type = "teams" }) {
                     )}
                   </>
                 ) : (
-                  <span className="font-bold text-primary">
-                    {`${(tip.frequency_in_stat * 100).toFixed(2)}% frq. >= ${
-                      PLAYER_STATS_THRESHOLDS[tip.variable]
-                    }`}
+                  <span className="text-2xl font-bold text-primary">
+                    {tip.average?.toFixed(2)}
                   </span>
                 )}
               </div>
@@ -128,7 +151,7 @@ function TournamentSelector({
   return (
     <div className="mb-6 px-2">
       <h3 className="text-sm font-medium text-muted-foreground mb-3">
-        Campeonatos disponíveis
+        Campeonatos
       </h3>
       <div className="flex gap-3 overflow-x-auto pb-2">
         {tournaments.map((tournament) => (
@@ -188,6 +211,8 @@ export default function TipsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedVariables, setSelectedVariables] = useState([]);
   const [selectedTeams, setSelectedTeams] = useState([]);
+  const [selectedMatchups, setSelectedMatchups] = useState([]);
+  const [selectedPlayers, setSelectedPlayers] = useState([]);
 
   // Get unique tournaments from both teams and players data
   const availableTournaments = [
@@ -204,6 +229,11 @@ export default function TipsPage() {
     (tip) => !selectedTournament || tip.tournament === selectedTournament
   );
 
+  // For matchups, always use teams data since players don't have opponent info
+  const teamsDataForMatchups = tipsData.teams.filter(
+    (tip) => !selectedTournament || tip.tournament === selectedTournament
+  );
+
   const availableVariables = [
     ...new Set(tournamentFilteredData.map((tip) => tip.variable)),
   ];
@@ -212,14 +242,50 @@ export default function TipsPage() {
     ...new Set(tournamentFilteredData.map((tip) => tip.team)),
   ];
 
-  // Get filtered data based on selected tournament, variables, and teams
+  // Create a map of player to team for easy lookup
+  const playerTeamMap = new Map();
+  tournamentFilteredData.forEach((tip) => {
+    if (tip.player && tip.team) {
+      playerTeamMap.set(tip.player, tip.team);
+    }
+  });
+  
+  const availablePlayers = [
+    ...new Set(tournamentFilteredData.map((tip) => tip.player).filter(Boolean)),
+  ].sort();
+
+  const availableMatchups = getUniqueMatchups(teamsDataForMatchups);
+
+  // Get filtered data based on selected tournament, variables, teams, matchups, and players
   const filteredData = tournamentFilteredData.filter((tip) => {
     const variableMatch =
       selectedVariables.length === 0 ||
       selectedVariables.includes(tip.variable);
     const teamMatch =
       selectedTeams.length === 0 || selectedTeams.includes(tip.team);
-    return variableMatch && teamMatch;
+    
+    // For matchups: if teams view, use direct matchup match
+    // If players view, check if player's team is in any selected matchup
+    let matchupMatch = true;
+    if (selectedMatchups.length > 0) {
+      if (currentView === "teams") {
+        const matchupName = getMatchupName(tip);
+        matchupMatch = matchupName && selectedMatchups.includes(matchupName);
+      } else {
+        // For players: check if player's team is part of any selected matchup
+        matchupMatch = selectedMatchups.some((matchup) => {
+          // Extract teams from matchup string (e.g., "Bologna x Cremonese")
+          const teams = matchup.split(" x ");
+          return teams.includes(tip.team);
+        });
+      }
+    }
+    
+    const playerMatch =
+      currentView === "teams" ||
+      selectedPlayers.length === 0 ||
+      (tip.player && selectedPlayers.includes(tip.player));
+    return variableMatch && teamMatch && matchupMatch && playerMatch;
   });
 
   const fetchTips = async () => {
@@ -265,6 +331,8 @@ export default function TipsPage() {
     // Clear filters when switching views
     setSelectedVariables([]);
     setSelectedTeams([]);
+    setSelectedMatchups([]);
+    setSelectedPlayers([]);
   };
 
   const handleTournamentChange = (tournament) => {
@@ -272,6 +340,8 @@ export default function TipsPage() {
     // Clear filters when changing tournament
     setSelectedVariables([]);
     setSelectedTeams([]);
+    setSelectedMatchups([]);
+    setSelectedPlayers([]);
   };
 
   return (
@@ -350,12 +420,20 @@ export default function TipsPage() {
           {/* Filter and View Toggle */}
           <div className="flex justify-between items-center mb-4 px-2">
             <TipsFilter
+              currentView={currentView}
               availableVariables={availableVariables}
               availableTeams={availableTeams}
+              availablePlayers={availablePlayers}
+              playerTeamMap={playerTeamMap}
+              availableMatchups={availableMatchups}
               selectedVariables={selectedVariables}
               selectedTeams={selectedTeams}
+              selectedPlayers={selectedPlayers}
+              selectedMatchups={selectedMatchups}
               onVariablesChange={setSelectedVariables}
               onTeamsChange={setSelectedTeams}
+              onPlayersChange={setSelectedPlayers}
+              onMatchupsChange={setSelectedMatchups}
             />
             <ViewToggle
               currentView={currentView}

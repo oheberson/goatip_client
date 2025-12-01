@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,18 +12,35 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { STATS_MAP } from "@/lib/constants";
-import { Filter, X } from "lucide-react";
+import { Filter, X, Search } from "lucide-react";
+import { formatPlayerName } from "@/lib/utils";
 
 export function TipsFilter({
+  currentView = "teams",
   availableVariables = [],
   availableTeams = [],
+  availablePlayers = [],
+  playerTeamMap = new Map(),
+  availableMatchups = [],
   selectedVariables = [],
   selectedTeams = [],
+  selectedPlayers = [],
+  selectedMatchups = [],
   onVariablesChange,
   onTeamsChange,
+  onPlayersChange,
+  onMatchupsChange,
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [playerSearchTerm, setPlayerSearchTerm] = useState("");
+
+  // Helper function to get team abbreviation
+  const getTeamAbbreviation = (teamName) => {
+    if (!teamName) return "";
+    return teamName.substring(0, 3).toUpperCase();
+  };
 
   const formatStatName = (statName) => {
     const translatedStatName = STATS_MAP[statName];
@@ -50,13 +67,47 @@ export function TipsFilter({
     }
   };
 
+  const handleMatchupToggle = (matchup) => {
+    if (selectedMatchups.includes(matchup)) {
+      onMatchupsChange(selectedMatchups.filter((m) => m !== matchup));
+    } else {
+      onMatchupsChange([...selectedMatchups, matchup]);
+    }
+  };
+
+  const handlePlayerSelect = (player) => {
+    if (!selectedPlayers.includes(player)) {
+      onPlayersChange([...selectedPlayers, player]);
+      setPlayerSearchTerm("");
+    }
+  };
+
+  const handlePlayerRemove = (player) => {
+    onPlayersChange(selectedPlayers.filter((p) => p !== player));
+  };
+
+  const filteredPlayers = useMemo(() => {
+    if (!playerSearchTerm) return [];
+    const term = playerSearchTerm.toLowerCase();
+    return availablePlayers
+      .filter((player) => player.toLowerCase().includes(term))
+      .filter((player) => !selectedPlayers.includes(player))
+      .slice(0, 10); // Limit to 10 suggestions
+  }, [playerSearchTerm, availablePlayers, selectedPlayers]);
+
   const clearAllFilters = () => {
     onVariablesChange([]);
     onTeamsChange([]);
+    onPlayersChange([]);
+    onMatchupsChange([]);
+    setPlayerSearchTerm("");
   };
 
   const hasActiveFilters =
-    selectedVariables.length > 0 || selectedTeams.length > 0;
+    selectedVariables.length > 0 ||
+    selectedTeams.length > 0 ||
+    selectedPlayers.length > 0 ||
+    selectedMatchups.length > 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -70,7 +121,10 @@ export function TipsFilter({
           Filtrar
           {hasActiveFilters && (
             <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-              {selectedVariables.length + selectedTeams.length}
+              {selectedVariables.length +
+                selectedTeams.length +
+                selectedPlayers.length +
+                selectedMatchups.length}
             </Badge>
           )}
         </Button>
@@ -94,7 +148,9 @@ export function TipsFilter({
             )}
           </DialogTitle>
           <DialogDescription className="flex justify-start">
-            Selecione as variáveis e times para filtrar as dicas
+            {currentView === "teams"
+              ? "Selecione as variáveis, times e partidas para filtrar as dicas"
+              : "Selecione as variáveis e jogadores para filtrar as dicas"}
           </DialogDescription>
         </DialogHeader>
 
@@ -143,6 +199,88 @@ export function TipsFilter({
             </div>
           </div>
 
+          {/* Partidas Section */}
+          {availableMatchups.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-3 text-sm">Partidas</h3>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {availableMatchups.map((matchup) => (
+                  <div key={matchup} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`matchup-${matchup}`}
+                      checked={selectedMatchups.includes(matchup)}
+                      onCheckedChange={() => handleMatchupToggle(matchup)}
+                    />
+                    <label
+                      htmlFor={`matchup-${matchup}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {matchup}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Players Search Section - Only for players view */}
+          {currentView === "players" && (
+            <div>
+              <h3 className="font-semibold mb-3 text-sm">Jogadores</h3>
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  type="text"
+                  placeholder="Buscar jogador..."
+                  value={playerSearchTerm}
+                  onChange={(e) => setPlayerSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+                {filteredPlayers.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {filteredPlayers.map((player) => {
+                      const team = playerTeamMap.get(player);
+                      const teamAbbr = team ? getTeamAbbreviation(team) : "";
+                      return (
+                        <div
+                          key={player}
+                          onClick={() => handlePlayerSelect(player)}
+                          className="px-4 py-2 hover:bg-muted cursor-pointer text-sm"
+                        >
+                          {formatPlayerName(player)}
+                          {teamAbbr && (
+                            <span className="text-muted-foreground ml-1">
+                              ({teamAbbr})
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              {selectedPlayers.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedPlayers.map((player) => (
+                    <Badge
+                      key={player}
+                      variant="secondary"
+                      className="text-xs flex items-center gap-1"
+                    >
+                      {formatPlayerName(player)}
+                      <button
+                        onClick={() => handlePlayerRemove(player)}
+                        className="ml-1 hover:bg-muted rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Active Filters Summary */}
           {hasActiveFilters && (
             <div className="pt-4 border-t">
@@ -172,6 +310,36 @@ export function TipsFilter({
                     {team}
                     <button
                       onClick={() => handleTeamToggle(team)}
+                      className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+                {selectedPlayers.map((player) => (
+                  <Badge
+                    key={`active-player-${player}`}
+                    variant="secondary"
+                    className="text-xs"
+                  >
+                    {formatPlayerName(player)}
+                    <button
+                      onClick={() => handlePlayerRemove(player)}
+                      className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+                {selectedMatchups.map((matchup) => (
+                  <Badge
+                    key={`active-matchup-${matchup}`}
+                    variant="secondary"
+                    className="text-xs"
+                  >
+                    {matchup}
+                    <button
+                      onClick={() => handleMatchupToggle(matchup)}
                       className="ml-1 hover:bg-muted rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />

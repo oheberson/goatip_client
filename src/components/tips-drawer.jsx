@@ -17,6 +17,7 @@ import {
 } from "@/lib/constants";
 import { TrendingUp, TrendingDown, X } from "lucide-react";
 import { Questions } from "@/components/questions";
+import { TipsWeeklyChart } from "@/components/tips-weekly-chart";
 
 function LikelihoodTag({ value, label }) {
   // Convert value to percentage for color calculation
@@ -70,7 +71,7 @@ function LikelihoodTag({ value, label }) {
 }
 
 export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
-  const [activeTab, setActiveTab] = useState("over");
+  const [mode, setMode] = useState("over"); // "over" or "under"
 
   if (!tip) return null;
 
@@ -133,114 +134,64 @@ export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
         </DrawerHeader>
 
         <div className="px-4 pb-4 flex-1 overflow-y-auto">
-          {/* Tab Navigation */}
+          {/* Tips List - Only for teams */}
           {type == "teams" && (
-            <>
-              <div className="flex bg-muted rounded-lg p-1 mb-4">
-                <Button
-                  variant={activeTab === "over" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveTab("over")}
-                  className="flex-1 flex items-center gap-2"
-                >
-                  <TrendingUp className="w-4 h-4" />
-                  Over ({overTipsArray.length})
-                </Button>
-                <Button
-                  variant={activeTab === "under" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveTab("under")}
-                  className="flex-1 flex items-center gap-2"
-                >
-                  <TrendingDown className="w-4 h-4" />
-                  Under ({underTipsArray.length})
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                {activeTab === "over" ? (
-                  <div>
-                    <h3 className="font-semibold mb-3 text-green-700 dark:text-green-300">
-                      Dicas Over
-                    </h3>
-                    {overTipsArray.length > 0 ? (
-                      <div className="space-y-3">
-                        {overTipsArray.map((tipItem, index) => (
-                          <Card key={index}>
-                            <CardContent className="p-4">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-medium">
-                                    Linha: {tipItem.line}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    Over {tipItem.line}{" "}
-                                    {formatStatName(tip.variable).toLowerCase()}
-                                  </p>
-                                </div>
-                                <LikelihoodTag
-                                  value={tipItem.likelihood}
-                                  label="Probabilidade"
-                                />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <Card>
-                        <CardContent className="p-6 text-center">
+            <div className="space-y-4">
+              <div>
+                <h3 className={`font-semibold mb-3 ${
+                  mode === "over" 
+                    ? "text-green-700 dark:text-green-300" 
+                    : "text-red-700 dark:text-red-300"
+                }`}>
+                  {mode === "over" ? "Dicas Over" : "Dicas Under"}
+                </h3>
+                {(mode === "over" ? overTipsArray : underTipsArray).length > 0 ? (
+                  <div className="space-y-3">
+                    {(mode === "over" ? overTipsArray : underTipsArray).map((tipItem, index) => (
+                      <Card key={index}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">
+                                Linha: {tipItem.line}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {mode === "over" ? "Over" : "Under"} {tipItem.line}{" "}
+                                {formatStatName(tip.variable).toLowerCase()}
+                              </p>
+                            </div>
+                            <LikelihoodTag
+                              value={tipItem.likelihood}
+                              label="Probabilidade"
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      {mode === "over" ? (
+                        <>
                           <TrendingUp className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                           <p className="text-muted-foreground">
                             Nenhuma dica over disponível
                           </p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <h3 className="font-semibold mb-3 text-red-700 dark:text-red-300">
-                      Dicas Under
-                    </h3>
-                    {underTipsArray.length > 0 ? (
-                      <div className="space-y-3">
-                        {underTipsArray.map((tipItem, index) => (
-                          <Card key={index}>
-                            <CardContent className="p-4">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-medium">
-                                    Linha: {tipItem.line}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    Under {tipItem.line}{" "}
-                                    {formatStatName(tip.variable).toLowerCase()}
-                                  </p>
-                                </div>
-                                <LikelihoodTag
-                                  value={tipItem.likelihood}
-                                  label="Probabilidade"
-                                />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <Card>
-                        <CardContent className="p-6 text-center">
+                        </>
+                      ) : (
+                        <>
                           <TrendingDown className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                           <p className="text-muted-foreground">
                             Nenhuma dica under disponível
                           </p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
                 )}
               </div>
-            </>
+            </div>
           )}
           {/* Opponent's Info */}
           {type == "teams" && (
@@ -321,6 +272,9 @@ export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Weekly Stats Chart */}
+          <TipsWeeklyChart tip={tip} type={type} mode={mode} onModeChange={setMode} />
         </div>
       </DrawerContent>
     </Drawer>

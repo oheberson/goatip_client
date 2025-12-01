@@ -234,6 +234,20 @@ export const api = {
       shouldUseMockData(isSubscribed, isFreeTrial)
         ? mockApi.tips.getTips()
         : apiClient.get("/tips/get-tips"),
+    getTeamStatByWeek: (tournamentName, teamName, statName, playerName = null, isSubscribed = true, isFreeTrial = false) => {
+      const params = new URLSearchParams({
+        tournament_name: tournamentName,
+        team_name: teamName,
+        stat_name: statName,
+      });
+      if (playerName) {
+        params.append("player_name", playerName);
+      }
+      return shouldUseMockData(isSubscribed, isFreeTrial)
+        ? mockApi.tips?.getTeamStatByWeek?.(tournamentName, teamName, statName, playerName) ||
+          apiClient.get(`/tips/team-stat-by-week?${params.toString()}`)
+        : apiClient.get(`/tips/team-stat-by-week?${params.toString()}`);
+    },
   },
 
   // Search

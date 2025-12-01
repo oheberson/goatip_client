@@ -21,3 +21,43 @@ export const formatPlayerName = (name) => {
 
   return `${firstName[0].toUpperCase()}. ${lastName}`;
 };
+
+/**
+ * Generates a normalized matchup name from tip data.
+ * Format: "Home Team x Away Team"
+ * Both "Team A x Team B" and "Team B x Team A" are normalized to the same matchup.
+ * @param {Object} tip - Tip object with team, opponent, and is_home fields
+ * @returns {string|null} - Normalized matchup name or null if data is incomplete
+ */
+export const getMatchupName = (tip) => {
+  if (!tip || !tip.team || !tip.opponent) {
+    return null;
+  }
+
+  const homeTeam = tip.is_home ? tip.team : tip.opponent;
+  const awayTeam = tip.is_home ? tip.opponent : tip.team;
+
+  return `${homeTeam} x ${awayTeam}`;
+};
+
+/**
+ * Extracts unique matchups from an array of tips.
+ * @param {Array} tips - Array of tip objects
+ * @returns {Array} - Sorted array of unique matchup names
+ */
+export const getUniqueMatchups = (tips) => {
+  if (!tips || !Array.isArray(tips)) {
+    return [];
+  }
+
+  const matchups = new Set();
+  
+  tips.forEach((tip) => {
+    const matchup = getMatchupName(tip);
+    if (matchup) {
+      matchups.add(matchup);
+    }
+  });
+
+  return Array.from(matchups).sort();
+};

@@ -117,7 +117,7 @@ function TournamentSelector({
   return (
     <div className="mb-6 px-2">
       <h3 className="text-sm font-medium text-muted-foreground mb-3">
-        Campeonatos disponíveis
+        Campeonatos
       </h3>
       <div className="flex gap-3 overflow-x-auto pb-2">
         {Object.values(tournaments).map((tournament) => (
@@ -221,198 +221,198 @@ export default function StatsPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">
-                  G
-                </span>
+        {/* Header */}
+        <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">
+                    G
+                  </span>
+                </div>
+                <h1 className="text-xl font-bold">Stats</h1>
               </div>
-              <h1 className="text-xl font-bold">Stats</h1>
+              <MobileMenu />
             </div>
-            <MobileMenu />
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="px-4 py-6">
-        <h1 className="font-black px-2 mb-2">Melhores Jogadores</h1>
-        {/* Tournament Selector */}
-        <TournamentSelector
-          tournaments={TOURNAMENTS}
-          selectedTournament={selectedTournament}
-          onSelectTournament={handleTournamentChange}
+        {/* Main Content */}
+        <main className="px-4 py-6">
+          <h1 className="font-black px-2 mb-2">Melhores Jogadores</h1>
+          {/* Tournament Selector */}
+          <TournamentSelector
+            tournaments={TOURNAMENTS}
+            selectedTournament={selectedTournament}
+            onSelectTournament={handleTournamentChange}
+          />
+
+          <div className="flex flex-col gap-0 mb-2 -mt-2 px-2 w-full">
+            <p className="text-muted-foreground text-xs italic">
+              *Dados das últimas 8 rodadas
+            </p>
+            <p className="text-muted-foreground text-xs italic">
+              *Lista de 150 jogadores
+            </p>
+          </div>
+
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Carregando estatísticas</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <Card className="mb-6">
+              <CardContent className="p-6 text-center">
+                <div className="text-destructive mb-2">⚠️</div>
+                <p className="text-destructive font-medium">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchBestPlayers(selectedTournament)}
+                  className="mt-3"
+                >
+                  Tentar novamente
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Players List */}
+          {!loading && !error && players.length > 0 && (
+            <>
+              <div
+                className={`my-4 px-2 flex flex-row items-center ${
+                  currentView === "list" ? "justify-between" : "justify-end"
+                }`}
+              >
+                {currentView === "list" && (
+                  <PlayerSortDialog
+                    currentSort={sortBy}
+                    onSortChange={handleSortChange}
+                  />
+                )}
+                <div className="flex items-center gap-2">
+                  <ViewToggle
+                    currentView={currentView}
+                    onViewChange={handleViewChange}
+                  />
+                </div>
+              </div>
+
+              {currentView === "list" ? (
+                <div className="space-y-3">
+                  {sortedPlayers.map((player, index) => (
+                    <PlayerCard
+                      key={`${player.player}-${index}`}
+                      player={player}
+                      onClick={() => handlePlayerClick(player)}
+                      sortBy={sortBy}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Position Statistics Chart */}
+                  <Card>
+                    <CardContent className="flex flex-col p-6">
+                      <div className="mb-4">
+                        <h2 className="text-lg font-semibold mb-2">
+                          Média de Pontos por Posição
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          Comparação da pontuação média dos jogadores agrupados
+                          por posição
+                        </p>
+                      </div>
+                      <PositionStatsChart data={positionData} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Position Radar Analysis Chart */}
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="mb-4">
+                        <h2 className="text-lg font-semibold mb-2">
+                          Análise Detalhada por Posição
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          Estatísticas que mais contribuem para a pontuação de
+                          cada posição
+                        </p>
+                      </div>
+                      <PositionRadarChart players={players} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Top 10 Players by Category Chart */}
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="mb-4">
+                        <h2 className="text-lg font-semibold mb-2">
+                          Top 10 Jogadores por Categoria
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          Ranking dos melhores jogadores em cada categoria de
+                          estatísticas
+                        </p>
+                      </div>
+                      <Top10PlayersChart players={players} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Top Teams by Category Chart */}
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="mb-4">
+                        <h2 className="text-lg font-semibold mb-2">
+                          Ranking dos Times por Categoria
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          Comparação dos times em cada categoria de estatísticas
+                        </p>
+                      </div>
+                      <TopTeamsChart players={players} />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && players.length === 0 && (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">No Players Found</h3>
+                <p className="text-muted-foreground">
+                  No player statistics available for this tournament
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </main>
+
+        {/* Player Details Drawer */}
+        <PlayerStatsDrawer
+          player={selectedPlayer}
+          isOpen={isDrawerOpen}
+          onClose={handleCloseDrawer}
         />
 
-        <div className="flex flex-col gap-0 mb-2 -mt-2 px-2 w-full">
-          <p className="text-muted-foreground text-xs italic">
-            *Dados das últimas 8 rodadas
-          </p>
-          <p className="text-muted-foreground text-xs italic">
-            *Lista de 150 jogadores
-          </p>
-        </div>
+        {/* Bottom Navigation */}
+        <Navigation />
 
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Carregando estatísticas</p>
-            </div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <Card className="mb-6">
-            <CardContent className="p-6 text-center">
-              <div className="text-destructive mb-2">⚠️</div>
-              <p className="text-destructive font-medium">{error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchBestPlayers(selectedTournament)}
-                className="mt-3"
-              >
-                Tentar novamente
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Players List */}
-        {!loading && !error && players.length > 0 && (
-          <>
-            <div
-              className={`my-4 px-2 flex flex-row items-center ${
-                currentView === "list" ? "justify-between" : "justify-end"
-              }`}
-            >
-              {currentView === "list" && (
-                <PlayerSortDialog
-                  currentSort={sortBy}
-                  onSortChange={handleSortChange}
-                />
-              )}
-              <div className="flex items-center gap-2">
-                <ViewToggle
-                  currentView={currentView}
-                  onViewChange={handleViewChange}
-                />
-              </div>
-            </div>
-
-            {currentView === "list" ? (
-              <div className="space-y-3">
-                {sortedPlayers.map((player, index) => (
-                  <PlayerCard
-                    key={`${player.player}-${index}`}
-                    player={player}
-                    onClick={() => handlePlayerClick(player)}
-                    sortBy={sortBy}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Position Statistics Chart */}
-                <Card>
-                  <CardContent className="flex flex-col p-6">
-                    <div className="mb-4">
-                      <h2 className="text-lg font-semibold mb-2">
-                        Média de Pontos por Posição
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Comparação da pontuação média dos jogadores agrupados
-                        por posição
-                      </p>
-                    </div>
-                    <PositionStatsChart data={positionData} />
-                  </CardContent>
-                </Card>
-
-                {/* Position Radar Analysis Chart */}
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="mb-4">
-                      <h2 className="text-lg font-semibold mb-2">
-                        Análise Detalhada por Posição
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Estatísticas que mais contribuem para a pontuação de
-                        cada posição
-                      </p>
-                    </div>
-                    <PositionRadarChart players={players} />
-                  </CardContent>
-                </Card>
-
-                {/* Top 10 Players by Category Chart */}
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="mb-4">
-                      <h2 className="text-lg font-semibold mb-2">
-                        Top 10 Jogadores por Categoria
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Ranking dos melhores jogadores em cada categoria de
-                        estatísticas
-                      </p>
-                    </div>
-                    <Top10PlayersChart players={players} />
-                  </CardContent>
-                </Card>
-
-                {/* Top Teams by Category Chart */}
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="mb-4">
-                      <h2 className="text-lg font-semibold mb-2">
-                        Ranking dos Times por Categoria
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Comparação dos times em cada categoria de estatísticas
-                      </p>
-                    </div>
-                    <TopTeamsChart players={players} />
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && players.length === 0 && (
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">No Players Found</h3>
-              <p className="text-muted-foreground">
-                No player statistics available for this tournament
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </main>
-
-      {/* Player Details Drawer */}
-      <PlayerStatsDrawer
-        player={selectedPlayer}
-        isOpen={isDrawerOpen}
-        onClose={handleCloseDrawer}
-      />
-
-      {/* Bottom Navigation */}
-      <Navigation />
-
-      {/* Bottom padding to account for fixed navigation */}
-      <div className="h-20"></div>
+        {/* Bottom padding to account for fixed navigation */}
+        <div className="h-20"></div>
       </div>
     </ProtectedRoute>
   );
