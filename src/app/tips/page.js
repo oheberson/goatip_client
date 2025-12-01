@@ -213,6 +213,7 @@ export default function TipsPage() {
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [selectedMatchups, setSelectedMatchups] = useState([]);
   const [selectedPlayers, setSelectedPlayers] = useState([]);
+  const [selectedStarter, setSelectedStarter] = useState(null); // null, true, or false
 
   // Get unique tournaments from both teams and players data
   const availableTournaments = [
@@ -285,7 +286,17 @@ export default function TipsPage() {
       currentView === "teams" ||
       selectedPlayers.length === 0 ||
       (tip.player && selectedPlayers.includes(tip.player));
-    return variableMatch && teamMatch && matchupMatch && playerMatch;
+    
+    // Starter filter - only for players view
+    const starterMatch =
+      currentView === "teams" ||
+      selectedStarter === null ||
+      (tip.is_starter !== undefined && 
+       tip.is_starter !== null &&
+       ((selectedStarter === true && (tip.is_starter === 1 || tip.is_starter === true)) ||
+        (selectedStarter === false && (tip.is_starter === 0 || tip.is_starter === false))));
+    
+    return variableMatch && teamMatch && matchupMatch && playerMatch && starterMatch;
   });
 
   const fetchTips = async () => {
@@ -333,6 +344,7 @@ export default function TipsPage() {
     setSelectedTeams([]);
     setSelectedMatchups([]);
     setSelectedPlayers([]);
+    setSelectedStarter(null);
   };
 
   const handleTournamentChange = (tournament) => {
@@ -342,6 +354,7 @@ export default function TipsPage() {
     setSelectedTeams([]);
     setSelectedMatchups([]);
     setSelectedPlayers([]);
+    setSelectedStarter(null);
   };
 
   return (
@@ -430,10 +443,12 @@ export default function TipsPage() {
               selectedTeams={selectedTeams}
               selectedPlayers={selectedPlayers}
               selectedMatchups={selectedMatchups}
+              selectedStarter={selectedStarter}
               onVariablesChange={setSelectedVariables}
               onTeamsChange={setSelectedTeams}
               onPlayersChange={setSelectedPlayers}
               onMatchupsChange={setSelectedMatchups}
+              onStarterChange={setSelectedStarter}
             />
             <ViewToggle
               currentView={currentView}

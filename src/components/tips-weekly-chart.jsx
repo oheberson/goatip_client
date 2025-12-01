@@ -258,6 +258,24 @@ export function TipsWeeklyChart({
                               </span>
                             </div>
                           )}
+                          {data.min !== undefined && data.min !== null && (
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">
+                                Minutos:{" "}
+                              </span>
+                              <span className="font-medium">{data.min}</span>
+                            </div>
+                          )}
+                          {data.is_starter !== undefined && data.is_starter !== null && (
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">
+                                Titular:{" "}
+                              </span>
+                              <span className="font-medium">
+                                {data.is_starter === 1 || data.is_starter === true ? "Sim" : "Não"}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );

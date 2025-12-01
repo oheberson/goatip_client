@@ -28,10 +28,12 @@ export function TipsFilter({
   selectedTeams = [],
   selectedPlayers = [],
   selectedMatchups = [],
+  selectedStarter = null,
   onVariablesChange,
   onTeamsChange,
   onPlayersChange,
   onMatchupsChange,
+  onStarterChange,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [playerSearchTerm, setPlayerSearchTerm] = useState("");
@@ -95,11 +97,20 @@ export function TipsFilter({
       .slice(0, 10); // Limit to 10 suggestions
   }, [playerSearchTerm, availablePlayers, selectedPlayers]);
 
+  const handleStarterToggle = (value) => {
+    if (selectedStarter === value) {
+      onStarterChange(null); // Deselect if already selected
+    } else {
+      onStarterChange(value);
+    }
+  };
+
   const clearAllFilters = () => {
     onVariablesChange([]);
     onTeamsChange([]);
     onPlayersChange([]);
     onMatchupsChange([]);
+    onStarterChange(null);
     setPlayerSearchTerm("");
   };
 
@@ -107,7 +118,8 @@ export function TipsFilter({
     selectedVariables.length > 0 ||
     selectedTeams.length > 0 ||
     selectedPlayers.length > 0 ||
-    selectedMatchups.length > 0;
+    selectedMatchups.length > 0 ||
+    selectedStarter !== null;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -124,7 +136,8 @@ export function TipsFilter({
               {selectedVariables.length +
                 selectedTeams.length +
                 selectedPlayers.length +
-                selectedMatchups.length}
+                selectedMatchups.length +
+                (selectedStarter !== null ? 1 : 0)}
             </Badge>
           )}
         </Button>
@@ -281,6 +294,41 @@ export function TipsFilter({
             </div>
           )}
 
+          {/* Titular Section - Only for players view */}
+          {currentView === "players" && (
+            <div>
+              <h3 className="font-semibold mb-3 text-sm">Titular</h3>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="starter-yes"
+                    checked={selectedStarter === true}
+                    onCheckedChange={() => handleStarterToggle(true)}
+                  />
+                  <label
+                    htmlFor="starter-yes"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Sim
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="starter-no"
+                    checked={selectedStarter === false}
+                    onCheckedChange={() => handleStarterToggle(false)}
+                  />
+                  <label
+                    htmlFor="starter-no"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Não
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Active Filters Summary */}
           {hasActiveFilters && (
             <div className="pt-4 border-t">
@@ -346,6 +394,21 @@ export function TipsFilter({
                     </button>
                   </Badge>
                 ))}
+                {selectedStarter !== null && (
+                  <Badge
+                    key="active-starter"
+                    variant="secondary"
+                    className="text-xs"
+                  >
+                    Titular: {selectedStarter === true ? "Sim" : "Não"}
+                    <button
+                      onClick={() => onStarterChange(null)}
+                      className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
               </div>
             </div>
           )}
