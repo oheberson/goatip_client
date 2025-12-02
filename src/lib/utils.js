@@ -61,3 +61,64 @@ export const getUniqueMatchups = (tips) => {
 
   return Array.from(matchups).sort();
 };
+
+/**
+ * Gets the end of day timestamp for Brazilian timezone (UTC-3)
+ * @returns {number} - Timestamp for 23:59:59 Brazilian time today
+ */
+export const getEndOfDayBrazilianTime = () => {
+  // Brazilian timezone is UTC-3
+  const now = new Date();
+  const brazilianTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  
+  // Set to end of day (23:59:59)
+  brazilianTime.setHours(23, 59, 59, 999);
+  
+  // Convert back to UTC for storage
+  const utcOffset = now.getTime() - brazilianTime.getTime();
+  return brazilianTime.getTime() + utcOffset;
+};
+
+/**
+ * Stores tips data in localStorage with expiration at end of day (Brazilian time)
+ * @param {Object} data - Tips data to store
+ */
+export const storeTipsData = (data) => {
+  try {
+    const expirationTime = getEndOfDayBrazilianTime();
+    const storageData = {
+      data,
+      expirationTime,
+    };
+    localStorage.setItem("tips_data", JSON.stringify(storageData));
+  } catch (error) {
+    console.error("Failed to store tips data:", error);
+  }
+};
+
+/**
+ * Retrieves tips data from localStorage if not expired
+ * @returns {Object|null} - Tips data if valid, null otherwise
+ */
+export const getStoredTipsData = () => {
+  try {
+    const stored = localStorage.getItem("tips_data");
+    if (!stored) return null;
+
+    const { data, expirationTime } = JSON.parse(stored);
+    const now = Date.now();
+
+    // Check if data is still valid (not expired)
+    if (now < expirationTime) {
+      return data;
+    }
+
+    // Data expired, remove it
+    localStorage.removeItem("tips_data");
+    return null;
+  } catch (error) {
+    console.error("Failed to retrieve tips data:", error);
+    localStorage.removeItem("tips_data");
+    return null;
+  }
+};

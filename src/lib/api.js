@@ -231,9 +231,7 @@ export const api = {
   // Tips
   tips: {
     getTips: (isSubscribed = true, isFreeTrial = false) =>
-      shouldUseMockData(isSubscribed, isFreeTrial)
-        ? mockApi.tips.getTips()
-        : apiClient.get("/tips/get-tips"),
+      apiClient.get("/tips/get-tips"),
     getTeamStatByWeek: (tournamentName, teamName, statName, playerName = null, isSubscribed = true, isFreeTrial = false) => {
       const params = new URLSearchParams({
         tournament_name: tournamentName,

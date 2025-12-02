@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DemoWarning from "@/components/demo-warning";
 import { MobileMenu } from "@/components/mobile-menu";
@@ -18,8 +18,14 @@ import {
 import { TipsDrawer } from "@/components/tips-drawer";
 import { Questions } from "@/components/questions";
 import { TipsFilter } from "@/components/tips-filter";
-import { TrendingUp, Users, Trophy, Target } from "lucide-react";
-import { formatPlayerName, getUniqueMatchups, getMatchupName } from "../../lib/utils";
+import { TrendingUp, Users, Trophy, Target, RotateCcw } from "lucide-react";
+import {
+  formatPlayerName,
+  getUniqueMatchups,
+  getMatchupName,
+  storeTipsData,
+  getStoredTipsData,
+} from "../../lib/utils";
 
 function TipsCard({ tip, onClick, type = "teams" }) {
   const formatStatName = (statName) => {
@@ -250,7 +256,7 @@ export default function TipsPage() {
       playerTeamMap.set(tip.player, tip.team);
     }
   });
-  
+
   const availablePlayers = [
     ...new Set(tournamentFilteredData.map((tip) => tip.player).filter(Boolean)),
   ].sort();
@@ -264,7 +270,7 @@ export default function TipsPage() {
       selectedVariables.includes(tip.variable);
     const teamMatch =
       selectedTeams.length === 0 || selectedTeams.includes(tip.team);
-    
+
     // For matchups: if teams view, use direct matchup match
     // If players view, check if player's team is in any selected matchup
     let matchupMatch = true;
@@ -281,51 +287,104 @@ export default function TipsPage() {
         });
       }
     }
-    
+
     const playerMatch =
       currentView === "teams" ||
       selectedPlayers.length === 0 ||
       (tip.player && selectedPlayers.includes(tip.player));
-    
+
     // Starter filter - only for players view
     const starterMatch =
       currentView === "teams" ||
       selectedStarter === null ||
-      (tip.is_starter !== undefined && 
-       tip.is_starter !== null &&
-       ((selectedStarter === true && (tip.is_starter === 1 || tip.is_starter === true)) ||
-        (selectedStarter === false && (tip.is_starter === 0 || tip.is_starter === false))));
-    
-    return variableMatch && teamMatch && matchupMatch && playerMatch && starterMatch;
+      (tip.is_starter !== undefined &&
+        tip.is_starter !== null &&
+        ((selectedStarter === true &&
+          (tip.is_starter === 1 || tip.is_starter === true)) ||
+          (selectedStarter === false &&
+            (tip.is_starter === 0 || tip.is_starter === false))));
+
+    return (
+      variableMatch && teamMatch && matchupMatch && playerMatch && starterMatch
+    );
   });
 
-  const fetchTips = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await api.tips.getTips(isSubscribed, isFreeTrial);
-      setTipsData(data);
-      // Set default tournament to the first available one
-      if (data.teams.length > 0 || data.players.length > 0) {
+  const fetchTips = useCallback(
+    async (forceRefresh = false) => {
+      setLoading(true);
+      setError(null);
+
+      // If force refresh, clear localStorage cache
+      if (forceRefresh) {
+        try {
+          localStorage.removeItem("tips_data");
+        } catch (err) {
+          console.error("Failed to clear cache:", err);
+        }
+      }
+
+      try {
+        // Always fetch from API (no mocked data fallback)
+        const data = await api.tips.getTips(isSubscribed, isFreeTrial);
+        // Validate data structure
+        if (data && (data.teams.length > 0 || data.players.length > 0)) {
+          setTipsData(data);
+          // Store in localStorage with expiration
+          storeTipsData(data);
+
+          // Set default tournament to the first available one
+          if (data.teams.length > 0 || data.players.length > 0) {
+            const firstTournament = [
+              ...new Set([
+                ...data.teams.map((tip) => tip.tournament),
+                ...data.players.map((tip) => tip.tournament),
+              ]),
+            ][0];
+            setSelectedTournament(firstTournament);
+          }
+        } else {
+          // Invalid data structure
+          setTipsData({ teams: [], players: [], count: {} });
+          setError("no_data");
+        }
+      } catch (err) {
+        setTipsData({ teams: [], players: [], count: {} });
+        setError("no_data");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [isSubscribed, isFreeTrial]
+  );
+
+  useEffect(() => {
+    // First, try to get data from localStorage
+    const storedData = getStoredTipsData();
+
+    if (storedData) {
+      // Use cached data
+      setTipsData(storedData);
+      if (
+        (storedData.teams && storedData.teams.length > 0) ||
+        (storedData.players && storedData.players.length > 0)
+      ) {
         const firstTournament = [
           ...new Set([
-            ...data.teams.map((tip) => tip.tournament),
-            ...data.players.map((tip) => tip.tournament),
+            ...(storedData.teams || []).map((tip) => tip.tournament),
+            ...(storedData.players || []).map((tip) => tip.tournament),
           ]),
         ][0];
         setSelectedTournament(firstTournament);
+      } else {
+        // Cached data exists but is empty
+        setError("no_data");
       }
-    } catch (err) {
-      console.error("Falha ao carregar tips:", err);
-      setError("Falha ao carregar tips.");
-    } finally {
       setLoading(false);
+    } else {
+      // No cached data or expired, fetch from API
+      fetchTips();
     }
-  };
-
-  useEffect(() => {
-    fetchTips();
-  }, []);
+  }, [fetchTips]);
 
   const handleTipClick = (tip) => {
     setSelectedTip(tip);
@@ -396,7 +455,7 @@ export default function TipsPage() {
           </div>
 
           {/* Stats Summary */}
-          {tipsData.count && (
+          {tipsData.count && error !== "no_data" && (
             <div className="mb-6 px-2">
               <div className="flex gap-4 text-sm">
                 <div className="flex items-center gap-2">
@@ -422,7 +481,7 @@ export default function TipsPage() {
           )}
 
           {/* Tournament Selector */}
-          {availableTournaments.length > 0 && (
+          {error !== "no_data" && availableTournaments.length > 0 && (
             <TournamentSelector
               tournaments={availableTournaments}
               selectedTournament={selectedTournament}
@@ -431,30 +490,32 @@ export default function TipsPage() {
           )}
 
           {/* Filter and View Toggle */}
-          <div className="flex justify-between items-center mb-4 px-2">
-            <TipsFilter
-              currentView={currentView}
-              availableVariables={availableVariables}
-              availableTeams={availableTeams}
-              availablePlayers={availablePlayers}
-              playerTeamMap={playerTeamMap}
-              availableMatchups={availableMatchups}
-              selectedVariables={selectedVariables}
-              selectedTeams={selectedTeams}
-              selectedPlayers={selectedPlayers}
-              selectedMatchups={selectedMatchups}
-              selectedStarter={selectedStarter}
-              onVariablesChange={setSelectedVariables}
-              onTeamsChange={setSelectedTeams}
-              onPlayersChange={setSelectedPlayers}
-              onMatchupsChange={setSelectedMatchups}
-              onStarterChange={setSelectedStarter}
-            />
-            <ViewToggle
-              currentView={currentView}
-              onViewChange={handleViewChange}
-            />
-          </div>
+          {error !== "no_data" && (
+            <div className="flex justify-between items-center mb-4 px-2">
+              <TipsFilter
+                currentView={currentView}
+                availableVariables={availableVariables}
+                availableTeams={availableTeams}
+                availablePlayers={availablePlayers}
+                playerTeamMap={playerTeamMap}
+                availableMatchups={availableMatchups}
+                selectedVariables={selectedVariables}
+                selectedTeams={selectedTeams}
+                selectedPlayers={selectedPlayers}
+                selectedMatchups={selectedMatchups}
+                selectedStarter={selectedStarter}
+                onVariablesChange={setSelectedVariables}
+                onTeamsChange={setSelectedTeams}
+                onPlayersChange={setSelectedPlayers}
+                onMatchupsChange={setSelectedMatchups}
+                onStarterChange={setSelectedStarter}
+              />
+              <ViewToggle
+                currentView={currentView}
+                onViewChange={handleViewChange}
+              />
+            </div>
+          )}
 
           {/* Loading State */}
           {loading && (
@@ -466,19 +527,34 @@ export default function TipsPage() {
             </div>
           )}
 
-          {/* Error State */}
-          {error && (
+          {/* Error/No Data State */}
+          {error === "no_data" && (
             <Card className="mb-6">
-              <CardContent className="p-6 text-center">
-                <div className="text-destructive mb-2">⚠️</div>
-                <p className="text-destructive font-medium">{error}</p>
+              <CardContent className="p-6 text-center flex flex-col items-center">
+                <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">Sem Tips para hoje</h3>
+                <p className="text-muted-foreground mb-4">
+                  Não há dicas disponíveis no momento. Tente novamente mais
+                  tarde.
+                </p>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={fetchTips}
-                  className="mt-3"
+                  onClick={() => fetchTips(true)}
+                  disabled={loading}
+                  className="flex items-center gap-2"
                 >
-                  Tentar novamente
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                      Carregando...
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="w-4 h-4" />
+                      Atualizar
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -498,18 +574,23 @@ export default function TipsPage() {
             </div>
           )}
 
-          {/* Empty State */}
-          {!loading && !error && filteredData.length === 0 && (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">Nenhuma dica encontrada</h3>
-                <p className="text-muted-foreground">
-                  Não há dicas disponíveis para o campeonato selecionado
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          {/* Empty State - Only show if we have data but no matches after filtering */}
+          {!loading &&
+            error !== "no_data" &&
+            filteredData.length === 0 &&
+            (tipsData.teams.length > 0 || tipsData.players.length > 0) && (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2">
+                    Nenhuma dica encontrada
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Não há dicas disponíveis para os filtros selecionados
+                  </p>
+                </CardContent>
+              </Card>
+            )}
         </main>
 
         {/* Tips Details Drawer */}

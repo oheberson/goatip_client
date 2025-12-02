@@ -17,6 +17,7 @@ import {
 import {
   Users,
   BarChart3,
+  Target,
   Plus,
   CheckCircle,
   Flag,
@@ -27,30 +28,10 @@ import {
 import Link from "next/link";
 
 export default function Home() {
-  const { user, loading, isSubscribed } = useAuth();
-  const router = useRouter();
-
-  // Development mode bypass
-  const isDevelopmentMode =
-    process.env.NEXT_PUBLIC_ENVIRONMENT === "development";
-
-  console.log("iss dev>>>", isDevelopmentMode);
-
-  useEffect(() => {
-    if (!loading) {
-      // Skip redirect in development mode
-      if (isDevelopmentMode) {
-        console.log("🔧 Development mode: Skipping home page redirect");
-        return;
-      }
-
-      if (!user) {
-        router.replace("/subscribe");
-      }
-      // Removed the redirect for authenticated but non-subscribed users
-      // They can now access the home page and explore with demo data
-    }
-  }, [user, loading, isSubscribed, router, isDevelopmentMode]);
+  const { loading } = useAuth();
+  
+  // Free access mode - no redirects or restrictions
+  // Users can access the home page without authentication
 
   if (loading) {
     return (
@@ -106,7 +87,7 @@ export default function Home() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Link href="/matches">
+          {/* <Link href="/matches">
             <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
               <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3">
@@ -118,7 +99,7 @@ export default function Home() {
                 </p>
               </CardContent>
             </Card>
-          </Link>
+          </Link> */}
 
           <Link href="/stats">
             <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
@@ -134,7 +115,21 @@ export default function Home() {
             </Card>
           </Link>
 
-          <Link href="/search">
+          <Link href="/tips">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+              <CardContent className="p-4 h-full flex flex-col justify-between">
+                <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mb-3">
+                  <Target className="w-6 h-6 text-orange-600" />
+                </div>
+                <h3 className="font-semibold mb-1">Tips</h3>
+                <p className="text-sm text-muted-foreground flex-1">
+                  Confira odds de valor
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* <Link href="/search">
             <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
               <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3">
@@ -146,21 +141,7 @@ export default function Home() {
                 </p>
               </CardContent>
             </Card>
-          </Link>
-
-          <Link href="/tips">
-            <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
-              <CardContent className="p-4 h-full flex flex-col justify-between">
-                <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mb-3">
-                  <TrendingUp className="w-6 h-6 text-orange-600" />
-                </div>
-                <h3 className="font-semibold mb-1">Tips</h3>
-                <p className="text-sm text-muted-foreground flex-1">
-                  Confira odds de valor
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+          </Link> */}
         </div>
 
         {/* Recent Activity */}

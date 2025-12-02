@@ -17,128 +17,38 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(true); // Always true - free access
   const [isFreeTrial, setIsFreeTrial] = useState(false);
   const [trialInfo, setTrialInfo] = useState(null);
 
-  // Development bypass - when NEXT_PUBLIC_ENVIRONMENT is 'development'
-  const isDevelopmentMode = process.env.NEXT_PUBLIC_ENVIRONMENT === 'development';
-
+  // Free access mode - bypass all authentication and subscription checks
   useEffect(() => {
-    // Development mode bypass
-    if (isDevelopmentMode) {
-      console.log('🔧 Development mode: Bypassing authentication checks');
-      setUser({
-        id: 'dev-user-123',
-        email: 'developer@goatip.local',
-        user_metadata: { name: 'Developer' }
-      });
-      setIsSubscribed(true);
-      setIsFreeTrial(false);
-      setTrialInfo(null);
-      setLoading(false);
-      return;
-    }
-
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await Promise.all([
-          checkSubscription(session.user.email),
-          checkFreeTrial(session.user.email)
-        ]);
-      }
-      
-      setLoading(false);
-    };
-
-    getInitialSession();
-
-    // Listen for auth changes (only in production)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Skip auth state changes in development mode
-        if (isDevelopmentMode) return;
-        
-        // Note: localStorage clearing is handled in the auth callback page
-        // to ensure proper timing and avoid clearing auth tokens
-        
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await Promise.all([
-            checkSubscription(session.user.email),
-            checkFreeTrial(session.user.email)
-          ]);
-        } else {
-          setIsSubscribed(false);
-          setIsFreeTrial(false);
-          setTrialInfo(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [isDevelopmentMode]);
+    // Set a dummy user and always mark as subscribed
+    setUser({
+      id: 'free-user',
+      email: 'user@goatip.app',
+      user_metadata: { name: 'User' }
+    });
+    setIsSubscribed(true);
+    setIsFreeTrial(false);
+    setTrialInfo(null);
+    setLoading(false);
+    
+    // Note: We're not checking actual authentication or subscription status
+    // All users are treated as having full access
+  }, []);
 
   const checkSubscription = async (email) => {
-    try {
-      const response = await fetch('/api/check-subscription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setIsSubscribed(result.isSubscribed);
-      } else {
-        setIsSubscribed(false);
-      }
-    } catch (error) {
-      console.error('Error checking subscription:', error);
-      setIsSubscribed(false);
-    }
+    // Free access mode - always return as subscribed
+    setIsSubscribed(true);
+    return { isSubscribed: true };
   };
 
   const checkFreeTrial = async (email) => {
-    try {
-      const response = await fetch('/api/check-free-trial', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setIsFreeTrial(result.isFreeTrial);
-        if (result.isFreeTrial) {
-          setTrialInfo({
-            expiresAt: result.expiresAt,
-            daysRemaining: result.daysRemaining
-          });
-        } else {
-          setTrialInfo(null);
-        }
-      } else {
-        setIsFreeTrial(false);
-        setTrialInfo(null);
-      }
-    } catch (error) {
-      console.error('Error checking free trial:', error);
-      setIsFreeTrial(false);
-      setTrialInfo(null);
-    }
+    // Free access mode - no free trial needed, everyone has full access
+    setIsFreeTrial(false);
+    setTrialInfo(null);
+    return { isFreeTrial: false };
   };
 
   const signInWithMagicLink = async (email) => {

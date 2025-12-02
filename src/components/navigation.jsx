@@ -2,7 +2,13 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Home as HomeIcon, TrendingUp, Target, Flag } from "lucide-react";
+import {
+  Home as HomeIcon,
+  TrendingUp,
+  Target,
+  Flag,
+  BarChart3,
+} from "lucide-react";
 
 export function Navigation() {
   const router = useRouter();
@@ -15,23 +21,23 @@ export function Navigation() {
       path: "/",
       active: pathname === "/",
     },
-    {
+    /* {
       icon: Flag,
       label: "Torneios",
       path: "/matches",
       active: pathname === "/matches",
-    },
-    {
-      icon: TrendingUp,
-      label: "Stats",
-      path: "/stats",
-      active: pathname === "/stats",
-    },
+    }, */
     {
       icon: Target,
       label: "Tips",
       path: "/tips",
       active: pathname === "/tips",
+    },
+    {
+      icon: BarChart3,
+      label: "Stats",
+      path: "/stats",
+      active: pathname === "/stats",
     },
   ];
 
