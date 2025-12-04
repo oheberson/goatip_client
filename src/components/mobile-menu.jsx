@@ -36,7 +36,7 @@ export function MobileMenu() {
 
   const menuItems = [
     { icon: Home, label: "Home", href: "/" },
-    { icon: Flag, label: "Matches", href: "/matches" },
+    /* { icon: Flag, label: "Matches", href: "/matches" }, */
     { icon: BarChart3, label: "Stats", href: "/stats" },
     { icon: User, label: "Tips", href: "/tips" },
   ];

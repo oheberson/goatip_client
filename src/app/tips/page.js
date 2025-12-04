@@ -448,7 +448,7 @@ export default function TipsPage() {
                 "As dicas são baseadas em análises estatísticas de todo o campeonato.",
                 "As probabilidades mostradas indicam a confiança na sugestão.",
                 "Tenha um método de gestão de banca.",
-                "As odds apresentadas são com base na probabilidade calculada. O método utilizado é a Distribuição de Poisson com base na média então ponderado pela frequência da ocorrência da estatística.",
+                "As odds apresentadas são com base na probabilidade calculada. O método utilizado é a Distribuição Binominal Negativa com base na média então ponderado pela frequência da ocorrência da estatística e, em alguns casos, o mando de jogo.",
                 "Você encontrará valor quando houver discrepância entre a odd apresentada aqui e pela casa de apostas.",
               ]}
             />

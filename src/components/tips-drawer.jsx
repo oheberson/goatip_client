@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -15,9 +15,12 @@ import {
   TOURNAMENTS_MAP_NAMES,
   PLAYER_STATS_THRESHOLDS,
 } from "@/lib/constants";
-import { TrendingUp, TrendingDown, X } from "lucide-react";
+import { TrendingUp, TrendingDown, X, Sparkles } from "lucide-react";
 import { Questions } from "@/components/questions";
 import { TipsWeeklyChart } from "@/components/tips-weekly-chart";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { calculatePlayerTipProbability } from "@/lib/probability-calculator";
 
 function LikelihoodTag({ value, label }) {
   // Convert value to percentage for color calculation
@@ -72,6 +75,95 @@ function LikelihoodTag({ value, label }) {
 
 export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
   const [mode, setMode] = useState("over"); // "over" or "under"
+  const { isSubscribed, isFreeTrial } = useAuth();
+  const [weeklyData, setWeeklyData] = useState(null);
+  const [probabilityResult, setProbabilityResult] = useState(null);
+  const [loadingProbability, setLoadingProbability] = useState(false);
+
+  // Fetch weekly data for players
+  useEffect(() => {
+    if (!tip || type !== "players" || !isOpen) {
+      setWeeklyData(null);
+      setProbabilityResult(null);
+      return;
+    }
+
+    const fetchData = async () => {
+      setLoadingProbability(true);
+      try {
+        const playerName = tip.player;
+        const data = await api.tips.getTeamStatByWeek(
+          tip.tournament,
+          tip.team,
+          tip.variable,
+          playerName,
+          isSubscribed,
+          isFreeTrial
+        );
+
+        if (data?.data && data.data.length >= 4) {
+          setWeeklyData(data.data);
+        } else {
+          setWeeklyData(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch weekly stats for probability:", err);
+        setWeeklyData(null);
+      } finally {
+        setLoadingProbability(false);
+      }
+    };
+
+    fetchData();
+  }, [tip, type, isOpen, isSubscribed, isFreeTrial]);
+
+  // Calculate probability based on mode and weekly data
+  useEffect(() => {
+    if (!tip || type !== "players" || !weeklyData || weeklyData.length < 4) {
+      setProbabilityResult(null);
+      return;
+    }
+
+    try {
+      // Use player's average as target count
+      const targetCount = tip.average || 0;
+
+      // Calculate probability of being >= average (for over mode)
+      const result = calculatePlayerTipProbability({
+        weeklyData: weeklyData,
+        nextIsHome: tip.is_home,
+        targetCount,
+        useMinutesNormalization: true,
+      });
+
+      if (result) {
+        // For "over" mode: P(X >= average)
+        // For "under" mode: P(X < average) = 1 - P(X >= average)
+        if (mode === "under") {
+          const underProbability = 1 - result.rawProbability;
+          const underDecimalOdds =
+            underProbability > 0 ? 1 / underProbability : 1000;
+          setProbabilityResult({
+            ...result,
+            probabilityAtLeast: Math.round(underProbability * 1000) / 10 + "%",
+            rawProbability: underProbability,
+            decimalOdds: Number(underDecimalOdds.toFixed(2)),
+            isUnder: true,
+          });
+        } else {
+          setProbabilityResult({
+            ...result,
+            isUnder: false,
+          });
+        }
+      } else {
+        setProbabilityResult(null);
+      }
+    } catch (err) {
+      console.error("Failed to calculate probability:", err);
+      setProbabilityResult(null);
+    }
+  }, [tip, weeklyData, mode, type]);
 
   if (!tip) return null;
 
@@ -126,7 +218,7 @@ export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
             </span>
             <Questions
               questionsText={[
-                "As odds apresentadas são com base na probabilidade calculada. O método utilizado é a Distribuição de Poisson com base na média então ponderado pela frequência da ocorrência da estatística.",
+                "As odds apresentadas são com base na probabilidade calculada. O método utilizado é a Distribuição Binominal Negativa com base na média então ponderado pela frequência da ocorrência da estatística e, em alguns casos, o mando de jogo.",
                 "Você encontrará valor quando houver discrepância entre a odd apresentada aqui e pela casa de apostas.",
               ]}
             />
@@ -134,40 +226,142 @@ export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
         </DrawerHeader>
 
         <div className="px-4 pb-4 flex-1 overflow-y-auto">
+          {/* Probability Hint - Only for players */}
+          {type === "players" && (
+            <Card className="mb-4 border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5">
+              <CardContent className="p-4">
+                {loadingProbability ? (
+                  <div className="flex items-center justify-center py-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      Calculando probabilidade...
+                    </span>
+                  </div>
+                ) : probabilityResult ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div
+                        className="p-2 rounded-full shadow-sm"
+                        style={{
+                          backgroundColor: `rgba(${
+                            255 -
+                            Math.round(probabilityResult.rawProbability * 255)
+                          }, ${Math.round(
+                            probabilityResult.rawProbability * 255
+                          )}, 0, 0.2)`,
+                        }}
+                      >
+                        <Sparkles
+                          className="w-5 h-5"
+                          style={{
+                            color: `rgb(${
+                              255 -
+                              Math.round(probabilityResult.rawProbability * 255)
+                            }, ${Math.round(
+                              probabilityResult.rawProbability * 255
+                            )}, 0)`,
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
+                          Probabilidade Estimada
+                        </p>
+                        <p
+                          className="text-3xl font-bold mb-1"
+                          style={{
+                            color: `rgb(${
+                              255 -
+                              Math.round(probabilityResult.rawProbability * 255)
+                            }, ${Math.round(
+                              probabilityResult.rawProbability * 255
+                            )}, 0)`,
+                          }}
+                        >
+                          {probabilityResult.probabilityAtLeast}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Probabilidade de{" "}
+                          {mode === "over" ? "superar" : "ficar abaixo"} de{" "}
+                          {tip.average.toFixed(1)}{" "}
+                          {formatStatName(tip.variable).toLowerCase()}
+                          {tip.is_home ? " (em casa)" : " (fora)"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right border-l border-border/50 pl-4 ml-4">
+                      <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
+                        Odd Mínima Recomendada
+                      </p>
+                      <p className="text-xl font-semibold mb-1 text-primary">
+                        {probabilityResult.decimalOdds.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Odd com valor esperado positivo
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Projeção: {probabilityResult.mean}
+                      </p>
+                    </div>
+                  </div>
+                ) : weeklyData && weeklyData.length < 4 ? (
+                  <div className="text-center py-2">
+                    <p className="text-sm text-muted-foreground">
+                      Dados insuficientes para calcular probabilidade (mínimo 4
+                      jogos necessários)
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-2">
+                    <p className="text-sm text-muted-foreground">
+                      Não foi possível calcular a probabilidade
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Tips List - Only for teams */}
           {type == "teams" && (
             <div className="space-y-4">
               <div>
-                <h3 className={`font-semibold mb-3 ${
-                  mode === "over" 
-                    ? "text-green-700 dark:text-green-300" 
-                    : "text-red-700 dark:text-red-300"
-                }`}>
+                <h3
+                  className={`font-semibold mb-3 ${
+                    mode === "over"
+                      ? "text-green-700 dark:text-green-300"
+                      : "text-red-700 dark:text-red-300"
+                  }`}
+                >
                   {mode === "over" ? "Dicas Over" : "Dicas Under"}
                 </h3>
-                {(mode === "over" ? overTipsArray : underTipsArray).length > 0 ? (
+                {(mode === "over" ? overTipsArray : underTipsArray).length >
+                0 ? (
                   <div className="space-y-3">
-                    {(mode === "over" ? overTipsArray : underTipsArray).map((tipItem, index) => (
-                      <Card key={index}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">
-                                Linha: {tipItem.line}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {mode === "over" ? "Over" : "Under"} {tipItem.line}{" "}
-                                {formatStatName(tip.variable).toLowerCase()}
-                              </p>
+                    {(mode === "over" ? overTipsArray : underTipsArray).map(
+                      (tipItem, index) => (
+                        <Card key={index}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">
+                                  Linha: {tipItem.line}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {mode === "over" ? "Over" : "Under"}{" "}
+                                  {tipItem.line}{" "}
+                                  {formatStatName(tip.variable).toLowerCase()}
+                                </p>
+                              </div>
+                              <LikelihoodTag
+                                value={tipItem.likelihood}
+                                label="Probabilidade"
+                              />
                             </div>
-                            <LikelihoodTag
-                              value={tipItem.likelihood}
-                              label="Probabilidade"
-                            />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      )
+                    )}
                   </div>
                 ) : (
                   <Card>
@@ -274,7 +468,12 @@ export function TipsDrawer({ tip, isOpen, onClose, type = "teams" }) {
           </Card>
 
           {/* Weekly Stats Chart */}
-          <TipsWeeklyChart tip={tip} type={type} mode={mode} onModeChange={setMode} />
+          <TipsWeeklyChart
+            tip={tip}
+            type={type}
+            mode={mode}
+            onModeChange={setMode}
+          />
         </div>
       </DrawerContent>
     </Drawer>
